@@ -1,0 +1,2 @@
+# Pin optional: bump after testing upgrades.
+markitdown[all]>=0.1.6
