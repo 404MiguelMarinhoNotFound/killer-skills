@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Critical assessment</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#6b6b6b; --line:#e6e6e6; --accent:#2f6fed; --best:#eef4ff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#141414; --fg:#ececec; --muted:#9a9a9a; --line:#2a2a2a; --accent:#7aa2ff; --best:#1c2533; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width:820px; margin:0 auto; padding:40px 20px 80px; }
+  h1 { font-size:26px; margin:0 0 4px; }
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:36px 0 10px; }
+  h3 { font-size:16px; margin:14px 0 4px; } h4 { font-size:13px; margin:10px 0 2px; color:var(--muted); }
+  .muted { color:var(--muted); }
+  .card { border:1px solid var(--line); border-radius:10px; padding:4px 20px 12px; }
+  .decision { font-size:22px; font-weight:600; margin:4px 0; }
+  .wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  tr.best td { background:var(--best); font-weight:600; }
+  .sliders { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:8px 24px; }
+  .sliders label { display:block; font-size:13px; }
+  input[type=range] { width:100%; accent-color:var(--accent); }
+  ul { padding-left:20px; margin:4px 0; }
+  details { border-bottom:1px solid var(--line); padding:8px 0; }
+  summary { cursor:pointer; font-weight:500; }
+</style>
+</head>
+<body>
+<main></main>
+<script id="data" type="application/json">__RESULT_JSON__</script>
+<script>
+const R = JSON.parse(document.getElementById('data').textContent);
+const main = document.querySelector('main');
+const el = (tag, text, cls) => { const e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; };
+const list = items => { const ul = el('ul'); (items || []).forEach(i => ul.append(el('li', i))); return ul; };
+const section = (title, cls) => { const s = el('section', null, cls); s.append(el('h2', title)); main.append(s); return s; };
+const names = Object.fromEntries(R.brief.options.map(o => [o.id, o.name]));
+
+document.title = R.title;
+const modeLabel = R.brief.mode === 'single' ? 'Single idea vs status quo' : `${R.brief.options.length} options`;
+main.append(el('h1', R.title), el('p', `${modeLabel} · confidence ${R.confidence}`, 'muted'));
+
+const v = section('Verdict', 'card');
+v.append(el('p', names[R.verdict.decision] || R.verdict.decision, 'decision'), el('p', R.verdict.summary));
+if (R.verdict.conditions && R.verdict.conditions.length) v.append(el('h4', 'Conditions'), list(R.verdict.conditions));
+v.append(el('p', 'First step: ' + R.first_step));
+
+const s = section('Scores');
+const wrap = el('div', null, 'wrap'); const table = el('table'); wrap.append(table);
+const sliders = el('div', null, 'sliders');
+s.append(wrap, el('p', 'Scores are 1–5. Drag the weights to re-rank.', 'muted'), sliders);
+// Weights may be any positive numbers (e.g. 30/40/30); normalize so they fit the 0-1 sliders.
+const weightSum = R.brief.criteria.reduce((t, c) => t + c.weight, 0) || 1;
+const weights = Object.fromEntries(R.brief.criteria.map(c => [c.id, c.weight / weightSum]));
+const cell = (o, c) => R.scores.find(x => x.option === o && x.criterion === c) || { score: 0, rationale: '' };
+function draw() {
+  const sum = Object.values(weights).reduce((a, b) => a + b, 0) || 1;
+  const totals = Object.fromEntries(R.brief.options.map(o =>
+    [o.id, R.brief.criteria.reduce((t, c) => t + weights[c.id] / sum * cell(o.id, c.id).score, 0)]));
+  const best = Math.max(...Object.values(totals));
+  const head = el('tr');
+  head.append(el('th', 'Option'), ...R.brief.criteria.map(c => el('th', `${c.name} ${Math.round(weights[c.id] / sum * 100)}%`)), el('th', 'Total'));
+  table.replaceChildren(head);
+  R.brief.options.forEach(o => {
+    const tr = el('tr', null, Math.abs(totals[o.id] - best) < 1e-6 ? 'best' : '');
+    tr.append(el('td', o.name));
+    R.brief.criteria.forEach(c => { const td = el('td', String(cell(o.id, c.id).score)); td.title = cell(o.id, c.id).rationale; tr.append(td); });
+    tr.append(el('td', totals[o.id].toFixed(2)));
+    table.append(tr);
+  });
+}
+R.brief.criteria.forEach(c => {
+  const label = el('label', c.name);
+  const input = document.createElement('input');
+  Object.assign(input, { type: 'range', min: 0, max: 1, step: 0.05, value: weights[c.id] });
+  input.addEventListener('input', () => { weights[c.id] = Number(input.value); draw(); });
+  label.append(input); sliders.append(label);
+});
+draw();
+
+const l = section('Pros & cons');
+R.brief.options.forEach(o => {
+  l.append(el('h3', o.name));
+  ['pro', 'con'].forEach(kind => {
+    const items = R.ledger.filter(i => i.option === o.id && i.kind === kind)
+      .sort((a, b) => b.severity * b.likelihood - a.severity * a.likelihood)
+      .map(i => `${i.claim} (severity ${i.severity}, likelihood ${i.likelihood} · ${(i.raised_by || []).join(', ')})`);
+    l.append(el('h4', kind === 'pro' ? 'Pros' : 'Cons'), list(items));
+  });
+});
+
+const d = section('Strongest dissent');
+d.append(el('p', `${R.dissent.role}: ${R.dissent.position}`), el('p', 'Not adopted because: ' + R.dissent.why_rejected, 'muted'));
+section('What everyone missed').append(list(R.blind_spots));
+const p = section('Supervisor drift');
+p.append(el('p', 'Before the council: ' + R.precommit.position, 'muted'), el('p', R.drift));
+
+const c = section('Council');
+R.reports.forEach(r => {
+  const det = el('details');
+  det.append(el('summary', `${r.role} · ${r.confidence}`), el('p', r.position), list(r.reasoning), el('p', 'Surprise: ' + r.surprise, 'muted'));
+  c.append(det);
+});
+
+const b = section('Brief & unknowns');
+const bd = el('details');
+bd.append(el('summary', R.brief.question), el('p', R.brief.context), el('h4', 'Constraints'), list(R.brief.constraints),
+  el('h4', 'Criteria'), list(R.brief.criteria.map(x => `${x.name}: ${x.why}`)), el('h4', 'Unknowns'), list(R.unknowns));
+b.append(bd);
+</script>
+</body>
+</html>
