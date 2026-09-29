@@ -7,7 +7,7 @@ description: Critically assess a single idea (against the status quo) or compare
 
 You are the supervisor. You research, write one neutral brief, commit to your own view, run a council of independent subagents, then write a verdict judged on evidence rather than on how many voices agree. Every run leaves a folder of JSON files and one HTML report.
 
-`<SKILL_DIR>` below means the base directory Claude Code reports when this skill loads.
+`<SKILL_DIR>` below means the base directory Claude Code reports when this skill loads. The scripts need Python 3.10+ and nothing else; if `python` is not found, use `python3`.
 
 ## When not to use
 - The question has one right answer (a fact, a lookup): answer directly.
@@ -29,7 +29,7 @@ Collect only what can change the assessment:
 Record the source of every fact you plan to rely on. Stop once the options, constraints and stakes are clear.
 
 ### 3. Write the brief
-Create the run directory with one Bash command, using the real clock rather than a made-up time: `D=".critically-assess/runs/$(date +%Y%m%d-%H%M%S)-<slug>"; mkdir -p "$D/reports" && realpath "$D"`. Copy the printed absolute path exactly and use it as `<run_dir>` for every later write and command; never retype it from memory. Read `<SKILL_DIR>/reference/contracts.md` and write `brief.json`. Derive 3 to 6 criteria from what the user is trying to achieve and what is at stake, weight them, and justify each weight in one line. Keep the brief neutral.
+Create the run directory with one Bash command, using the real clock rather than a made-up time: `D=".critically-assess/runs/$(date +%Y%m%d-%H%M%S)-<slug>"; mkdir -p "$D/reports" && realpath "$D"`, where `<slug>` is 2-5 lowercase words joined by hyphens (letters, digits and hyphens only). Copy the printed absolute path exactly and use it as `<run_dir>` for every later write and command; never retype it from memory. Read `<SKILL_DIR>/reference/contracts.md` and write `brief.json`. Derive 3 to 6 criteria from what the user is trying to achieve and what is at stake, weight them, and justify each weight in one line. Keep the brief neutral.
 
 ### 4. Commit to your own view
 Before launching anyone, write `precommit.json` with your position, your three strongest reasons and your main risk. No subagent ever sees it. It exists so your synthesis cannot quietly mirror the council.
@@ -39,10 +39,11 @@ Run `python "<SKILL_DIR>/scripts/role_library.py"` to list the library. Pick 3 t
 
 ### 6. Launch the council in parallel
 Send one message containing one subagent call per roster role (the `Agent` tool; older Claude Code versions call it `Task`), with `subagent_type: general-purpose` and the roster's `model`. Each prompt contains, in this order:
-1. The role file's body: `<SKILL_DIR>/roles/<id>.md` without its frontmatter.
-2. For council roles only: the contents of `<SKILL_DIR>/roles/_contract.md`. The analyst's contract is already in its role file.
-3. `BRIEF:` followed by the full `brief.json`.
-4. This instruction, with the role's id filled in: "Your role id is `<id>`; put exactly that in the `role` field. Work only from the brief. Do not browse, read files or edit anything. Reply with the JSON object only."
+1. One opening line with the role's `name` and `id` filled in: "You are <name> (role id `<id>`), one voice on an independent decision council. Other voices cover the other angles and you will never see their answers, so commit fully to yours."
+2. The role file's body: `<SKILL_DIR>/roles/<id>.md` without its frontmatter.
+3. For council roles only: the contents of `<SKILL_DIR>/roles/_contract.md`. The analyst's contract is already in its role file.
+4. `BRIEF:` followed by the full `brief.json`, unedited.
+5. This closing instruction: "Put exactly `<id>` in the `role` field. Work only from the brief: do not browse, read files or edit anything. Where the brief is silent on something you need, say so instead of assuming it. Reply with the JSON object only."
 
 Never include the conversation, your research notes or `precommit.json`. If the tool rejects the `model` parameter, relaunch without it and record the model as `inherited`.
 
@@ -51,7 +52,11 @@ Save each reply verbatim to `reports/<role-id>.raw.txt`, then run:
 
     python "<SKILL_DIR>/scripts/validate.py" <run_dir>
 
-It converts every raw reply to `reports/<role-id>.json` and checks it. For any role with errors, relaunch that single role once, with the error lines appended to its prompt. If it fails a second time, drop the role and add it to `unknowns`.
+It converts every raw reply to `reports/<role-id>.json` and checks it; every error line starts with the role it belongs to. For any role with errors, relaunch that single role once, with its error lines appended to the original prompt under `YOUR PREVIOUS REPLY WAS REJECTED:`, and overwrite its `.raw.txt` with the new reply.
+- A council role that fails twice is dropped: move its `.raw.txt` (and `.json`, if any) into `reports/dropped/`, leave it out of the roster, and add "<role> gave no usable report" to `unknowns`. Validation ignores `reports/dropped/`. If dropping would leave fewer than 3 council roles, launch a replacement role from the library instead.
+- The analyst cannot be dropped, because the scores come from it. If it fails twice, write its report yourself in the analyst format, start every `rationale` and `evidence` with `Supervisor:`, save it as `reports/analyst.raw.txt`, set the analyst's roster model to `supervisor`, and add "analyst scores written by the supervisor" to `unknowns`.
+
+Re-run `validate.py` until it prints OK before moving on.
 
 ### 8. Synthesize
 Read every report, then write `result.json` as described in `reference/contracts.md`:
