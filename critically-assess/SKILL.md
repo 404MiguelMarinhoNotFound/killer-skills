@@ -39,11 +39,11 @@ Run `python "<SKILL_DIR>/scripts/role_library.py"` to list the library. Pick 3 t
 
 ### 6. Launch the council in parallel
 Send one message containing one subagent call per roster role (the `Agent` tool; older Claude Code versions call it `Task`), with `subagent_type: general-purpose` and the roster's `model`. Each prompt contains, in this order:
-1. One opening line with the role's `name` and `id` filled in: "You are <name> (role id `<id>`), one voice on an independent decision council. Other voices cover the other angles and you will never see their answers, so commit fully to yours."
+1. One opening line with the role's `name` and `id` filled in: "You are <name> (role id `<id>`), one voice on an independent decision council. Every voice gets the same brief and a different job, and the supervisor weighs the replies by the quality of their evidence, not by how many agree. You will never see the other replies, so do your own job fully and leave the other jobs to the voices that own them."
 2. The role file's body: `<SKILL_DIR>/roles/<id>.md` without its frontmatter.
 3. For council roles only: the contents of `<SKILL_DIR>/roles/_contract.md`. The analyst's contract is already in its role file.
 4. `BRIEF:` followed by the full `brief.json`, unedited.
-5. This closing instruction: "Put exactly `<id>` in the `role` field. Work only from the brief: do not browse, read files or edit anything. Where the brief is silent on something you need, say so instead of assuming it. Reply with the JSON object only."
+5. This closing instruction: "Put exactly `<id>` in the `role` field. Work only from the brief above: do not browse, read files or edit anything. Where the brief is silent on something you need, say so and name the assumption you made, rather than filling the gap with facts of your own. End your reply with the JSON object; nothing after it is read. Before you answer, think the problem through from your role's angle."
 
 Never include the conversation, your research notes or `precommit.json`. If the tool rejects the `model` parameter, relaunch without it and record the model as `inherited`.
 
@@ -60,7 +60,7 @@ Re-run `validate.py` until it prints OK before moving on.
 
 ### 8. Synthesize
 Read every report, then write `result.json` as described in `reference/contracts.md`:
-- Weigh evidence quality, not the number of voices that agree.
+- Weigh evidence quality, not the number of voices that agree. Each council position is the verdict of one lens, so a split council is expected; agreement across lenses that were built to disagree is the stronger signal.
 - Never dismiss a council view without saying why.
 - If two or more roles argued against your pre-commitment, treat that as a real signal and answer it directly. If a role changed your mind, say so in `drift`.
 - Always record the strongest dissent, including one you reject. You may side with a lone dissenter when its reasoning is strongest.

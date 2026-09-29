@@ -1,26 +1,26 @@
 ## Output contract
 
-Return ONLY one JSON object: no prose before or after it, no code fences, no comments inside it.
+Your reply ends with one JSON object in the shape below, written as plain JSON with no code fences and no comments. Only that final object is read, so everything that matters goes inside it. Use exactly these seven fields and add no others.
 
 {
   "role": "<your role id>",
-  "position": "<your overall stance in 1-2 sentences>",
-  "reasoning": ["<1 to 3 short points behind the position, strongest first>"],
+  "position": "<the option your lens favours or rejects, and why, in 1-2 sentences>",
+  "reasoning": ["<1 to 3 points behind the position, strongest first; one starts with Flip:>"],
   "per_option": [
     {"option": "<option id>", "pros": ["..."], "cons": ["..."], "risks": ["..."]}
   ],
-  "surprise": "<one thing the other voices will most likely miss>",
+  "surprise": "<one point from your lens that the other voices are least likely to raise>",
   "confidence": "low | medium | high",
-  "evidence": ["<Brief: fact> or <Mechanism: how it happens>, behind your strongest claim>"]
+  "evidence": ["Brief: <a fact the brief states>", "Mechanism: <how the effect comes about>"]
 }
 
 How to fill each field:
 - `role`: your role id, exactly as given to you.
-- `position`: name the option you favour, or the one you would reject, and why in a clause. "It depends" is not a position. If everything truly hinges on one fact, name that fact and give your answer for each value of it.
-- `reasoning`: 1 to 3 points, strongest first. One point must say which fact, if it turned out differently, would flip your position.
-- `per_option`: exactly one entry for every option id in the brief, written as the brief writes it, the status quo included. Apply the swap test to every pro, con and risk: if the sentence would still be true with another option's name in it, sharpen it or cut it. An empty list is better than filler.
-- `surprise`: one concrete point that voices looking through other lenses are likely to overlook. It must add something new, not restate your position.
+- `position`: the verdict of your lens alone, not an all-things-considered one. The supervisor combines the lenses, and a voice that drifts toward the middle adds nothing to that mix. Name one option to favour or reject and give the reason in a clause. If the brief leaves a deciding fact open, commit on the reading you find most likely and say which reading you took.
+- `reasoning`: 1 to 3 points, strongest first. One point starts with "Flip:" and names the fact that would change your position if it turned out differently. Draw that fact from your own lens, because a flip fact every voice shares tells the supervisor nothing new.
+- `per_option`: exactly one entry for every option id in the brief, spelled as the brief spells it, the status quo included. Pros are gains. Cons are costs or drawbacks that come with the option for certain. Risks are things that might go wrong, each with what would set it off. Your role section above says what your lens puts in these lists. Write each item as one sentence and apply the swap test: if the sentence would still be true with another option's name in it, sharpen it or cut it. An empty list is better than filler.
+- `surprise`: one concrete point from your lens that voices looking through other lenses are likely to miss. It must add something new, not restate your position or reasoning.
 - `confidence`: `high` when facts in the brief settle it, `medium` when you rely on a reasonable assumption, `low` when it hinges on something the brief does not say.
-- `evidence`: 1 to 3 items. Each starts with `Brief:` and restates a fact from the brief, or starts with `Mechanism:` and explains concretely how the effect would come about. Do not cite numbers or studies that are not in the brief.
+- `evidence`: 1 to 3 items behind your strongest claims. Each starts with `Brief:` and restates a fact the brief gives, or with `Mechanism:` and explains step by step how the effect would come about. Cite numbers, prices or studies only if the brief contains them. A gap in the brief is not evidence: name the gap in `reasoning` and let it lower `confidence`. Prefer the facts that matter most to your lens; a fact every voice would cite adds little.
 
-Stay under 300 words of content. Take your lens all the way; balance is someone else's job.
+Keep the whole object to about 300 words; one sentence per list item is enough. Take your lens all the way. The Analyst supplies the balance, so you do not have to.
