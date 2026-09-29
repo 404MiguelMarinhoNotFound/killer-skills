@@ -1,0 +1,4 @@
+.refs/
+.critically-assess/
+__pycache__/
+.pytest_cache/
