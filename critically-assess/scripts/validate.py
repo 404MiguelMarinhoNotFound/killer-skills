@@ -147,14 +147,18 @@ def validate_run(run_dir):
         except ValueError as exc:
             errors.append(f"{role}: reply is not valid JSON ({exc})")
             continue
+        # The file name is the role id; subagents sometimes rename themselves.
+        data["role"] = role
         (run / "reports" / f"{role}.json").write_text(json.dumps(data, indent=2), encoding="utf-8")
+    if not (run / "brief.json").exists():
+        return errors + [f"brief.json not found in {run.resolve()}"]
     brief = _read(run / "brief.json")
     errors += validate_brief(brief)
     option_ids = [o.get("id") for o in brief.get("options", [])]
     criterion_ids = [c.get("id") for c in brief.get("criteria", [])]
     for path in sorted((run / "reports").glob("*.json")):
         report = _read(path)
-        if report.get("role") == "analyst":
+        if path.stem == "analyst":
             errors += validate_analyst_report(report, option_ids, criterion_ids)
         else:
             errors += validate_role_report(report, option_ids)

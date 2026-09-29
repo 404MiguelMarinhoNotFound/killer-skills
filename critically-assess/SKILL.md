@@ -1,6 +1,6 @@
 ---
 name: critically-assess
-description: Critically assess a single idea (against the status quo) or compare several options, using a council of 3-5 role-based subagents plus a neutral analyst subagent. Produces weighted criterion scores, a merged pros and cons ledger, the strongest dissent, blind spots and a verdict, rendered as a minimal HTML report. Use when the user says "critically assess", "assess this idea", "pressure-test this", "compare these options", "pros and cons of", or brings a real decision with stakes and tradeoffs. Do not use for factual questions, creation tasks or trivial choices.
+description: Critically assess a single idea (against the status quo) or compare several options, using a council of 3-5 role-based subagents plus a neutral analyst subagent. Produces weighted criterion scores, a merged pros and cons ledger, the strongest dissent, blind spots and a verdict, rendered as a minimal HTML report. Use when the user says "critically assess", "assess this idea", "pressure-test this", "compare these options", "pros and cons of", or brings a real decision with stakes and tradeoffs. Also use it whenever the user asks you to compare or choose between named alternatives (frameworks, databases, vendors, tools, strategies) for a stated purpose, such as "compare X, Y and Z for our API" or "which of these should we pick", even if they never say "assess". Do not use for factual questions, creation tasks or trivial choices.
 ---
 
 # Critically Assess
@@ -29,7 +29,7 @@ Collect only what can change the assessment:
 Record the source of every fact you plan to rely on. Stop once the options, constraints and stakes are clear.
 
 ### 3. Write the brief
-Create `.critically-assess/runs/<YYYYMMDD-HHMMSS>-<slug>/` in the current working directory, with a `reports/` subfolder. Read `<SKILL_DIR>/reference/contracts.md` and write `brief.json`. Derive 3 to 6 criteria from what the user is trying to achieve and what is at stake, weight them, and justify each weight in one line. Keep the brief neutral.
+Create the run directory with one Bash command, using the real clock rather than a made-up time: `D=".critically-assess/runs/$(date +%Y%m%d-%H%M%S)-<slug>"; mkdir -p "$D/reports" && realpath "$D"`. Copy the printed absolute path exactly and use it as `<run_dir>` for every later write and command; never retype it from memory. Read `<SKILL_DIR>/reference/contracts.md` and write `brief.json`. Derive 3 to 6 criteria from what the user is trying to achieve and what is at stake, weight them, and justify each weight in one line. Keep the brief neutral.
 
 ### 4. Commit to your own view
 Before launching anyone, write `precommit.json` with your position, your three strongest reasons and your main risk. No subagent ever sees it. It exists so your synthesis cannot quietly mirror the council.
@@ -42,7 +42,7 @@ Send one message containing one subagent call per roster role (the `Agent` tool;
 1. The role file's body: `<SKILL_DIR>/roles/<id>.md` without its frontmatter.
 2. For council roles only: the contents of `<SKILL_DIR>/roles/_contract.md`. The analyst's contract is already in its role file.
 3. `BRIEF:` followed by the full `brief.json`.
-4. This instruction: "Work only from the brief. Do not browse, read files or edit anything. Reply with the JSON object only."
+4. This instruction, with the role's id filled in: "Your role id is `<id>`; put exactly that in the `role` field. Work only from the brief. Do not browse, read files or edit anything. Reply with the JSON object only."
 
 Never include the conversation, your research notes or `precommit.json`. If the tool rejects the `model` parameter, relaunch without it and record the model as `inherited`.
 

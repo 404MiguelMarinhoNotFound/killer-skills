@@ -86,3 +86,19 @@ def test_validate_run_reports_unparseable_reply_per_role(run_dir):
     (run_dir / "reports" / "executor.raw.txt").write_text("Sorry, I can't.", encoding="utf-8")
     errors = validate.validate_run(run_dir)
     assert any(e.startswith("executor:") and "not valid JSON" in e for e in errors)
+
+
+def test_validate_run_uses_filename_as_role_id(run_dir):
+    renamed = sample_run.role_report("contrarian")
+    renamed["role"] = "red-team"
+    (run_dir / "reports" / "contrarian.raw.txt").write_text(json.dumps(renamed), encoding="utf-8")
+    analyst = dict(sample_run.ANALYST, role="neutral analyst")
+    (run_dir / "reports" / "analyst.raw.txt").write_text(json.dumps(analyst), encoding="utf-8")
+    assert validate.validate_run(run_dir) == []
+    saved = json.loads((run_dir / "reports" / "contrarian.json").read_text(encoding="utf-8"))
+    assert saved["role"] == "contrarian"
+
+
+def test_validate_run_reports_missing_brief_without_crashing(run_dir):
+    (run_dir / "brief.json").unlink()
+    assert any("brief.json" in e for e in validate.validate_run(run_dir))
