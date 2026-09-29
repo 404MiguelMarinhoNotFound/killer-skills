@@ -30,3 +30,8 @@ def test_sensitivity_detects_winner_flip():
     # cost 0.5 -> 0.8, renormalized: A = 3.46, B = 3.38, so A overtakes B
     report = {r["criterion"]: r["flips"] for r in scoring.sensitivity(CRIT, SCORES, delta=0.3)}
     assert report["cost"] and report["cost"][0]["winners"] == ["A"]
+
+
+def test_all_zero_weights_tie_instead_of_crashing():
+    zero = [{"id": "cost", "weight": 0}, {"id": "speed", "weight": 0}]
+    assert scoring.winners(scoring.weighted_totals(zero, SCORES)) == ["A", "B"]

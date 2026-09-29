@@ -34,3 +34,12 @@ def test_main_writes_report(run_dir, capsys):
     html = (run_dir / "report.html").read_text(encoding="utf-8")
     assert "Postgres vs DynamoDB for orders" in html
     assert "Report:" in capsys.readouterr().out
+
+
+def test_main_refuses_an_invalid_result(run_dir, capsys):
+    import pytest
+    (run_dir / "result.json").write_text(json.dumps(dict(sample_run.RESULT, scores=[])), encoding="utf-8")
+    with pytest.raises(SystemExit):
+        render.main(run_dir)
+    assert "exactly one score" in capsys.readouterr().out
+    assert not (run_dir / "report.html").exists()

@@ -5,6 +5,8 @@ TOLERANCE = 1e-6
 
 def normalize(criteria):
     total = sum(c["weight"] for c in criteria)
+    if total <= 0:  # all weights at zero: every option ties, as in the report sliders
+        return {c["id"]: 0.0 for c in criteria}
     return {c["id"]: c["weight"] / total for c in criteria}
 
 

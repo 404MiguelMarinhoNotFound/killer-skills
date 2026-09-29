@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 import scoring
+import validate
 
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "report.html"
 TOKEN = "__RESULT_JSON__"
@@ -44,6 +45,11 @@ def terminal_summary(result):
 def main(run_dir):
     run = Path(run_dir)
     result = json.loads((run / "result.json").read_text(encoding="utf-8"))
+    problems = validate.validate_result(result)
+    if problems:
+        print("result.json is not valid; fix it and run validate.py first:")
+        print("\n".join(f"ERROR: {p}" for p in problems))
+        sys.exit(1)
     out = run / "report.html"
     out.write_text(render_html(result, TEMPLATE.read_text(encoding="utf-8")), encoding="utf-8")
     print(terminal_summary(result))

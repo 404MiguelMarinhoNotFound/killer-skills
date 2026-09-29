@@ -37,7 +37,7 @@
 const R = JSON.parse(document.getElementById('data').textContent);
 const main = document.querySelector('main');
 const el = (tag, text, cls) => { const e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; };
-const list = items => { const ul = el('ul'); (items || []).forEach(i => ul.append(el('li', i))); return ul; };
+const list = items => { const ul = el('ul'); [].concat(items ?? []).forEach(i => ul.append(el('li', String(i)))); return ul; };
 const section = (title, cls) => { const s = el('section', null, cls); s.append(el('h2', title)); main.append(s); return s; };
 const names = Object.fromEntries(R.brief.options.map(o => [o.id, o.name]));
 
@@ -77,7 +77,7 @@ function draw() {
 R.brief.criteria.forEach(c => {
   const label = el('label', c.name);
   const input = document.createElement('input');
-  Object.assign(input, { type: 'range', min: 0, max: 1, step: 0.05, value: weights[c.id] });
+  Object.assign(input, { type: 'range', min: 0, max: 1, step: 'any', value: weights[c.id] });
   input.addEventListener('input', () => { weights[c.id] = Number(input.value); draw(); });
   label.append(input); sliders.append(label);
 });
@@ -89,7 +89,7 @@ R.brief.options.forEach(o => {
   ['pro', 'con'].forEach(kind => {
     const items = R.ledger.filter(i => i.option === o.id && i.kind === kind)
       .sort((a, b) => b.severity * b.likelihood - a.severity * a.likelihood)
-      .map(i => `${i.claim} (severity ${i.severity}, likelihood ${i.likelihood} · ${(i.raised_by || []).join(', ')})`);
+      .map(i => `${i.claim} (severity ${i.severity}, likelihood ${i.likelihood} · ${[].concat(i.raised_by ?? []).join(', ')})`);
     l.append(el('h4', kind === 'pro' ? 'Pros' : 'Cons'), list(items));
   });
 });
