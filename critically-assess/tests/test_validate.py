@@ -107,9 +107,9 @@ def test_validate_run_reports_missing_brief_without_crashing(run_dir):
 
 # --- Review Focus 1: odd replies become per-role errors, never a crash -------------------
 
-def test_extract_json_survives_two_fences_and_braces_in_prose():
-    text = 'Draft:\n```json\n{"a": 1}\n```\nNotes {not json}\n```json\n{"b": 2}\n```'
-    assert validate.extract_json(text) == {"a": 1}
+def test_extract_json_keeps_the_last_object_when_a_draft_comes_first():
+    text = 'Draft:\n```json\n{"a": 1}\n```\nNotes {not json}\n```json\n{"b": {"c": 2}}\n```'
+    assert validate.extract_json(text) == {"b": {"c": 2}}
     assert validate.extract_json('```json\n{"a": 1}\n```\nSee {x} above.') == {"a": 1}
 
 

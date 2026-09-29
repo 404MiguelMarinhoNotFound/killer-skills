@@ -16,19 +16,26 @@ ROLE_KEYS = ("role", "position", "reasoning", "per_option", "surprise", "confide
 
 
 def extract_json(text):
-    """Return the first JSON object in a reply, tolerating code fences and surrounding prose."""
+    """Return the last top-level JSON object in a reply.
+
+    Models sometimes write a draft or an example before their final JSON, so the last
+    complete object wins. Objects nested inside another are not counted on their own,
+    and code fences or prose around the JSON are ignored.
+    """
     decoder = json.JSONDecoder()
-    candidates = [m.group(1) for m in re.finditer(r"```(?:json)?\s*(.*?)```", text, re.DOTALL)]
-    candidates.append(text)
-    for chunk in candidates:
-        for match in re.finditer(r"\{", chunk):
-            try:
-                obj, _ = decoder.raw_decode(chunk, match.start())
-            except ValueError:
-                continue
-            if isinstance(obj, dict):
-                return obj
-    raise ValueError("no JSON object found")
+    last, pos = None, 0
+    while (start := text.find("{", pos)) != -1:
+        try:
+            obj, end = decoder.raw_decode(text, start)
+        except ValueError:
+            pos = start + 1
+            continue
+        if isinstance(obj, dict):
+            last = obj
+        pos = end
+    if last is None:
+        raise ValueError("no JSON object found")
+    return last
 
 
 def _is_score(x):
