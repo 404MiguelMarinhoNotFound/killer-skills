@@ -13,6 +13,7 @@ BRIEF = {
     "evidence": [{"claim": "Finance needs ad-hoc SQL joins", "source": "user"}],
     "constraints": ["Launch in 8 weeks"],
     "stakes": "Hard to migrate once live",
+    "research": "both",
     "criteria": [
         {"id": "fit", "name": "Data model fit", "weight": 0.6, "why": "reporting needs joins"},
         {"id": "ops", "name": "Operational load", "weight": 0.4, "why": "small team"},
@@ -33,14 +34,14 @@ def role_report(role):
         ],
         "surprise": "s",
         "confidence": "medium",
-        "evidence": ["Finance needs joins"],
+        "evidence": ["Brief: Finance needs ad-hoc SQL joins", "Source: https://example.com/docs"],
     }
 
 
 def _ledger(option):
     return [
         {"option": option, "kind": kind, "claim": f"{kind} {i} for {option}",
-         "evidence": "brief", "severity": 3, "likelihood": 3}
+         "evidence": "Brief: stated by the user", "severity": 3, "likelihood": 3}
         for kind in ("pro", "con") for i in (1, 2)
     ]
 

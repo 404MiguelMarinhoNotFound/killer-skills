@@ -13,6 +13,9 @@ SINGLE_DECISIONS = ("go", "no-go", "conditional-go")
 RESULT_KEYS = ("title", "brief", "precommit", "roster", "reports", "analyst", "ledger", "scores",
                "dissent", "blind_spots", "drift", "verdict", "first_step", "confidence", "unknowns")
 ROLE_KEYS = ("role", "position", "reasoning", "per_option", "surprise", "confidence", "evidence")
+RESEARCH = ("online", "repo", "both", "none")
+COUNCIL_TAGS = ("Brief:", "Source:", "Mechanism:", "Knowledge:")
+ANALYST_TAGS = ("Brief:", "Mechanism:", "Knowledge:", "Supervisor:")
 
 
 def extract_json(text):
@@ -84,6 +87,8 @@ def validate_brief(brief):
             e.append("single mode: option B must be {\"id\": \"B\", \"name\": \"Status quo\"}")
     if mode == "multi" and len(options) < 2:
         e.append("multi mode needs at least 2 options")
+    if "research" in brief and brief["research"] not in RESEARCH:
+        e.append(f"brief.research must be one of {RESEARCH}")
     if not isinstance(brief.get("context", ""), str):
         e.append("brief.context must be a string")
     if not _is_text_list(brief.get("constraints", [])):
@@ -118,6 +123,10 @@ def validate_role_report(report, option_ids):
         e.append(f"{role}: reasoning must be a list of 1-3 strings")
     if not _is_text_list(report["evidence"], allow_empty=False):
         e.append(f"{role}: evidence must be a non-empty list of strings")
+    else:
+        for item in report["evidence"]:
+            if not item.strip().startswith(COUNCIL_TAGS):
+                e.append(f"{role}: evidence must start with one of {', '.join(COUNCIL_TAGS)}: {item[:60]}")
     if report["confidence"] not in CONFIDENCE:
         e.append(f"{role}: confidence must be low, medium or high")
     per_option = report["per_option"]
@@ -179,6 +188,8 @@ def validate_analyst_report(report, option_ids, criterion_ids):
         e += _check_ledger_item(item, option_ids, "analyst")
         if not _is_text(item.get("evidence")):
             e.append(f"analyst: ledger item without evidence: {item.get('claim')}")
+        elif not item["evidence"].strip().startswith(ANALYST_TAGS):
+            e.append(f"analyst: ledger evidence tag must be one of {', '.join(ANALYST_TAGS)}: {item.get('claim')}")
     for opt in option_ids:
         for kind in ("pro", "con"):
             n = sum(1 for i in ledger if i.get("option") == opt and i.get("kind") == kind)
