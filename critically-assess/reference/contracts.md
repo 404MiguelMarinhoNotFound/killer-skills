@@ -13,7 +13,7 @@ Every file lives in the run directory `.critically-assess/runs/<YYYYMMDD-HHMMSS>
     {"id": "B", "name": "Short name", "description": "..."}
   ],
   "context": "What the council needs to know about the situation",
-  "evidence": [{"claim": "A fact you will rely on", "source": "URL, file path or 'user'"}],
+  "evidence": [{"claim": "A fact you will rely on", "source": "URL, file path, 'user' or 'general knowledge (unverified)'"}],
   "constraints": ["Hard limits: time, budget, team, tech"],
   "stakes": "Why a wrong call is costly, and how hard it is to reverse",
   "criteria": [

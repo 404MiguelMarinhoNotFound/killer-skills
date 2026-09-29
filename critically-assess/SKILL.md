@@ -19,14 +19,17 @@ You are the supervisor. You research, write one neutral brief, commit to your ow
 ### 1. Detect the mode
 - One idea, plan or proposal: mode `single`. Option A is the idea, option B is "Status quo".
 - Two or more alternatives: mode `multi`. Label them A, B, C in the order the user gave them.
-- If there is nothing concrete to assess, ask one clarifying question. Otherwise do not ask anything: there is no approval step, and the brief is shown in the report instead.
+- If there is nothing concrete to assess, ask one clarifying question. Apart from that and the research question in step 2, do not ask anything: there is no approval step, and ### 2. Ask whether to research, then research
+Research is optional and the user decides. Ask one question with the `AskUserQuestion` tool: "Do you want me to search online for relevant facts or similar approaches, gather knowledge from this repo to pass to the council, or both? Or are these options hypothetical, so I should work only from what you've told me?" Offer four choices: `Online`, `Repo`, `Both`, `Neither: hypothetical`. Put first, marked recommended, the choice that fits: `Both` when the options are real products or code in this repo, `Online` for real products outside it, `Repo` for internal code choices, `Neither` for personal or conceptual questions. If you cannot ask (for example in a non-interactive run), treat the answer as `Neither` and add "no research was done" to `unknowns`.
 
-### 2. Research it yourself
-Collect only what can change the assessment:
-- Files or links the user attached or mentioned.
-- For codebase questions, send broad scans to the built-in `Explore` subagent, then read the key files it points to yourself.
-- For facts about the outside world (prices, limits, benchmarks, current state), use WebSearch and WebFetch.
-Record the source of every fact you plan to rely on. Stop once the options, constraints and stakes are clear.
+Then gather only what the user chose, and only what can change the assessment:
+- `Repo`: files the user attached or mentioned, and the files that bear on the options. Send broad scans to the built-in `Explore` subagent, then read the key files it points to yourself.
+- `Online`: current facts that decide the case (prices, limits, maintenance status, known failure stories, how others solved the same problem), using WebSearch and WebFetch.
+- `Neither`: use only the user's message and files they attached.
+
+Record the source of every fact you rely on. A fact you did not check gets the source `general knowledge (unverified)`, never a document name you did not open. Stop once the options, constraints and stakes are clear.
+
+ptions, constraints and stakes are clear.
 
 ### 3. Write the brief
 Create the run directory with one Bash command, using the real clock rather than a made-up time: `D=".critically-assess/runs/$(date +%Y%m%d-%H%M%S)-<slug>"; mkdir -p "$D/reports" && realpath "$D"`, where `<slug>` is 2-5 lowercase words joined by hyphens (letters, digits and hyphens only). If that command is blocked, run `date +%Y%m%d-%H%M%S` on its own and build the folder name from its output; never invent the timestamp. Copy the printed absolute path exactly and use it as `<run_dir>` for every later write and command; never retype it from memory. Read `<SKILL_DIR>/reference/contracts.md` and write `brief.json`. Derive 3 to 6 criteria from what the user is trying to achieve and what is at stake, weight them, and justify each weight in one line. Keep the brief neutral.
