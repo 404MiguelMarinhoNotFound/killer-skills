@@ -13,9 +13,10 @@ Every file lives in the run directory `.critically-assess/runs/<YYYYMMDD-HHMMSS>
     {"id": "B", "name": "Short name", "description": "..."}
   ],
   "context": "What the council needs to know about the situation",
-  "evidence": [{"claim": "A fact you will rely on", "source": "URL, file path or 'user'"}],
+  "evidence": [{"claim": "A fact you will rely on", "source": "URL, file path, 'user' or 'general knowledge (unverified)'"}],
   "constraints": ["Hard limits: time, budget, team, tech"],
   "stakes": "Why a wrong call is costly, and how hard it is to reverse",
+  "research": "both",
   "criteria": [
     {"id": "fit", "name": "Readable name", "weight": 0.4, "why": "Why it deserves this weight for this user"}
   ]
@@ -25,8 +26,11 @@ Every file lives in the run directory `.critically-assess/runs/<YYYYMMDD-HHMMSS>
 - Single mode: exactly two options. `A` is the idea; `B` is `{"id": "B", "name": "Status quo", "description": "Keep doing what happens today"}`.
 - Use 3 to 6 criteria. A weight is any positive number; the scripts normalize them.
 - Keep it neutral. No adjectives that favour an option, no hint of your own view.
+- `research` records the user's answer in step 2 (`online`, `repo`, `both` or `none`). It sets what council voices may look up; the analyst always works from the brief alone.
 
-## precommit.json (step 4)
+## precommit.json (step 4, sealed until step 7)
+
+Written first to `${TMPDIR:-/tmp}/critically-assess-sealed/<run-id>.json`, outside the working directory, and moved into the run folder only after every council reply is saved.
 
 ```json
 {"position": "Your view before the council", "reasons": ["first", "second", "third"], "main_risk": "The biggest risk in your own view"}
@@ -34,7 +38,7 @@ Every file lives in the run directory `.critically-assess/runs/<YYYYMMDD-HHMMSS>
 
 ## reports/<role>.raw.txt (step 7)
 
-The subagent's reply, saved verbatim. The file name is the role id; `validate.py` overwrites the `role` field with it. `scripts/validate.py` turns it into `reports/<role>.json`. Council roles follow `roles/_contract.md`; the analyst follows its own contract in `roles/analyst.md`.
+The subagent's reply, saved verbatim. The file name is the role id; `validate.py` overwrites the `role` field with it. Every council `evidence` item must start with `Brief:`, `Source:`, `Mechanism:` or `Knowledge:`; analyst ledger evidence with `Brief:`, `Mechanism:`, `Knowledge:` or `Supervisor:`. `scripts/validate.py` turns it into `reports/<role>.json`. Council roles follow `roles/_contract.md`; the analyst follows its own contract in `roles/analyst.md`.
 
 ## result.json (step 8)
 

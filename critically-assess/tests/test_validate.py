@@ -213,3 +213,30 @@ def test_result_brief_is_validated():
 ])
 def test_result_fields_the_report_reads_are_required(mutate):
     assert _result_with(mutate)
+
+
+# --- evidence tags and the research setting -------------------------------------------
+
+def test_role_evidence_must_carry_a_known_tag():
+    report = sample_run.role_report("contrarian")
+    report["evidence"] = ["Finance needs joins"]
+    assert any("evidence" in e and "Brief:" in e for e in validate.validate_role_report(report, OPTS))
+    for tag in ("Brief:", "Source:", "Mechanism:", "Knowledge:"):
+        report["evidence"] = [f"{tag} something concrete"]
+        assert validate.validate_role_report(report, OPTS) == []
+
+
+def test_analyst_evidence_must_carry_a_known_tag():
+    analyst = copy.deepcopy(sample_run.ANALYST)
+    analyst["ledger"][0]["evidence"] = "trust me"
+    assert any("evidence tag" in e for e in validate.validate_analyst_report(analyst, OPTS, CRITS))
+    analyst["ledger"][0]["evidence"] = "Supervisor: written by the supervisor"
+    assert validate.validate_analyst_report(analyst, OPTS, CRITS) == []
+
+
+def test_brief_research_setting_is_optional_but_checked():
+    brief = copy.deepcopy(sample_run.BRIEF)
+    brief.pop("research")
+    assert validate.validate_brief(brief) == []
+    brief["research"] = "everything"
+    assert any("research" in e for e in validate.validate_brief(brief))

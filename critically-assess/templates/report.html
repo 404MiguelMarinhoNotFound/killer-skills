@@ -103,13 +103,14 @@ p.append(el('p', 'Before the council: ' + R.precommit.position, 'muted'), el('p'
 const c = section('Council');
 R.reports.forEach(r => {
   const det = el('details');
-  det.append(el('summary', `${r.role} · ${r.confidence}`), el('p', r.position), list(r.reasoning), el('p', 'Surprise: ' + r.surprise, 'muted'));
+  det.append(el('summary', `${r.role} · ${r.confidence}`), el('p', r.position), list(r.reasoning), el('p', 'Surprise: ' + r.surprise, 'muted'),
+    el('h4', 'Evidence'), list(r.evidence));
   c.append(det);
 });
 
 const b = section('Brief & unknowns');
 const bd = el('details');
-bd.append(el('summary', R.brief.question), el('p', R.brief.context), el('h4', 'Constraints'), list(R.brief.constraints),
+bd.append(el('summary', R.brief.question), el('p', R.brief.context), el('p', 'Research: ' + (R.brief.research || 'not recorded'), 'muted'), el('h4', 'Constraints'), list(R.brief.constraints),
   el('h4', 'Criteria'), list(R.brief.criteria.map(x => `${x.name}: ${x.why}`)), el('h4', 'Unknowns'), list(R.unknowns));
 b.append(bd);
 </script>
