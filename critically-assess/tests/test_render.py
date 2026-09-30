@@ -43,3 +43,11 @@ def test_main_refuses_an_invalid_result(run_dir, capsys):
         render.main(run_dir)
     assert "exactly one score" in capsys.readouterr().out
     assert not (run_dir / "report.html").exists()
+
+
+def test_main_embeds_role_summaries_without_touching_result_json(run_dir):
+    before = (run_dir / "result.json").read_text(encoding="utf-8")
+    render.main(run_dir)
+    html = (run_dir / "report.html").read_text(encoding="utf-8")
+    assert '"role_catalog"' in html and "The Contrarian" in html
+    assert (run_dir / "result.json").read_text(encoding="utf-8") == before

@@ -1,6 +1,7 @@
 ---
 id: outsider
 name: The Outsider
+summary: Reads the brief with no inside knowledge and flags jargon, unstated assumptions and claims that don't convince.
 model: sonnet
 tension_with: []
 use_when: the result will be seen, used, bought or maintained by other people

@@ -3,10 +3,12 @@ import json
 import sys
 from pathlib import Path
 
+import role_library
 import scoring
 import validate
 
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "report.html"
+ROLES_DIR = Path(__file__).resolve().parent.parent / "roles"
 TOKEN = "__RESULT_JSON__"
 
 
@@ -51,7 +53,9 @@ def main(run_dir):
         print("\n".join(f"ERROR: {p}" for p in problems))
         sys.exit(1)
     out = run / "report.html"
-    out.write_text(render_html(result, TEMPLATE.read_text(encoding="utf-8")), encoding="utf-8")
+    # Role names and one-line summaries come from the role files, so the report never drifts from the library.
+    page_data = {**result, "role_catalog": role_library.catalog(ROLES_DIR)}
+    out.write_text(render_html(page_data, TEMPLATE.read_text(encoding="utf-8")), encoding="utf-8")
     print(terminal_summary(result))
     print(f"\nReport: {out.resolve()}")
 

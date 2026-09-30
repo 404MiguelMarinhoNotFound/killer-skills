@@ -204,7 +204,14 @@
   .council { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 16px; align-items: start; }
   .role-head { display: flex; justify-content: space-between; align-items: center; gap: 10px 16px; margin-bottom: 10px; flex-wrap: wrap; }
   .role-name { font: 500 20px/1.2 var(--serif); }
+  .role-summary { font-size: 14px; color: var(--ink-2); margin: 0 0 6px; }
   .role-why { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+  .role-why strong { font-weight: 600; color: var(--ink-2); }
+  .who { margin-top: 22px; border-top: 1px solid var(--line); }
+  .who > summary { font-size: 14px; color: var(--ink-2); }
+  .who ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 4px 28px; padding-bottom: 8px; }
+  .who li { padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); }
+  .who li strong { display: block; color: var(--ink); font-weight: 600; }
   .role-position { margin: 0 0 12px; }
   details { border-top: 1px solid var(--line); }
   details > summary { list-style: none; cursor: pointer; padding: 12px 0; font: 500 14px var(--sans); color: var(--ink-2); display: flex; justify-content: space-between; align-items: center; }
@@ -293,7 +300,9 @@
   const txt = s => document.createTextNode(s == null ? '' : String(s));
   const asList = x => (Array.isArray(x) ? x : x == null ? [] : [x]).map(String);
   const titleCase = id => String(id || '').split(/[-_\s]+/).map(w => w ? w[0].toUpperCase() + w.slice(1) : w).join(' ');
-  const roleName = id => id === 'first-principles' ? 'First Principles' : titleCase(id);
+  const CATALOG = R.role_catalog || {};
+  const roleName = id => CATALOG[id] && CATALOG[id].name ? String(CATALOG[id].name).replace(/^The\s+/, '') : (id === 'first-principles' ? 'First Principles' : titleCase(id));
+  const roleSummary = id => (CATALOG[id] && CATALOG[id].summary) || '';
 
   const ICONS = {
     check: 'M4 10.5l4 4 8-9',
@@ -402,6 +411,15 @@
     ['missed', 'Blind spots'], ['drift', 'Supervisor drift'], ['council', 'Council'], ['brief', 'Brief & unknowns']];
   const toc = el('nav', { cls: 'toc', attrs: { 'aria-label': 'Sections' } });
   for (const [id, label] of tocTargets) toc.append(el('a', { text: label, attrs: { href: '#' + id } }));
+  const rosterIds = (R.roster || []).map(r => r.role);
+  if (rosterIds.length) {
+    const models = Object.fromEntries((R.roster || []).map(r => [r.role, r.model]));
+    header.append(el('details', { cls: 'who' },
+      el('summary', { text: `Who was on the council (${rosterIds.length})` }),
+      el('ul', { cls: 'clean' }, rosterIds.map(id => el('li', {},
+        el('strong', { text: roleName(id) + (models[id] ? ` · ${models[id]}` : '') }),
+        txt(roleSummary(id) || 'No description in the role library.'))))));
+  }
   header.append(toc);
 
   /* ---------- Verdict ---------- */
@@ -621,7 +639,8 @@
     const card = el('article', { cls: 'card' },
       el('div', { cls: 'role-head' }, el('div', { cls: 'role-name', text: roleName(r.role) }),
         el('div', { cls: 'chips' }, chip(r.confidence || '?', cTone), meta.model ? chip(meta.model) : null)),
-      meta.why ? el('p', { cls: 'role-why', text: meta.why }) : null,
+      roleSummary(r.role) ? el('p', { cls: 'role-summary', text: roleSummary(r.role) }) : null,
+      meta.why ? el('p', { cls: 'role-why' }, el('strong', { text: 'On this council: ' }), txt(meta.why)) : null,
       el('p', { cls: 'role-position', text: r.position }));
     const reasoning = el('details', {}, el('summary', { text: 'Reasoning' }),
       el('ul', { cls: 'clean reasoning' }, asList(r.reasoning).map(x => el('li', { cls: /^flip:/i.test(x) ? 'flip' : '', text: x }))),

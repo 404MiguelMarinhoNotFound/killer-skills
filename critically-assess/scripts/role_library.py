@@ -2,7 +2,7 @@
 import sys
 from pathlib import Path
 
-REQUIRED_KEYS = {"id", "name", "model", "tension_with", "use_when", "skip_when"}
+REQUIRED_KEYS = {"id", "name", "summary", "model", "tension_with", "use_when", "skip_when"}
 ALLOWED_MODELS = {"opus", "sonnet"}
 REQUIRED_SECTIONS = ("## Lens", "## You must", "## You must not")
 
@@ -27,6 +27,11 @@ def load_roles(roles_dir):
     return [parse_role(p) for p in sorted(Path(roles_dir).glob("*.md")) if not p.name.startswith("_")]
 
 
+def catalog(roles_dir):
+    """Map each role id to its display name and one-line summary, for the report."""
+    return {r["id"]: {"name": r.get("name", r["id"]), "summary": r.get("summary", "")} for r in load_roles(roles_dir)}
+
+
 def check_roles(roles):
     errors = []
     ids = [r.get("id") for r in roles]
@@ -37,6 +42,8 @@ def check_roles(roles):
         missing = REQUIRED_KEYS - r.keys()
         if missing:
             errors.append(f"{rid}: missing keys {sorted(missing)}")
+        if "summary" in r and not str(r["summary"]).strip():
+            errors.append(f"{rid}: summary is empty")
         if r.get("model") not in ALLOWED_MODELS:
             errors.append(f"{rid}: model must be opus or sonnet, got {r.get('model')}")
         for other in r.get("tension_with", []):
@@ -55,6 +62,7 @@ if __name__ == "__main__":
     for r in roles:
         tension = ", ".join(r["tension_with"]) or "-"
         print(f"{r['id']:<17} {r['model']:<7} tension: {tension:<17} use: {r['use_when']} | skip: {r['skip_when']}")
+        print(f"{'':17} {r.get('summary', '')}")
     problems = check_roles(roles)
     for p in problems:
         print(f"ERROR: {p}")

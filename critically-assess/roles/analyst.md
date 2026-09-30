@@ -1,6 +1,7 @@
 ---
 id: analyst
 name: The Analyst
+summary: Neutral scorer: builds a balanced pros and cons ledger and scores every option on every criterion, without picking a winner.
 model: opus
 tension_with: []
 use_when: always
