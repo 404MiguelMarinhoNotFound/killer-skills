@@ -57,7 +57,7 @@ The subagent's reply, saved verbatim. The file name is the role id; `validate.py
   "dissent": {"role": "expansionist", "position": "The strongest view you did not adopt", "why_rejected": "..."},
   "blind_spots": ["Something no voice raised"],
   "drift": "How and why the verdict moved from precommit.json, or 'None' plus the reason",
-  "verdict": {"decision": "A", "summary": "Two sentences at most", "conditions": []},
+  "verdict": {"decision": "A", "summary": "The decision and its main reason, explained in plain words", "conditions": []},
   "first_step": "One concrete action",
   "confidence": "medium",
   "unknowns": ["What would change the verdict if it turned out differently"]

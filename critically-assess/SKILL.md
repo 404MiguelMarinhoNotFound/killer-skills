@@ -21,7 +21,9 @@ Once this skill is running, finish the whole workflow below. If partway through 
 ### 1. Detect the mode
 - One idea, plan or proposal: mode `single`. Option A is the idea, option B is "Status quo".
 - Two or more alternatives: mode `multi`. Label them A, B, C in the order the user gave them.
-- If there is nothing concrete to assess, ask one clarifying question. Apart from that and the research question in step 2, do not ask anything: there is no approval step, and ### 2. Ask whether to research, then research
+- If there is nothing concrete to assess, ask one clarifying question. Apart from that and the research question in step 2, do not ask anything: there is no approval step, and the brief is shown in the report instead.
+
+### 2. Ask whether to research, then research
 Research is optional and the user decides. If the user already said what research they want, use that and don't ask. Otherwise ask one question with the `AskUserQuestion` tool: "Do you want me to search online for relevant facts or similar approaches, gather knowledge from this repo to pass to the council, or both? Or are these options hypothetical, so I should work only from what you've told me?" Offer four choices: `Online`, `Repo`, `Both`, `Neither: hypothetical`. Put first, marked recommended, the choice that fits: `Both` when the options are real products or code in this repo, `Online` for real products outside it, `Repo` for internal code choices, `Neither` for personal or conceptual questions. If you cannot ask (for example in a non-interactive run), treat the answer as `Neither` and add "no research was done" to `unknowns`. The answer also sets what the council may look up in step 6, and it goes into the brief as `research`: `online`, `repo`, `both` or `none`.
 
 Then gather the shared facts every voice should start from, within what the user chose, and only what can change the assessment. Each council voice can look up more for its own lens later, so you do not need to cover everything:
@@ -31,13 +33,11 @@ Then gather the shared facts every voice should start from, within what the user
 
 Record the source of every fact you rely on. A fact you did not check gets the source `general knowledge (unverified)`, never a document name you did not open. Stop once the options, constraints and stakes are clear.
 
-ptions, constraints and stakes are clear.
-
 ### 3. Write the brief
-Create the run directory with one Bash command, using the real clock rather than a made-up time: `D=".critically-assess/runs/$(date +%Y%m%d-%H%M%S)-<slug>"; mkdir -p "$D/reports" && realpath "$D"`, where `<slug>` is 2-5 lowercase words joined by hyphens (letters, digits and hyphens only). If that command is blocked, run `date +%Y%m%d-%H%M%S` on its own and build the folder name from its output; never invent the timestamp. Copy the printed absolute path exactly and use it as `<run_dir>` for every later write and command; never retype it from memory. Read `<SKILL_DIR>/reference/contracts.md` and write `brief.json`. Derive 3 to 6 criteria from what the user is trying to achieve and what is at stake, weight them, and justify each weight in one line. Keep the brief neutral.
+Create the run directory with one Bash command, using the real clock rather than a made-up time: `D=".critically-assess/runs/$(date +%Y%m%d-%H%M%S)-<slug>"; mkdir -p "$D/reports" && realpath "$D"`, where `<slug>` is 2-5 lowercase words joined by hyphens (letters, digits and hyphens only). If that command is blocked, run `date +%Y%m%d-%H%M%S` on its own and build the folder name from its output; never invent the timestamp. Copy the printed absolute path exactly and use it as `<run_dir>` for every later write and command; never retype it from memory. Read `<SKILL_DIR>/reference/contracts.md` and write `brief.json`. Derive 3 to 6 criteria from what the user is trying to achieve and what is at stake, weight them, and justify each weight in one line. Keep the brief neutral. The report shows the brief to the reader, so write it the way "Write for the reader" in step 8 describes, not as notes.
 
 ### 4. Commit to your own view
-Before launching anyone, write your position, your three strongest reasons and your main risk to a sealed file outside the working directory, so a council voice that reads the repository cannot find it: `${TMPDIR:-/tmp}/critically-assess-sealed/<run-id>.json`, where `<run-id>` is the run folder's name. Print its absolute path and reuse it exactly. No subagent ever sees it. It exists so your synthesis cannot quietly mirror the council.
+Before launching anyone, write your position, your three strongest reasons and your main risk to a sealed file outside the working directory, so a council voice that reads the repository cannot find it: `${TMPDIR:-/tmp}/critically-assess-sealed/<run-id>.json`, where `<run-id>` is the run folder's name. Print its absolute path and reuse it exactly. No subagent ever sees it. It exists so your synthesis cannot quietly mirror the council. The report later shows this view next to where you ended up, so write it in full sentences a reader can follow.
 
 ### 5. Pick the roster
 Run `python "<SKILL_DIR>/scripts/role_library.py"` to list the library. Pick 3 to 5 council roles that fit this topic, plus `analyst`, who is always included. Favour roles that pull against each other (`tension_with`). For each pick, note one line on why it is on this council and which model it runs on: the role's `model` unless you have a reason to override.
@@ -51,7 +51,7 @@ Send one message containing one subagent call per roster role (the `Agent` tool;
    - `online`: "You may search the web if your lens needs a fact the brief does not settle. You do not have to. Do not read other files."
    - `repo`: "You may read files in the repository at `<working_dir>` if your lens needs a fact the brief does not settle. You do not have to. Do not search the web."
    - `none`, and always for the analyst: "Work from the brief alone: do not search the web or read other files."
-4. "Put exactly `<id>` in the `role` field. Never read `.critically-assess/` apart from your brief, and never edit, write or run anything. Where you are missing something you need, say so and name the assumption you made. End your reply with the JSON object; nothing after it is read. Before you answer, think the problem through from your role's angle."
+4. "Put exactly `<id>` in the `role` field. Never read `.critically-assess/` apart from your brief, and never edit, write or run anything. Where you are missing something you need, say so and name the assumption you made. End your reply with the JSON object; nothing after it is read. Before you answer, think the problem through from your role's angle. Then reread each item you wrote as a reader who sees only that item, and unpack any that would not make sense alone."
 
 Never include the conversation, your research notes or the sealed pre-commitment. If the tool rejects the `model` parameter, relaunch without it and record the model as `inherited`.
 
@@ -81,7 +81,10 @@ Read every report, then write `result.json` as described in `reference/contracts
 Everything in `result.json` ends up in the report, and the reader never saw the brief, the council's replies or your notes. Rewrite what you take from the reports instead of pasting it.
 - Call each option by its name. The letters A, B, C are ids for the files only.
 - Leave out this skill's own vocabulary: brief, pre-commitment, council voice, lens, roster, step numbers, file names. Say what you mean ("before hearing the council, I leaned towards...").
-- One idea per sentence. Aim for 15 to 20 words and never pass 35. Split a sentence rather than chain it with semicolons or colons.
+- Explain, don't compress. There is no word limit: length follows the idea. A simple point gets a short sentence, and that sentence must still be complete and clear. A big idea gets as many words and sentences as it takes to explain.
+- Unpack each concept instead of naming it. A reader follows a claim when they can see three things: what the thing is, what happens and through which chain of events, and why that matters for this user. A string of nouns ("migration risk", "ops burden", "lock-in") only names a concept; write out what it means here.
+- Make every item stand alone. The report shows each pro, con, score reason, blind spot and unknown on its own, so the reader cannot see the sentence before it. Name the subject every time, never open with "It", "This", "That" or "They", and never point to "above" or "the same".
+- Write sentences, not notes: no arrows, slashes, dropped verbs or chains of clauses joined by semicolons. Where ideas connect, say how ("because", "so", "which means").
 - Put the point first, then the reason. Use the active voice and everyday words.
 - Spell out an acronym the first time, as in "point-in-time recovery (PITR)", unless the user used it.
 - Give numbers with their unit and what they mean: "about 3 weeks of work for the 3-person team".
@@ -89,8 +92,12 @@ Everything in `result.json` ends up in the report, and the reader never saw the 
 Two rewrites showing the pattern (the topic is only an illustration):
 - Before: "None: I precommitted to B on cost and hiring lead time; the council agreed." After: "No change. Before hearing the council, I leaned towards hiring a contractor, and every role agreed."
 - Before: "Adds a broker (RabbitMQ -> Erlang runtime, clustering, TLS certs) to a stack promising 'one database and nothing else'; not in staging; an outage stops checkout at step 3." After: "Adding RabbitMQ means running a second system next to the database. If it goes down, customers cannot check out."
+- Before: "Lower ops burden vs. the incumbent; migration risk real." After: "With the managed service, nobody on the team has to patch or restart servers any more. The cost is the move itself: two years of order data have to be copied over without taking the shop offline."
 
-Run `validate.py` again and fix `result.json` until it prints OK. It also checks the writing: it rejects long or packed sentences, option letters, internal terms and unexplained acronyms in `result.json`, and lists the same problems in the council's replies as `WARN` lines, so you know what to rewrite when you carry that text over.
+#### Coherence pass
+Before validating, read `result.json` once more as a newcomer who knows only the user's question. Take each reader-facing string on its own: the verdict, conditions, first step, drift, dissent, every ledger claim, every score reason, every blind spot and unknown. For each, ask: could this reader say back, in their own words, what it claims and why it matters? If not, the fix is almost never to cut or split. Find the concept the sentence leans on, and explain it: name the thing, say what happens, say why it matters here. Check the whole report reads as one story too: the verdict, the pros and cons and the dissent should use the same names for the same things.
+
+Then run `validate.py` again and fix `result.json` until it prints OK. It also catches some writing problems: note-style text, items that open by pointing at an earlier sentence, option letters, internal terms and unexplained acronyms in `result.json`. It lists the same problems in the council's replies as `WARN` lines, so you know what to unpack when you carry that text over. Passing it does not make a sentence clear; the coherence pass does.
 
 ### 9. Render and answer
 Run `python "<SKILL_DIR>/scripts/render.py" <run_dir>`. It writes `report.html`, prints a short summary, and opens the report in the user's default browser when the machine has one (add `--no-open` if the user asked not to). Reply in chat with that summary, written the same plain way. If it printed "Opened in your default browser", say so; otherwise give the `file://` link it printed so the user can open it. Do not paste the full report into chat.

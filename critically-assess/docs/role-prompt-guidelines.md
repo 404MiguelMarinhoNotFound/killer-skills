@@ -61,7 +61,7 @@ Role-played agents drift toward early consensus and moderate positions even when
 
 ## 14. Return a distilled result
 A subagent may do a lot of work, but it should hand back a compact, structured summary. That keeps the supervisor's context clean and makes outputs comparable. [CE, CC-docs]
-- **Here:** return one JSON object of under 300 words of content, with fixed fields.
+- **Here:** return one JSON object with fixed fields. Distilled means no padding or repetition, not compressed wording: the council text is shown to the user as written, so each item gets the words it needs to be clear on its own. An earlier 300-word budget pushed voices into note-style shorthand and was removed.
 
 ## 15. Evaluate early on real cases
 Start with a small set of realistic cases, judge outputs against a rubric (an LLM judge plus a human look), and treat prompt wording as the main lever. Small phrasing changes move behaviour a lot. [MA]
