@@ -5,114 +5,659 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Critical assessment</title>
 <style>
-  :root { --bg:#fff; --fg:#1a1a1a; --muted:#6b6b6b; --line:#e6e6e6; --accent:#2f6fed; --best:#eef4ff; }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#141414; --fg:#ececec; --muted:#9a9a9a; --line:#2a2a2a; --accent:#7aa2ff; --best:#1c2533; }
+  /* Tokens. Warm monochrome, colour only where it carries meaning. */
+  :root {
+    color-scheme: light;
+    --canvas: #f7f6f3;
+    --surface: #ffffff;
+    --surface-2: #fbfbfa;
+    --ink: #1f2124;
+    --ink-2: #4a4b4d;
+    --muted: #787774;
+    --line: #e7e5e0;
+    --line-strong: #d6d3cc;
+    --accent: #2a78d6;
+    --accent-ink: #1f5fae;
+    --bar-rest: #cfccc4;
+    --good-bg: #edf3ec;  --good-ink: #2f6a33;
+    --bad-bg: #fdebec;   --bad-ink: #9f2f2d;
+    --warn-bg: #fbf3db;  --warn-ink: #7d5500;
+    --info-bg: #e1f3fe;  --info-ink: #1f6c9f;
+    --neutral-bg: #f1f0ec; --neutral-ink: #57564f;
+    --violet-bg: #efeafb; --violet-ink: #5b45a8;
+    --heat-1: #eef4fd; --heat-2: #cde2fb; --heat-3: #86b6ef; --heat-4: #3987e5; --heat-5: #1c5cab;
+    --shadow-hover: 0 2px 10px rgba(20, 20, 20, 0.05);
+    --serif: "Iowan Old Style", "Charter", "Source Serif Pro", "Palatino Linotype", Palatino, Georgia, serif;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --canvas: #111110; --surface: #1a1a19; --surface-2: #1f1f1d;
+      --ink: #f1f0ec; --ink-2: #c9c7c0; --muted: #9a9892;
+      --line: #2e2e2b; --line-strong: #3d3d39;
+      --accent: #3987e5; --accent-ink: #86b6ef; --bar-rest: #4a4945;
+      --good-bg: #1c2b1d; --good-ink: #8fd18f;
+      --bad-bg: #331c1c; --bad-ink: #f0a3a1;
+      --warn-bg: #332a14; --warn-ink: #f0c867;
+      --info-bg: #15293a; --info-ink: #8cc7f0;
+      --neutral-bg: #262624; --neutral-ink: #c3c2b7;
+      --violet-bg: #251f3d; --violet-ink: #b8acf2;
+      --heat-1: #243449; --heat-2: #184f95; --heat-3: #256abf; --heat-4: #3987e5; --heat-5: #86b6ef;
+      --shadow-hover: 0 2px 12px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --canvas: #111110; --surface: #1a1a19; --surface-2: #1f1f1d;
+    --ink: #f1f0ec; --ink-2: #c9c7c0; --muted: #9a9892;
+    --line: #2e2e2b; --line-strong: #3d3d39;
+    --accent: #3987e5; --accent-ink: #86b6ef; --bar-rest: #4a4945;
+    --good-bg: #1c2b1d; --good-ink: #8fd18f;
+    --bad-bg: #331c1c; --bad-ink: #f0a3a1;
+    --warn-bg: #332a14; --warn-ink: #f0c867;
+    --info-bg: #15293a; --info-ink: #8cc7f0;
+    --neutral-bg: #262624; --neutral-ink: #c3c2b7;
+    --violet-bg: #251f3d; --violet-ink: #b8acf2;
+    --heat-1: #243449; --heat-2: #184f95; --heat-3: #256abf; --heat-4: #3987e5; --heat-5: #86b6ef;
+    --shadow-hover: 0 2px 12px rgba(0, 0, 0, 0.35);
+  }
+
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--fg); font:15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width:820px; margin:0 auto; padding:40px 20px 80px; }
-  h1 { font-size:26px; margin:0 0 4px; }
-  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:36px 0 10px; }
-  h3 { font-size:16px; margin:14px 0 4px; } h4 { font-size:13px; margin:10px 0 2px; color:var(--muted); }
-  .muted { color:var(--muted); }
-  .card { border:1px solid var(--line); border-radius:10px; padding:4px 20px 12px; }
-  .decision { font-size:22px; font-weight:600; margin:4px 0; }
-  .wrap { overflow-x:auto; }
-  table { width:100%; border-collapse:collapse; }
-  th, td { text-align:left; padding:8px; border-bottom:1px solid var(--line); white-space:nowrap; }
-  tr.best td { background:var(--best); font-weight:600; }
-  .sliders { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:8px 24px; }
-  .sliders label { display:block; font-size:13px; }
-  input[type=range] { width:100%; accent-color:var(--accent); }
-  ul { padding-left:20px; margin:4px 0; }
-  details { border-bottom:1px solid var(--line); padding:8px 0; }
-  summary { cursor:pointer; font-weight:500; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font: 16px/1.6 var(--sans); }
+  main { max-width: 1000px; margin: 0 auto; padding: 56px 24px 96px; }
+  a { color: var(--accent-ink); text-underline-offset: 3px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* Header */
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 40px; }
+  .eyebrow { font: 600 11px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .theme-toggle { font: 500 13px var(--sans); color: var(--ink-2); background: var(--surface); border: 1px solid var(--line);
+    border-radius: 6px; padding: 7px 12px; cursor: pointer; min-height: 36px; transition: transform .15s var(--ease), border-color .2s; }
+  .theme-toggle:hover { border-color: var(--line-strong); }
+  .theme-toggle:active { transform: scale(.98); }
+  h1 { font: 500 clamp(32px, 5vw, 48px)/1.1 var(--serif); letter-spacing: -0.02em; margin: 12px 0 16px; text-wrap: balance; }
+  .question { font-size: 18px; color: var(--ink-2); max-width: 70ch; margin: 0 0 20px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--sans); letter-spacing: .06em; text-transform: uppercase;
+    padding: 6px 10px; border-radius: 999px; background: var(--neutral-bg); color: var(--neutral-ink); white-space: nowrap; }
+  .chip.good { background: var(--good-bg); color: var(--good-ink); }
+  .chip.bad { background: var(--bad-bg); color: var(--bad-ink); }
+  .chip.warn { background: var(--warn-bg); color: var(--warn-ink); }
+  .chip.info { background: var(--info-bg); color: var(--info-ink); }
+  .chip.violet { background: var(--violet-bg); color: var(--violet-ink); }
+  .chip svg { width: 12px; height: 12px; }
+  .toc { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 28px 0 0; padding: 14px 0 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .toc a { color: var(--muted); text-decoration: none; }
+  .toc a:hover { color: var(--ink); }
+
+  /* Sections and cards */
+  section { margin-top: 72px; scroll-margin-top: 24px; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+  h2 { font: 500 26px/1.2 var(--serif); letter-spacing: -0.01em; margin: 0; }
+  .section-note { color: var(--muted); font-size: 14px; margin: 0; }
+  h3 { font: 600 17px/1.35 var(--sans); margin: 0 0 6px; }
+  h4 { font: 600 11px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 20px 0 10px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 28px; transition: box-shadow .2s var(--ease); }
+  .card:hover { box-shadow: var(--shadow-hover); }
+  .muted { color: var(--muted); }
+  .grid { display: grid; gap: 16px; }
+  .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  ul.clean { list-style: none; padding: 0; margin: 0; }
+
+  /* Verdict */
+  .verdict { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 0; padding: 0; overflow: hidden; }
+  .verdict-main { padding: 32px; }
+  .verdict-side { padding: 32px; background: var(--surface-2); border-left: 1px solid var(--line); }
+  .decision { display: flex; align-items: center; gap: 14px; margin: 14px 0 12px; }
+  .decision-mark { flex: none; width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; }
+  .decision-mark svg { width: 22px; height: 22px; }
+  .decision-text { font: 500 clamp(28px, 4vw, 38px)/1.1 var(--serif); letter-spacing: -0.02em; }
+  .summary { font-size: 17px; color: var(--ink-2); margin: 0; max-width: 60ch; }
+  .conditions li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .conditions li:last-child { border-bottom: 0; }
+  .conditions svg { flex: none; width: 16px; height: 16px; margin-top: 4px; color: var(--warn-ink); }
+  .first-step { margin-top: 24px; padding: 16px 18px; border-left: 3px solid var(--accent); background: var(--info-bg); border-radius: 0 8px 8px 0; }
+  .first-step .label { font: 600 11px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--info-ink); margin-bottom: 8px; }
+  .first-step p { margin: 0; color: var(--ink); }
+  .meter { display: flex; gap: 4px; margin: 8px 0 6px; }
+  .meter span { height: 6px; flex: 1; border-radius: 3px; background: var(--line); }
+  .meter span.on { background: var(--accent); }
+  .stat { margin-bottom: 22px; }
+  .stat:last-child { margin-bottom: 0; }
+  .stat-label { font-size: 13px; color: var(--muted); }
+  .stat-value { font: 600 22px/1.25 var(--sans); }
+  .stat-sub { font-size: 13px; color: var(--ink-2); }
+
+  /* Scores */
+  .bars { display: grid; gap: 12px; margin-bottom: 28px; }
+  .bar-row { display: grid; grid-template-columns: minmax(90px, 200px) minmax(0, 1fr) 64px; align-items: center; gap: 14px; }
+  .bar-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { position: relative; height: 22px; }
+  .bar-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--line); }
+  .bar-fill { position: absolute; left: 0; top: 1px; bottom: 1px; width: 100%; background: var(--bar-rest); border-radius: 0 4px 4px 0;
+    transform-origin: left center; transition: transform .6s var(--ease), background-color .3s; }
+  .bar-row.lead .bar-fill { background: var(--accent); }
+  .bar-row.lead .bar-name { font-weight: 700; }
+  .bar-value { font: 600 15px var(--sans); font-variant-numeric: tabular-nums; text-align: right; }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); }
+  tr:last-child td { border-bottom: 0; }
+  th { font: 600 12px/1.3 var(--sans); color: var(--muted); background: var(--surface-2); vertical-align: bottom; min-width: 96px; max-width: 170px; }
+  th:first-child { min-width: 0; }
+  th .w { display: block; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+  td.opt { font-weight: 600; white-space: nowrap; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+  th:first-child { position: sticky; left: 0; z-index: 1; }
+  td.heat { text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 64px; cursor: help; }
+  td.total { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+  tr.lead td.opt::after { content: "Leads"; margin-left: 8px; font: 600 10px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 999px; background: var(--info-bg); color: var(--info-ink); vertical-align: 2px; }
+  .legend { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin: 10px 2px 0; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 18px; height: 10px; border-radius: 2px; }
+  .weights { margin-top: 28px; }
+  .weights-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 28px; }
+  .slider label { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+  .slider output { font-variant-numeric: tabular-nums; color: var(--muted); }
+  input[type=range] { width: 100%; accent-color: var(--accent); min-height: 28px; }
+  .btn { font: 500 13px var(--sans); color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 6px;
+    padding: 7px 12px; cursor: pointer; min-height: 34px; }
+  .btn:hover { background: var(--surface-2); }
+  .btn[disabled] { opacity: .45; cursor: default; }
+  .sensitivity { margin-top: 18px; display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--ink-2); }
+  .sensitivity svg { flex: none; width: 16px; height: 16px; margin-top: 3px; }
+
+  /* Pros and cons */
+  .option-card h3 { font: 500 22px/1.2 var(--serif); letter-spacing: -0.01em; }
+  .option-card .desc { color: var(--muted); font-size: 14px; margin: 0 0 4px; }
+  .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .pc-col h4 { display: flex; align-items: center; gap: 8px; }
+  .pc-col h4 i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+  .pc-item { padding: 12px 0; border-top: 1px solid var(--line); }
+  .pc-item p { margin: 0 0 8px; }
+  .impact { display: flex; align-items: center; gap: 10px; font: 500 12px var(--mono); color: var(--muted); flex-wrap: wrap; }
+  .impact-bar { width: 72px; height: 4px; border-radius: 2px; background: var(--line); position: relative; overflow: hidden; }
+  .impact-bar b { position: absolute; inset: 0 auto 0 0; border-radius: 2px; }
+  .by { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+  .by span { font: 500 11px var(--sans); color: var(--ink-2); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; }
+  .empty { color: var(--muted); font-size: 14px; padding: 12px 0; border-top: 1px solid var(--line); }
+
+  /* Dissent, blind spots, drift */
+  blockquote { margin: 0; font: italic 400 21px/1.45 var(--serif); color: var(--ink); }
+  .attribution { margin-top: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .reason { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink-2); }
+  ol.numbered { counter-reset: n; list-style: none; padding: 0; margin: 0; }
+  ol.numbered li { counter-increment: n; display: grid; grid-template-columns: 32px 1fr; gap: 8px; padding: 12px 0; border-top: 1px solid var(--line); }
+  ol.numbered li:first-child { border-top: 0; padding-top: 0; }
+  ol.numbered li::before { content: counter(n, decimal-leading-zero); font: 500 13px var(--mono); color: var(--muted); padding-top: 3px; }
+  .drift { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: stretch; }
+  .drift .arrow { display: grid; place-items: center; color: var(--muted); }
+  .drift .arrow svg { width: 22px; height: 22px; }
+
+  /* Council */
+  .council { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 16px; align-items: start; }
+  .role-head { display: flex; justify-content: space-between; align-items: center; gap: 10px 16px; margin-bottom: 10px; flex-wrap: wrap; }
+  .role-name { font: 500 20px/1.2 var(--serif); }
+  .role-why { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+  .role-position { margin: 0 0 12px; }
+  details { border-top: 1px solid var(--line); }
+  details > summary { list-style: none; cursor: pointer; padding: 12px 0; font: 500 14px var(--sans); color: var(--ink-2); display: flex; justify-content: space-between; align-items: center; }
+  details > summary::-webkit-details-marker { display: none; }
+  details > summary::after { content: "+"; font: 400 18px/1 var(--mono); color: var(--muted); }
+  details[open] > summary::after { content: "\2212"; }
+  .reasoning li { padding: 6px 0 6px 14px; position: relative; font-size: 15px; }
+  .reasoning li::before { content: ""; position: absolute; left: 0; top: 15px; width: 5px; height: 5px; border-radius: 1px; background: var(--line-strong); }
+  .reasoning li.flip { background: var(--warn-bg); border-radius: 6px; padding: 8px 10px 8px 14px; margin: 4px 0; }
+  .reasoning li.flip::before { background: var(--warn-ink); top: 17px; left: 4px; }
+  .evidence li { display: flex; gap: 10px; align-items: baseline; padding: 7px 0; font-size: 14px; border-top: 1px solid var(--line); }
+  .evidence li:first-child { border-top: 0; }
+  .evidence .chip { flex: none; min-width: 96px; justify-content: center; }
+  .evidence .text { min-width: 0; overflow-wrap: anywhere; }
+  .surprise { margin-top: 14px; font-size: 14px; color: var(--ink-2); }
+  .surprise strong { color: var(--ink); }
+
+  /* Brief */
+  .brief-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; }
+  dl { margin: 0; }
+  dt { font: 600 11px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 18px 0 8px; }
+  dt:first-child { margin-top: 0; }
+  dd { margin: 0; }
+  .src { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+  footer { margin-top: 88px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+  /* Motion */
+  .reveal { opacity: 0; transform: translateY(12px); transition: opacity .6s var(--ease), transform .6s var(--ease); }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { opacity: 1; transform: none; transition: none; }
+    .bar-fill, .card { transition: none; }
+  }
+
+  /* Small screens */
+  @media (max-width: 760px) {
+    main { padding: 32px 16px 72px; }
+    section { margin-top: 56px; }
+    .verdict { grid-template-columns: 1fr; }
+    .verdict-side { border-left: 0; border-top: 1px solid var(--line); }
+    .verdict-main, .verdict-side, .card { padding: 22px; }
+    .card.verdict { padding: 0; }
+    th { min-width: 84px; }
+    tr.lead td.opt::after { display: none; }
+    .grid-2, .grid-3, .pc, .brief-grid { grid-template-columns: 1fr; }
+    .drift { grid-template-columns: 1fr; }
+    .drift .arrow { transform: rotate(90deg); }
+    .bar-row { grid-template-columns: minmax(70px, 110px) minmax(0, 1fr) 48px; gap: 10px; }
+  }
+
+  /* Print: everything open, nothing interactive */
+  @media print {
+    body { background: #fff; color: #000; font-size: 12pt; }
+    main { max-width: none; padding: 0; }
+    .theme-toggle, .weights, .toc { display: none !important; }
+    .card { box-shadow: none !important; break-inside: avoid; }
+    section { margin-top: 28pt; break-inside: auto; }
+    .reveal { opacity: 1 !important; transform: none !important; }
+    details > summary::after { content: ""; }
+    a { color: #000; }
+  }
 </style>
 </head>
 <body>
-<main></main>
+<main id="report" aria-live="polite"></main>
 <script id="data" type="application/json">__RESULT_JSON__</script>
 <script>
-const R = JSON.parse(document.getElementById('data').textContent);
-const main = document.querySelector('main');
-const el = (tag, text, cls) => { const e = document.createElement(tag); if (text != null) e.textContent = text; if (cls) e.className = cls; return e; };
-const list = items => { const ul = el('ul'); [].concat(items ?? []).forEach(i => ul.append(el('li', String(i)))); return ul; };
-const section = (title, cls) => { const s = el('section', null, cls); s.append(el('h2', title)); main.append(s); return s; };
-const names = Object.fromEntries(R.brief.options.map(o => [o.id, o.name]));
+(() => {
+  const R = JSON.parse(document.getElementById('data').textContent);
+  const main = document.getElementById('report');
+  const brief = R.brief || {};
+  const options = brief.options || [];
+  const criteria = brief.criteria || [];
+  const scores = R.scores || [];
+  const names = Object.fromEntries(options.map(o => [o.id, o.name]));
 
-document.title = R.title;
-const modeLabel = R.brief.mode === 'single' ? 'Single idea vs status quo' : `${R.brief.options.length} options`;
-main.append(el('h1', R.title), el('p', `${modeLabel} · confidence ${R.confidence}`, 'muted'));
+  /* ---------- DOM helpers: every piece of data goes in as text, never as markup ---------- */
+  const el = (tag, opts = {}, ...kids) => {
+    const e = document.createElement(tag);
+    if (opts.cls) e.className = opts.cls;
+    if (opts.text != null) e.textContent = String(opts.text);
+    if (opts.attrs) for (const [k, v] of Object.entries(opts.attrs)) e.setAttribute(k, v);
+    for (const k of kids.flat(Infinity)) if (k != null) e.append(k);
+    return e;
+  };
+  const txt = s => document.createTextNode(s == null ? '' : String(s));
+  const asList = x => (Array.isArray(x) ? x : x == null ? [] : [x]).map(String);
+  const titleCase = id => String(id || '').split(/[-_\s]+/).map(w => w ? w[0].toUpperCase() + w.slice(1) : w).join(' ');
+  const roleName = id => id === 'first-principles' ? 'First Principles' : titleCase(id);
 
-const v = section('Verdict', 'card');
-v.append(el('p', names[R.verdict.decision] || R.verdict.decision, 'decision'), el('p', R.verdict.summary));
-if (R.verdict.conditions && R.verdict.conditions.length) v.append(el('h4', 'Conditions'), list(R.verdict.conditions));
-v.append(el('p', 'First step: ' + R.first_step));
+  const ICONS = {
+    check: 'M4 10.5l4 4 8-9',
+    cross: 'M5 5l10 10M15 5L5 15',
+    alert: 'M10 3l8 14H2L10 3zM10 8v4M10 14.5v.5',
+    arrow: 'M4 10h12M11 5l5 5-5 5',
+    flag: 'M5 17V3M5 4h9l-2 3 2 3H5',
+    scale: 'M10 3v14M4 17h12M4 7h12M4 7l-2 5h4l-2-5M16 7l-2 5h4l-2-5',
+    stable: 'M3 10h14M6 6h8M6 14h8',
+  };
+  const icon = (name, label) => {
+    const ns = 'http' + '://www.w3.org/2000/svg';
+    const s = document.createElementNS(ns, 'svg');
+    s.setAttribute('viewBox', '0 0 20 20');
+    s.setAttribute('fill', 'none');
+    s.setAttribute('stroke', 'currentColor');
+    s.setAttribute('stroke-width', '2');
+    s.setAttribute('stroke-linecap', 'round');
+    s.setAttribute('stroke-linejoin', 'round');
+    if (label) { s.setAttribute('role', 'img'); s.setAttribute('aria-label', label); } else s.setAttribute('aria-hidden', 'true');
+    const p = document.createElementNS(ns, 'path');
+    p.setAttribute('d', ICONS[name]);
+    s.append(p);
+    return s;
+  };
+  const chip = (label, tone, iconName) => el('span', { cls: 'chip' + (tone ? ' ' + tone : '') }, iconName ? icon(iconName) : null, txt(label));
 
-const s = section('Scores');
-const wrap = el('div', null, 'wrap'); const table = el('table'); wrap.append(table);
-const sliders = el('div', null, 'sliders');
-s.append(wrap, el('p', 'Scores are 1–5. Drag the weights to re-rank.', 'muted'), sliders);
-// Weights may be any positive numbers (e.g. 30/40/30); normalize so they fit the 0-1 sliders.
-const weightSum = R.brief.criteria.reduce((t, c) => t + c.weight, 0) || 1;
-const weights = Object.fromEntries(R.brief.criteria.map(c => [c.id, c.weight / weightSum]));
-const cell = (o, c) => R.scores.find(x => x.option === o && x.criterion === c) || { score: 0, rationale: '' };
-function draw() {
-  const sum = Object.values(weights).reduce((a, b) => a + b, 0) || 1;
-  const totals = Object.fromEntries(R.brief.options.map(o =>
-    [o.id, R.brief.criteria.reduce((t, c) => t + weights[c.id] / sum * cell(o.id, c.id).score, 0)]));
-  const best = Math.max(...Object.values(totals));
-  const head = el('tr');
-  head.append(el('th', 'Option'), ...R.brief.criteria.map(c => el('th', `${c.name} ${Math.round(weights[c.id] / sum * 100)}%`)), el('th', 'Total'));
-  table.replaceChildren(head);
-  R.brief.options.forEach(o => {
-    const tr = el('tr', null, Math.abs(totals[o.id] - best) < 1e-6 ? 'best' : '');
-    tr.append(el('td', o.name));
-    R.brief.criteria.forEach(c => { const td = el('td', String(cell(o.id, c.id).score)); td.title = cell(o.id, c.id).rationale; tr.append(td); });
-    tr.append(el('td', totals[o.id].toFixed(2)));
-    table.append(tr);
+  // Plain text in, with any web address turned into a safe link.
+  const URL_RE = /\bhttps?:\/\/[^\s<>"')\]]+/g;
+  const linkify = (s) => {
+    const frag = document.createDocumentFragment();
+    const str = String(s == null ? '' : s);
+    let last = 0;
+    for (const m of str.matchAll(URL_RE)) {
+      frag.append(txt(str.slice(last, m.index)));
+      const a = el('a', { text: shortUrl(m[0]), attrs: { href: m[0], target: '_blank', rel: 'noopener noreferrer', title: m[0] } });
+      frag.append(a);
+      last = m.index + m[0].length;
+    }
+    frag.append(txt(str.slice(last)));
+    return frag;
+  };
+  const shortUrl = u => { try { const x = new URL(u); const p = x.pathname.length > 32 ? x.pathname.slice(0, 30) + '…' : x.pathname; return x.hostname.replace(/^www\./, '') + (p === '/' ? '' : p); } catch { return u; } };
+
+  const section = (id, title, note) => {
+    const s = el('section', { cls: 'reveal', attrs: { id, 'aria-labelledby': id + '-h' } });
+    s.append(el('div', { cls: 'section-head' }, el('h2', { text: title, attrs: { id: id + '-h' } }), note ? el('p', { cls: 'section-note', text: note }) : null));
+    main.append(s);
+    return s;
+  };
+
+  /* ---------- Scoring: mirrors scripts/scoring.py exactly ---------- */
+  const TOL = 1e-6;
+  const normalize = w => { const t = Object.values(w).reduce((a, b) => a + b, 0); return Object.fromEntries(Object.entries(w).map(([k, v]) => [k, t > 0 ? v / t : 0])); };
+  const cell = (o, c) => scores.find(x => x.option === o && x.criterion === c);
+  const totalsFor = w => { const n = normalize(w); const t = {}; for (const o of options) t[o.id] = criteria.reduce((s, c) => s + n[c.id] * ((cell(o.id, c.id) || {}).score || 0), 0); return t; };
+  const winnersOf = t => { const vals = Object.values(t); if (!vals.length) return []; const best = Math.max(...vals); return Object.keys(t).filter(k => Math.abs(t[k] - best) < TOL).sort(); };
+  const sensitivity = (w, delta = 0.1) => {
+    const base = winnersOf(totalsFor(w)).join('|');
+    const n = normalize(w);
+    const flips = [];
+    for (const c of criteria) {
+      for (const shift of [-delta, delta]) {
+        const shifted = Object.fromEntries(Object.entries(n).map(([k, v]) => [k, Math.max(v + (k === c.id ? shift : 0), 0)]));
+        if (Object.values(shifted).reduce((a, b) => a + b, 0) === 0) continue;
+        const now = winnersOf(totalsFor(shifted));
+        if (now.join('|') !== base) flips.push({ criterion: c.id, shift, winners: now });
+      }
+    }
+    return flips;
+  };
+
+  const initialWeights = normalize(Object.fromEntries(criteria.map(c => [c.id, Number(c.weight) || 0])));
+  const weights = { ...initialWeights };
+
+  /* ---------- Header ---------- */
+  const mode = brief.mode === 'single' ? 'Single idea vs status quo' : `${options.length} options compared`;
+  const researchLabel = { online: 'Researched online', repo: 'Researched in repo', both: 'Researched online + repo', none: 'No research' }[brief.research];
+  const confTone = { high: 'good', medium: 'info', low: 'warn' }[R.confidence] || '';
+  const toggle = el('button', { cls: 'theme-toggle', text: 'Theme', attrs: { type: 'button', 'aria-label': 'Switch light or dark theme' } });
+  const currentTheme = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const setToggleText = () => { toggle.textContent = currentTheme() === 'dark' ? 'Light theme' : 'Dark theme'; };
+  try { const saved = localStorage.getItem('ca-theme'); if (saved) document.documentElement.dataset.theme = saved; } catch {}
+  setToggleText();
+  toggle.addEventListener('click', () => {
+    const next = currentTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem('ca-theme', next); } catch {}
+    setToggleText();
   });
-}
-R.brief.criteria.forEach(c => {
-  const label = el('label', c.name);
-  const input = document.createElement('input');
-  Object.assign(input, { type: 'range', min: 0, max: 1, step: 'any', value: weights[c.id] });
-  input.addEventListener('input', () => { weights[c.id] = Number(input.value); draw(); });
-  label.append(input); sliders.append(label);
-});
-draw();
 
-const l = section('Pros & cons');
-R.brief.options.forEach(o => {
-  l.append(el('h3', o.name));
-  ['pro', 'con'].forEach(kind => {
-    const items = R.ledger.filter(i => i.option === o.id && i.kind === kind)
-      .sort((a, b) => b.severity * b.likelihood - a.severity * a.likelihood)
-      .map(i => `${i.claim} (severity ${i.severity}, likelihood ${i.likelihood} · ${[].concat(i.raised_by ?? []).join(', ')})`);
-    l.append(el('h4', kind === 'pro' ? 'Pros' : 'Cons'), list(items));
-  });
-});
+  document.title = R.title || 'Critical assessment';
+  const header = el('header', {},
+    el('div', { cls: 'topbar' }, el('span', { cls: 'eyebrow', text: 'Critical assessment' }), toggle),
+    el('h1', { text: R.title || brief.question || 'Critical assessment' }),
+    brief.question ? el('p', { cls: 'question', text: brief.question }) : null,
+    el('div', { cls: 'chips' },
+      chip(mode),
+      chip(`Confidence: ${R.confidence || 'n/a'}`, confTone),
+      researchLabel ? chip(researchLabel) : null,
+      chip(`${(R.reports || []).length} council voices + analyst`)),
+  );
+  main.append(header);
 
-const d = section('Strongest dissent');
-d.append(el('p', `${R.dissent.role}: ${R.dissent.position}`), el('p', 'Not adopted because: ' + R.dissent.why_rejected, 'muted'));
-section('What everyone missed').append(list(R.blind_spots));
-const p = section('Supervisor drift');
-p.append(el('p', 'Before the council: ' + R.precommit.position, 'muted'), el('p', R.drift));
+  const tocTargets = [['verdict', 'Verdict'], ['scores', 'Scores'], ['proscons', 'Pros & cons'], ['dissent', 'Dissent'],
+    ['missed', 'Blind spots'], ['drift', 'Supervisor drift'], ['council', 'Council'], ['brief', 'Brief & unknowns']];
+  const toc = el('nav', { cls: 'toc', attrs: { 'aria-label': 'Sections' } });
+  for (const [id, label] of tocTargets) toc.append(el('a', { text: label, attrs: { href: '#' + id } }));
+  header.append(toc);
 
-const c = section('Council');
-R.reports.forEach(r => {
-  const det = el('details');
-  det.append(el('summary', `${r.role} · ${r.confidence}`), el('p', r.position), list(r.reasoning), el('p', 'Surprise: ' + r.surprise, 'muted'),
-    el('h4', 'Evidence'), list(r.evidence));
-  c.append(det);
-});
+  /* ---------- Verdict ---------- */
+  const decision = (R.verdict || {}).decision;
+  const decisionView = {
+    'go': { text: 'Go', tone: 'good', icon: 'check' },
+    'no-go': { text: 'No-go', tone: 'bad', icon: 'cross' },
+    'conditional-go': { text: 'Go, with conditions', tone: 'warn', icon: 'alert' },
+    'hybrid': { text: 'Hybrid approach', tone: 'violet', icon: 'scale' },
+  }[decision] || { text: names[decision] || decision || '—', tone: 'info', icon: 'flag' };
+  const toneVar = t => ({ good: ['--good-bg', '--good-ink'], bad: ['--bad-bg', '--bad-ink'], warn: ['--warn-bg', '--warn-ink'], violet: ['--violet-bg', '--violet-ink'], info: ['--info-bg', '--info-ink'] }[t]);
+  const [markBg, markInk] = toneVar(decisionView.tone);
+  const mark = el('span', { cls: 'decision-mark', attrs: { style: `background: var(${markBg}); color: var(${markInk})` } }, icon(decisionView.icon, decisionView.text));
 
-const b = section('Brief & unknowns');
-const bd = el('details');
-bd.append(el('summary', R.brief.question), el('p', R.brief.context), el('p', 'Research: ' + (R.brief.research || 'not recorded'), 'muted'), el('h4', 'Constraints'), list(R.brief.constraints),
-  el('h4', 'Criteria'), list(R.brief.criteria.map(x => `${x.name}: ${x.why}`)), el('h4', 'Unknowns'), list(R.unknowns));
-b.append(bd);
+  const vs = section('verdict', 'Verdict');
+  const vMain = el('div', { cls: 'verdict-main' },
+    el('span', { cls: 'eyebrow', text: brief.mode === 'single' ? 'Recommendation on the idea' : 'Recommended option' }),
+    el('div', { cls: 'decision' }, mark, el('span', { cls: 'decision-text', text: decisionView.text })),
+    el('p', { cls: 'summary', text: (R.verdict || {}).summary || '' }));
+  const conds = asList((R.verdict || {}).conditions);
+  if (conds.length) {
+    vMain.append(el('h4', { text: 'Conditions' }),
+      el('ul', { cls: 'clean conditions' }, conds.map(c => el('li', {}, icon('alert'), el('span', { text: c })))));
+  }
+  if (R.first_step) vMain.append(el('div', { cls: 'first-step' }, el('div', { cls: 'label', text: 'Start here' }), el('p', { text: R.first_step })));
+
+  const vSide = el('aside', { cls: 'verdict-side', attrs: { 'aria-label': 'At a glance' } });
+  const confSteps = { low: 1, medium: 2, high: 3 }[R.confidence] || 0;
+  vSide.append(el('div', { cls: 'stat' },
+    el('div', { cls: 'stat-label', text: 'Confidence' }),
+    el('div', { cls: 'meter', attrs: { role: 'img', 'aria-label': `Confidence ${R.confidence || 'unknown'}` } }, [1, 2, 3].map(i => el('span', { cls: i <= confSteps ? 'on' : '' }))),
+    el('div', { cls: 'stat-value', text: titleCase(R.confidence || 'unknown') })));
+  const glanceLead = el('div', { cls: 'stat' });
+  const glanceSens = el('div', { cls: 'stat' });
+  vSide.append(glanceLead, glanceSens);
+  if (R.dissent && R.dissent.role) vSide.append(el('div', { cls: 'stat' },
+    el('div', { cls: 'stat-label', text: 'Strongest dissent' }),
+    el('div', { cls: 'stat-value', text: roleName(R.dissent.role) }),
+    el('div', { cls: 'stat-sub', text: 'See below' })));
+  vs.append(el('div', { cls: 'card verdict' }, vMain, vSide));
+
+  /* ---------- Scores ---------- */
+  const ss = section('scores', 'Scores', 'Weighted from the analyst’s 1–5 scores. Move the weights to test the ranking.');
+  const bars = el('div', { cls: 'bars', attrs: { role: 'list', 'aria-label': 'Weighted total per option, out of 5' } });
+  const barRows = {};
+  for (const o of options) {
+    const fill = el('div', { cls: 'bar-fill' });
+    const value = el('div', { cls: 'bar-value' });
+    const row = el('div', { cls: 'bar-row', attrs: { role: 'listitem' } },
+      el('div', { cls: 'bar-name', text: o.name, attrs: { title: o.description || o.name } }), el('div', { cls: 'bar-track' }, fill), value);
+    barRows[o.id] = { row, fill, value };
+    bars.append(row);
+  }
+  const table = el('table');
+  const caption = el('caption', { cls: 'visually-hidden', text: 'Score per option and criterion, 1 to 5, with weighted totals' });
+  const thead = el('thead');
+  const headRow = el('tr', {}, el('th', { text: 'Option', attrs: { scope: 'col' } }));
+  const weightCells = {};
+  for (const c of criteria) {
+    const w = el('span', { cls: 'w' });
+    weightCells[c.id] = w;
+    headRow.append(el('th', { attrs: { scope: 'col', title: c.why || '' } }, txt(c.name), w));
+  }
+  headRow.append(el('th', { text: 'Weighted', attrs: { scope: 'col', style: 'text-align:right' } }));
+  thead.append(headRow);
+  const tbody = el('tbody');
+  const totalCells = {}, tableRows = {};
+  const heatStyle = s => {
+    const bg = `var(--heat-${Math.min(5, Math.max(1, s))})`;
+    const dark = currentTheme() === 'dark';
+    const lightInk = dark ? s <= 3 : s >= 4;
+    return `background:${bg};color:${lightInk ? '#ffffff' : (dark ? '#0d1b2b' : '#11335e')}`;
+  };
+  const heatCells = [];
+  for (const o of options) {
+    const tr = el('tr', {}, el('td', { cls: 'opt', text: o.name }));
+    for (const c of criteria) {
+      const sc = cell(o.id, c.id);
+      const td = el('td', { cls: 'heat', text: sc ? sc.score : '–', attrs: { title: sc ? `${c.name}: ${sc.rationale || ''}` : 'No score' } });
+      if (sc) heatCells.push([td, sc.score]);
+      tr.append(td);
+    }
+    const tot = el('td', { cls: 'total' });
+    totalCells[o.id] = tot; tableRows[o.id] = tr;
+    tr.append(tot);
+    tbody.append(tr);
+  }
+  const paintHeat = () => heatCells.forEach(([td, s]) => td.setAttribute('style', heatStyle(s)));
+  table.append(caption, thead, tbody);
+  const legend = el('div', { cls: 'legend' }, txt('Score'), [1, 2, 3, 4, 5].map(i => [el('i', { attrs: { style: `background: var(--heat-${i})` } }), txt(String(i))]), el('span', { text: 'Hover a score for the analyst’s reason', attrs: { style: 'margin-left:10px' } }));
+
+  const sensLine = el('div', { cls: 'sensitivity' });
+  const reset = el('button', { cls: 'btn', text: 'Reset weights', attrs: { type: 'button' } });
+  const sliders = el('div', { cls: 'sliders' });
+  const sliderOutputs = {}, sliderInputs = {};
+  for (const c of criteria) {
+    const id = 'w-' + c.id;
+    const out = el('output', { attrs: { for: id } });
+    const input = el('input', { attrs: { id, type: 'range', min: '0', max: '1', step: 'any', 'aria-describedby': id + '-why' } });
+    input.value = String(weights[c.id]);
+    input.addEventListener('input', () => { weights[c.id] = Number(input.value); draw(); });
+    sliderOutputs[c.id] = out; sliderInputs[c.id] = input;
+    sliders.append(el('div', { cls: 'slider' }, el('label', { attrs: { for: id } }, el('span', { text: c.name }), out), input,
+      el('span', { cls: 'visually-hidden', text: c.why || '', attrs: { id: id + '-why' } })));
+  }
+  reset.addEventListener('click', () => { Object.assign(weights, initialWeights); for (const c of criteria) sliderInputs[c.id].value = String(weights[c.id]); draw(); });
+  ss.append(el('div', { cls: 'card' }, bars, el('div', { cls: 'table-wrap' }, table), legend,
+    el('div', { cls: 'weights' }, el('div', { cls: 'weights-head' }, el('h4', { text: 'Criterion weights', attrs: { style: 'margin:0' } }), reset), sliders),
+    sensLine));
+
+  const fmtPct = v => Math.round(v * 100) + '%';
+  function draw() {
+    const t = totalsFor(weights);
+    const n = normalize(weights);
+    const win = winnersOf(t);
+    const changed = criteria.some(c => Math.abs(weights[c.id] - initialWeights[c.id]) > 1e-9);
+    for (const o of options) {
+      const v = t[o.id];
+      const lead = win.includes(o.id) && v > 0;
+      barRows[o.id].fill.style.transform = `scaleX(${Math.max(0, Math.min(1, v / 5))})`;
+      barRows[o.id].value.textContent = v.toFixed(2);
+      barRows[o.id].row.classList.toggle('lead', lead);
+      barRows[o.id].row.setAttribute('aria-label', `${o.name}: ${v.toFixed(2)} out of 5${lead ? ', leading' : ''}`);
+      totalCells[o.id].textContent = v.toFixed(2);
+      tableRows[o.id].classList.toggle('lead', lead);
+    }
+    for (const c of criteria) { weightCells[c.id].textContent = fmtPct(n[c.id]); sliderOutputs[c.id].textContent = fmtPct(n[c.id]); }
+    reset.disabled = !changed;
+
+    // Leader and margin
+    const sorted = Object.entries(t).sort((a, b) => b[1] - a[1]);
+    glanceLead.replaceChildren(el('div', { cls: 'stat-label', text: changed ? 'Leader at your weights' : 'Leader on weighted score' }),
+      el('div', { cls: 'stat-value', text: win.length > 1 ? 'Tie: ' + win.map(k => names[k]).join(' / ') : (names[win[0]] || '—') }),
+      el('div', { cls: 'stat-sub', text: sorted.length > 1 ? `${sorted[0][1].toFixed(2)} / 5 · ${(sorted[0][1] - sorted[1][1]).toFixed(2)} ahead of the next` : '' }));
+
+    // Sensitivity
+    const flips = sensitivity(weights);
+    const flipCrit = [...new Set(flips.map(f => f.criterion))].map(id => (criteria.find(c => c.id === id) || {}).name || id);
+    glanceSens.replaceChildren(el('div', { cls: 'stat-label', text: 'Weight sensitivity' }),
+      el('div', { cls: 'stat-value', text: flipCrit.length ? 'Sensitive' : 'Stable' }),
+      el('div', { cls: 'stat-sub', text: flipCrit.length ? 'Leader changes if ' + flipCrit.join(', ') + ' moves ±10 pts' : 'Leader holds under ±10 pt weight shifts' }));
+    sensLine.replaceChildren(icon(flipCrit.length ? 'alert' : 'stable'),
+      el('span', { text: flipCrit.length
+        ? `The ranking is fragile: moving the weight of ${flipCrit.join(', ')} by 10 points changes the leader. Weigh that criterion deliberately.`
+        : 'The ranking is robust: no single weight change of 10 points changes the leader.' }));
+    sensLine.style.color = flipCrit.length ? 'var(--warn-ink)' : 'var(--ink-2)';
+  }
+  paintHeat();
+  draw();
+  toggle.addEventListener('click', paintHeat);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', paintHeat);
+
+  /* ---------- Pros & cons ---------- */
+  const ps = section('proscons', 'Pros & cons', 'Merged from the analyst’s ledger and the council, ranked by impact (severity × likelihood).');
+  const pcGrid = el('div', { cls: 'grid' });
+  const impactOf = i => (Number(i.severity) || 0) * (Number(i.likelihood) || 0);
+  for (const o of options) {
+    const card = el('article', { cls: 'card option-card' });
+    const head = el('div', { cls: 'role-head' }, el('div', {}, el('h3', { text: o.name }), o.description ? el('p', { cls: 'desc', text: o.description }) : null));
+    if (decision === o.id) head.append(chip('Recommended', 'info', 'check'));
+    card.append(head);
+    const cols = el('div', { cls: 'pc' });
+    for (const kind of ['pro', 'con']) {
+      const items = (R.ledger || []).filter(i => i.option === o.id && i.kind === kind).sort((a, b) => impactOf(b) - impactOf(a));
+      const colour = kind === 'pro' ? 'var(--good-ink)' : 'var(--bad-ink)';
+      const col = el('div', { cls: 'pc-col' }, el('h4', {}, el('i', { attrs: { style: `background:${colour}` } }), txt(kind === 'pro' ? `Pros (${items.length})` : `Cons (${items.length})`)));
+      if (!items.length) col.append(el('div', { cls: 'empty', text: 'None recorded' }));
+      for (const i of items) {
+        const pct = Math.round(impactOf(i) / 25 * 100);
+        col.append(el('div', { cls: 'pc-item' },
+          el('p', { text: i.claim }),
+          el('div', { cls: 'impact' },
+            el('span', { cls: 'impact-bar', attrs: { role: 'img', 'aria-label': `Impact ${impactOf(i)} of 25` } }, el('b', { attrs: { style: `width:${pct}%;background:${colour}` } })),
+            el('span', { text: `severity ${i.severity} · likelihood ${i.likelihood}` }),
+            el('span', { cls: 'by' }, asList(i.raised_by).map(r => el('span', { text: roleName(r) }))))));
+      }
+      cols.append(col);
+    }
+    card.append(cols);
+    pcGrid.append(card);
+  }
+  ps.append(pcGrid);
+
+  /* ---------- Dissent ---------- */
+  if (R.dissent) {
+    const ds = section('dissent', 'Strongest dissent', 'The best argument the verdict did not follow.');
+    ds.append(el('div', { cls: 'card' },
+      el('blockquote', { text: R.dissent.position }),
+      el('div', { cls: 'attribution' }, chip(roleName(R.dissent.role), 'violet')),
+      el('p', { cls: 'reason' }, el('strong', { text: 'Not adopted because: ' }), txt(R.dissent.why_rejected))));
+  }
+
+  /* ---------- Blind spots ---------- */
+  const ms = section('missed', 'What everyone missed', 'Points no council voice raised, added by the supervisor.');
+  ms.append(el('div', { cls: 'card' }, el('ol', { cls: 'numbered' }, asList(R.blind_spots).map(b => el('li', { text: b })))));
+
+  /* ---------- Drift ---------- */
+  const dr = section('drift', 'Supervisor drift', 'The supervisor sealed its own view before hearing the council.');
+  const pre = R.precommit || {};
+  dr.append(el('div', { cls: 'drift' },
+    el('div', { cls: 'card' }, el('span', { cls: 'eyebrow', text: 'Before the council' }),
+      el('p', { text: pre.position || '', attrs: { style: 'font-size:17px;margin:10px 0 0' } }),
+      asList(pre.reasons).length ? el('ul', { cls: 'clean reasoning', attrs: { style: 'margin-top:10px' } }, asList(pre.reasons).map(r => el('li', { text: r }))) : null,
+      pre.main_risk ? el('p', { cls: 'muted', text: 'Main risk: ' + pre.main_risk, attrs: { style: 'font-size:14px;margin:10px 0 0' } }) : null),
+    el('div', { cls: 'arrow' }, icon('arrow')),
+    el('div', { cls: 'card' }, el('span', { cls: 'eyebrow', text: 'After the council' }), el('p', { text: R.drift || '', attrs: { style: 'font-size:17px;margin:10px 0 0' } }))));
+
+  /* ---------- Council ---------- */
+  const cs = section('council', 'Council', 'Each voice judged the brief through one lens, independently and in parallel.');
+  const TAGS = { Brief: 'neutral', Source: 'info', Mechanism: 'violet', Knowledge: 'warn', Supervisor: 'neutral' };
+  const splitTag = s => { const m = /^(Brief|Source|Mechanism|Knowledge|Supervisor):\s*/.exec(s); return m ? [m[1], s.slice(m[0].length)] : [null, s]; };
+  const roster = Object.fromEntries((R.roster || []).map(r => [r.role, r]));
+  const council = el('div', { cls: 'council' });
+  for (const r of R.reports || []) {
+    const meta = roster[r.role] || {};
+    const cTone = { high: 'good', medium: 'info', low: 'warn' }[r.confidence] || '';
+    const card = el('article', { cls: 'card' },
+      el('div', { cls: 'role-head' }, el('div', { cls: 'role-name', text: roleName(r.role) }),
+        el('div', { cls: 'chips' }, chip(r.confidence || '?', cTone), meta.model ? chip(meta.model) : null)),
+      meta.why ? el('p', { cls: 'role-why', text: meta.why }) : null,
+      el('p', { cls: 'role-position', text: r.position }));
+    const reasoning = el('details', {}, el('summary', { text: 'Reasoning' }),
+      el('ul', { cls: 'clean reasoning' }, asList(r.reasoning).map(x => el('li', { cls: /^flip:/i.test(x) ? 'flip' : '', text: x }))),
+      r.surprise ? el('p', { cls: 'surprise' }, el('strong', { text: 'What others will miss: ' }), txt(r.surprise)) : null);
+    const evidence = el('details', {}, el('summary', { text: `Evidence (${asList(r.evidence).length})` }),
+      el('ul', { cls: 'clean evidence' }, asList(r.evidence).map(x => { const [tag, rest] = splitTag(x); return el('li', {}, tag ? chip(tag, TAGS[tag]) : null, el('span', { cls: 'text' }, linkify(rest))); })));
+    card.append(reasoning, evidence);
+    council.append(card);
+  }
+  cs.append(council);
+
+  /* ---------- Brief & unknowns ---------- */
+  const bs = section('brief', 'Brief & unknowns', 'The neutral brief every voice received, and what would change the verdict.');
+  const dl = el('dl');
+  const add = (label, node) => { if (node) dl.append(el('dt', { text: label }), el('dd', {}, node)); };
+  add('Question', brief.question ? el('p', { text: brief.question, attrs: { style: 'margin:0' } }) : null);
+  add('Context', brief.context ? el('p', { text: brief.context, attrs: { style: 'margin:0' } }) : null);
+  add('Stakes', brief.stakes ? el('p', { text: brief.stakes, attrs: { style: 'margin:0' } }) : null);
+  add('Options', options.length ? el('ul', { cls: 'clean reasoning' }, options.map(o => el('li', {}, el('strong', { text: o.name }), txt(o.description ? ' — ' + o.description : '')))) : null);
+  add('Constraints', asList(brief.constraints).length ? el('ul', { cls: 'clean reasoning' }, asList(brief.constraints).map(c => el('li', { text: c }))) : null);
+  add('Criteria', criteria.length ? el('ul', { cls: 'clean reasoning' }, criteria.map(c => el('li', {}, el('strong', { text: `${c.name} (${fmtPct(initialWeights[c.id])})` }), txt(c.why ? ' — ' + c.why : '')))) : null);
+  add('Evidence gathered', (brief.evidence || []).length ? el('ul', { cls: 'clean evidence' }, brief.evidence.map(e => el('li', {}, el('span', { cls: 'text' }, txt(e.claim || ''), el('span', { cls: 'src' }, txt(' · '), linkify(e.source || '')))))) : null);
+  const unknownsCard = el('div', { cls: 'card' }, el('h3', { text: 'Unknowns' }), el('p', { cls: 'muted', text: 'Facts that could change the verdict if they turned out differently.', attrs: { style: 'font-size:14px;margin:0 0 12px' } }),
+    asList(R.unknowns).length ? el('ol', { cls: 'numbered' }, asList(R.unknowns).map(u => el('li', { text: u }))) : el('p', { cls: 'muted', text: 'None recorded.' }));
+  bs.append(el('div', { cls: 'brief-grid' }, el('div', { cls: 'card' }, dl), unknownsCard));
+
+  main.append(el('footer', {}, el('span', { text: 'Generated by the critically-assess skill' }), el('span', { text: 'Scores are 1–5 · weights are normalized · print-friendly' })));
+
+  /* ---------- Gentle reveal on scroll ---------- */
+  const reveals = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const io = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+    reveals.forEach(r => io.observe(r));
+  } else reveals.forEach(r => r.classList.add('in'));
+  window.addEventListener('beforeprint', () => { document.querySelectorAll('details').forEach(d => d.open = true); reveals.forEach(r => r.classList.add('in')); });
+})();
 </script>
 </body>
 </html>
