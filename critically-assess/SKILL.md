@@ -24,7 +24,7 @@ Research is optional and the user decides. If the user already said what researc
 
 Then gather the shared facts every voice should start from, within what the user chose, and only what can change the assessment. Each council voice can look up more for its own lens later, so you do not need to cover everything:
 - `Repo`: files the user attached or mentioned, and the files that bear on the options. Send broad scans to the built-in `Explore` subagent, then read the key files it points to yourself.
-- `Online`: current facts that decide the case (prices, limits, maintenance status, known failure stories, how others solved the same problem), using WebSearch and WebFetch.
+- `Online`: current facts that decide the case (prices, limits, maintenance status, known failure stories, how others solved the same problem), using WebSearch and WebFetch. For technical options, prefer each technology's official documentation for the version in play; open its GitHub repository only when the docs can't answer, such as for open issues, real behaviour in source, or maintenance activity.
 - `Neither`: use only the user's message and files they attached.
 
 Record the source of every fact you rely on. A fact you did not check gets the source `general knowledge (unverified)`, never a document name you did not open. Stop once the options, constraints and stakes are clear.
