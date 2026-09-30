@@ -67,5 +67,6 @@ The subagent's reply, saved verbatim. The file name is the role id; `validate.py
 - `verdict.decision`: in single mode `go`, `no-go` or `conditional-go` (the last one requires `conditions`); in multi mode an option id or `hybrid`.
 - `ledger`: merge the analyst's ledger with the council's pros and cons. Collapse duplicates into one item and list every role that raised it in `raised_by`. Drop anything without evidence.
 - `scores`: start from the analyst's. If you change one, prefix its rationale with `Supervisor:` and say why.
+- Every sentence the reader sees follows "Write for the reader" in SKILL.md step 8. `validate.py` checks title, verdict, conditions, first step, drift, dissent, blind spots, unknowns, ledger claims and score rationales.
 - `roster`: 3 to 5 council roles plus the analyst, leaving out any role dropped into `reports/dropped/`. Write `inherited` as the model if the subagent tool refused the model parameter, or `supervisor` for an analyst report you had to write yourself.
 - `validate.py` checks every field the report reads: the full option × criterion grid in `scores` (integers 1-5, known ids only), `raised_by` as a list of role ids, and `dissent`, `verdict.summary`, `first_step` and `drift` as non-empty strings. `render.py` refuses to render a `result.json` that fails validation.

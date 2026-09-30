@@ -8,6 +8,8 @@ import re
 import sys
 from pathlib import Path
 
+import clarity
+
 CONFIDENCE = ("low", "medium", "high")
 SINGLE_DECISIONS = ("go", "no-go", "conditional-go")
 RESULT_KEYS = ("title", "brief", "precommit", "roster", "reports", "analyst", "ledger", "scores",
@@ -321,12 +323,34 @@ def validate_run(run_dir):
             errors += _safe(validate_role_report, path.stem, report, option_ids)
     if (run / "result.json").exists():
         result, err = _read(run / "result.json")
-        errors += [err] if err else _safe(validate_result, "result", result)
+        if err:
+            errors.append(err)
+        else:
+            result_errors = _safe(validate_result, "result", result)
+            errors += result_errors
+            if not result_errors:  # plain-English checks only make sense on a well-formed result
+                errors += [f"result: clarity: {p}" for p in _safe(clarity.check_result, "clarity", result)]
     return errors
+
+
+def clarity_warnings(run_dir):
+    """Plain-English problems in the council's own text. Reported, never a reason to relaunch a role."""
+    run = Path(run_dir)
+    brief, err = _read(run / "brief.json")
+    if err or not isinstance(brief, dict):
+        return []
+    reports = []
+    for path in sorted((run / "reports").glob("*.json")):
+        report, err = _read(path)
+        if not err and isinstance(report, dict) and path.stem != "analyst":
+            reports.append(report)
+    return _safe(clarity.check_reports, "clarity", reports, brief)
 
 
 if __name__ == "__main__":
     problems = validate_run(sys.argv[1])
+    for w in clarity_warnings(sys.argv[1]):
+        print(f"WARN: {w}")
     for p in problems:
         print(f"ERROR: {p}")
     print("OK" if not problems else f"{len(problems)} error(s)")

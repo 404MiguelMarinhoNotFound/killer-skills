@@ -27,6 +27,7 @@
     --violet-bg: #efeafb; --violet-ink: #5b45a8;
     --heat-1: #eef4fd; --heat-2: #cde2fb; --heat-3: #86b6ef; --heat-4: #3987e5; --heat-5: #1c5cab;
     --shadow-hover: 0 2px 10px rgba(20, 20, 20, 0.05);
+    --shadow-pop: 0 8px 28px rgba(20, 20, 20, 0.08), 0 1px 2px rgba(20, 20, 20, 0.04);
     --serif: "Iowan Old Style", "Charter", "Source Serif Pro", "Palatino Linotype", Palatino, Georgia, serif;
     --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
     --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
@@ -47,6 +48,7 @@
       --violet-bg: #251f3d; --violet-ink: #b8acf2;
       --heat-1: #243449; --heat-2: #184f95; --heat-3: #256abf; --heat-4: #3987e5; --heat-5: #86b6ef;
       --shadow-hover: 0 2px 12px rgba(0, 0, 0, 0.35);
+      --shadow-pop: 0 10px 32px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
     }
   }
   :root[data-theme="dark"] {
@@ -63,6 +65,7 @@
     --violet-bg: #251f3d; --violet-ink: #b8acf2;
     --heat-1: #243449; --heat-2: #184f95; --heat-3: #256abf; --heat-4: #3987e5; --heat-5: #86b6ef;
     --shadow-hover: 0 2px 12px rgba(0, 0, 0, 0.35);
+    --shadow-pop: 0 10px 32px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
   }
 
   * { box-sizing: border-box; }
@@ -97,9 +100,9 @@
 
   /* Sections and cards */
   section { margin-top: 72px; scroll-margin-top: 24px; }
-  .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
-  h2 { font: 500 26px/1.2 var(--serif); letter-spacing: -0.01em; margin: 0; }
-  .section-note { color: var(--muted); font-size: 14px; margin: 0; }
+  .section-head { margin-bottom: 20px; }
+  h2 { font: 500 26px/1.2 var(--serif); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+  .section-note { color: var(--muted); font-size: 15px; margin: 6px 0 0; max-width: 68ch; }
   h3 { font: 600 17px/1.35 var(--sans); margin: 0 0 6px; }
   h4 { font: 600 11px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 20px 0 10px; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 28px; transition: box-shadow .2s var(--ease); }
@@ -154,24 +157,64 @@
   th .w { display: block; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
   td.opt { font-weight: 600; white-space: nowrap; position: sticky; left: 0; background: var(--surface); z-index: 1; }
   th:first-child { position: sticky; left: 0; z-index: 1; }
-  td.heat { text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 64px; cursor: help; }
+  td.heat { padding: 0; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 64px; }
+  .score-btn { display: block; width: 100%; min-height: 44px; margin: 0; padding: 10px 12px; border: 0; border-radius: 0; background: transparent;
+    color: inherit; font: inherit; text-align: center; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  .score-btn:hover { box-shadow: inset 0 0 0 2px color-mix(in srgb, currentColor 45%, transparent); }
+  .score-btn:focus-visible { outline: 2px solid currentColor; outline-offset: -5px; border-radius: 8px; }
+  .score-btn[aria-expanded="true"] { box-shadow: inset 0 0 0 2px currentColor; }
   td.total { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
   tr.lead td.opt::after { content: "Leads"; margin-left: 8px; font: 600 10px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase;
     padding: 3px 7px; border-radius: 999px; background: var(--info-bg); color: var(--info-ink); vertical-align: 2px; }
-  .legend { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin: 10px 2px 0; flex-wrap: wrap; }
-  .legend i { display: inline-block; width: 18px; height: 10px; border-radius: 2px; }
-  .weights { margin-top: 28px; }
-  .weights-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+  .legend { display: flex; align-items: center; gap: 6px 14px; font-size: 13px; color: var(--muted); margin: 12px 2px 0; flex-wrap: wrap; }
+  .legend > span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .legend i { display: inline-block; width: 18px; height: 10px; border-radius: 2px; box-shadow: inset 0 0 0 1px var(--line); }
+  .hint { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink-2); margin: 10px 2px 0; }
+  .hint svg { flex: none; width: 15px; height: 15px; margin-top: 3px; color: var(--muted); }
+  .explain { margin: 0 0 24px; }
+  .explain-lead { font: 500 21px/1.35 var(--serif); letter-spacing: -0.01em; margin: 0 0 6px; text-wrap: pretty; }
+  .explain-how { font-size: 15px; color: var(--ink-2); margin: 0; max-width: 64ch; }
+  .sub-head { font: 600 11px/1.3 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
+  .calc { margin: -8px 0 32px; border-top: 0; border-bottom: 1px solid var(--line); }
+  .calc > summary { color: var(--accent-ink); }
+  .calc-body { padding: 2px 0 20px; }
+  .seg { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+  .seg button { font: 500 13px var(--sans); color: var(--ink-2); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 999px;
+    padding: 6px 14px; min-height: 36px; cursor: pointer; touch-action: manipulation; transition: background-color .15s, color .15s; }
+  .seg button:hover { border-color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+  .calc-title { font-size: 15px; margin: 0 0 8px; }
+  table.calc-table { font-size: 14px; }
+  .calc-table th, .calc-table td { padding: 8px 10px; }
+  .calc-table th { min-width: 0; max-width: none; position: static; background: transparent; font-weight: 600; }
+  .calc-table td:first-child, .calc-table th:first-child { padding-left: 0; }
+  .calc-table td:last-child, .calc-table th:last-child { padding-right: 0; }
+  .calc-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .calc-table .op { color: var(--muted); font-weight: 400; }
+  .calc-table tfoot td { font-weight: 700; border-top: 1px solid var(--line-strong); border-bottom: 0; }
+  .calc-note { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+  .reasons { margin-top: 18px; }
+  .reasons-body { padding: 0 0 12px; }
+  .reasons-body h5 { font: 600 14px/1.3 var(--sans); margin: 14px 0 4px; }
+  .reasons-body li { padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); }
+  .reasons-body li strong { color: var(--ink); font-weight: 600; }
+  .weights { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
+  .weights-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+  .weights-help { font-size: 14px; color: var(--ink-2); margin: 0 0 16px; max-width: 70ch; }
   .sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 28px; }
   .slider label { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
   .slider output { font-variant-numeric: tabular-nums; color: var(--muted); }
   input[type=range] { width: 100%; accent-color: var(--accent); min-height: 28px; }
   .btn { font: 500 13px var(--sans); color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 6px;
-    padding: 7px 12px; cursor: pointer; min-height: 34px; }
+    padding: 7px 12px; cursor: pointer; min-height: 36px; }
   .btn:hover { background: var(--surface-2); }
   .btn[disabled] { opacity: .45; cursor: default; }
-  .sensitivity { margin-top: 18px; display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--ink-2); }
-  .sensitivity svg { flex: none; width: 16px; height: 16px; margin-top: 3px; }
+  .sens { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--line); }
+  .sensitivity { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; color: var(--ink-2); }
+  .sensitivity svg { flex: none; width: 16px; height: 16px; margin-top: 4px; }
+  .sensitivity p { margin: 0; }
+  .sensitivity ul { margin: 6px 0 0; padding-left: 18px; }
+  .sensitivity li { margin: 2px 0; }
 
   /* Pros and cons */
   .option-card h3 { font: 500 22px/1.2 var(--serif); letter-spacing: -0.01em; }
@@ -181,7 +224,8 @@
   .pc-col h4 i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
   .pc-item { padding: 12px 0; border-top: 1px solid var(--line); }
   .pc-item p { margin: 0 0 8px; }
-  .impact { display: flex; align-items: center; gap: 10px; font: 500 12px var(--mono); color: var(--muted); flex-wrap: wrap; }
+  .impact { display: flex; align-items: center; gap: 6px 10px; font: 500 13px var(--sans); color: var(--muted); flex-wrap: wrap; }
+  .by-label { font-size: 12px; color: var(--muted); }
   .impact-bar { width: 72px; height: 4px; border-radius: 2px; background: var(--line); position: relative; overflow: hidden; }
   .impact-bar b { position: absolute; inset: 0 auto 0 0; border-radius: 2px; }
   .by { display: inline-flex; gap: 4px; flex-wrap: wrap; }
@@ -207,8 +251,14 @@
   .role-summary { font-size: 14px; color: var(--ink-2); margin: 0 0 6px; }
   .role-why { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
   .role-why strong { font-weight: 600; color: var(--ink-2); }
-  .who { margin-top: 22px; border-top: 1px solid var(--line); }
-  .who > summary { font-size: 14px; color: var(--ink-2); }
+  .guide { margin-top: 22px; }
+  .guide + .who { border-top: 1px solid var(--line); }
+  .guide > summary, .who > summary { font-size: 14px; color: var(--ink-2); }
+  .guide ul { padding-bottom: 8px; }
+  .guide li { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 2px 24px; padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); }
+  .guide li a { color: var(--ink); font-weight: 600; text-decoration: none; display: block; }
+  .guide li a:hover { text-decoration: underline; }
+  .who { border-top: 1px solid var(--line); }
   .who ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 4px 28px; padding-bottom: 8px; }
   .who li { padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); }
   .who li strong { display: block; color: var(--ink); font-weight: 600; }
@@ -222,6 +272,7 @@
   .reasoning li::before { content: ""; position: absolute; left: 0; top: 15px; width: 5px; height: 5px; border-radius: 1px; background: var(--line-strong); }
   .reasoning li.flip { background: var(--warn-bg); border-radius: 6px; padding: 8px 10px 8px 14px; margin: 4px 0; }
   .reasoning li.flip::before { background: var(--warn-ink); top: 17px; left: 4px; }
+  .reasoning li.flip strong { font-weight: 600; }
   .evidence li { display: flex; gap: 10px; align-items: baseline; padding: 7px 0; font-size: 14px; border-top: 1px solid var(--line); }
   .evidence li:first-child { border-top: 0; }
   .evidence .chip { flex: none; min-width: 96px; justify-content: center; }
@@ -238,12 +289,50 @@
   .src { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
   footer { margin-top: 88px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
+  /* Score popover: opened by click or keyboard, never by hover */
+  .pop { position: fixed; top: 0; left: 0; z-index: 50; width: min(340px, calc(100vw - 24px)); padding: 14px 16px 16px;
+    background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 10px; box-shadow: var(--shadow-pop);
+    font-size: 14px; line-height: 1.55; opacity: 0; transform: translateY(var(--pop-from, 6px)) scale(.98); transform-origin: var(--pop-origin, 50% 0);
+    transition: opacity .16s var(--ease), transform .2s var(--ease); }
+  .pop[hidden] { display: none; }
+  .pop.open { opacity: 1; transform: none; }
+  .pop:focus { outline: none; }
+  .pop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pop-arrow { position: absolute; left: var(--arrow-x, 50%); width: 12px; height: 12px; margin-left: -6px; background: var(--surface);
+    border: 1px solid var(--line-strong); transform: rotate(45deg); }
+  .pop[data-side="below"] .pop-arrow { top: -7px; border-right: 0; border-bottom: 0; }
+  .pop[data-side="above"] .pop-arrow { bottom: -7px; border-left: 0; border-top: 0; }
+  .pop-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: -4px -8px 6px 0; }
+  .pop-close { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent;
+    color: var(--muted); cursor: pointer; touch-action: manipulation; }
+  .pop-close:hover { background: var(--neutral-bg); color: var(--ink); }
+  .pop-close svg { width: 14px; height: 14px; }
+  .pop-title { font: 600 15px/1.35 var(--sans); margin: 0 0 4px; }
+  .pop-score { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; color: var(--ink-2); font-size: 13px; flex-wrap: wrap; }
+  .pop-score b { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 5px; font-variant-numeric: tabular-nums; }
+  .pop-body { margin: 0; color: var(--ink); overflow-wrap: anywhere; }
+  .pop-note { margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+
+  /* Back to top */
+  .to-top { position: fixed; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40;
+    width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 1px solid var(--line-strong);
+    background: var(--surface); color: var(--ink-2); box-shadow: var(--shadow-hover); cursor: pointer; touch-action: manipulation;
+    opacity: 0; transform: translateY(8px); visibility: hidden;
+    transition: opacity .2s var(--ease), transform .2s var(--ease), border-color .2s, color .2s, visibility 0s linear .2s; }
+  .to-top.show { opacity: 1; transform: none; visibility: visible;
+    transition: opacity .2s var(--ease), transform .2s var(--ease), border-color .2s, color .2s, visibility 0s; }
+  .to-top:hover { color: var(--ink); border-color: var(--muted); }
+  .to-top:active { transform: scale(.96); }
+  .to-top svg { width: 18px; height: 18px; }
+  h1:focus { outline: none; }
+
   /* Motion */
   .reveal { opacity: 0; transform: translateY(12px); transition: opacity .6s var(--ease), transform .6s var(--ease); }
   .reveal.in { opacity: 1; transform: none; }
   @media (prefers-reduced-motion: reduce) {
     .reveal { opacity: 1; transform: none; transition: none; }
-    .bar-fill, .card { transition: none; }
+    .bar-fill, .card, .pop, .to-top, .to-top.show, .seg button { transition: none; }
+    .pop { transform: none; }
   }
 
   /* Small screens */
@@ -260,19 +349,31 @@
     .drift { grid-template-columns: 1fr; }
     .drift .arrow { transform: rotate(90deg); }
     .bar-row { grid-template-columns: minmax(70px, 110px) minmax(0, 1fr) 48px; gap: 10px; }
+    .guide li { grid-template-columns: 1fr; }
+    .calc-table th, .calc-table td { padding: 8px 6px; font-size: 13.5px; }
+    .calc-table th.num { white-space: normal; }
+    .explain-lead { font-size: 19px; }
+    footer { padding-bottom: 56px; }
   }
 
   /* Print: everything open, nothing interactive */
   @media print {
     body { background: #fff; color: #000; font-size: 12pt; }
     main { max-width: none; padding: 0; }
-    .theme-toggle, .weights, .toc { display: none !important; }
+    .theme-toggle, .weights, .toc, .pop, .to-top, .seg, .hint { display: none !important; }
+    .calc-panel[hidden] { display: block !important; margin-top: 16px; }
+    .guide, .calc { border-top: 1px solid #ddd; }
     .card { box-shadow: none !important; break-inside: avoid; }
     section { margin-top: 28pt; break-inside: auto; }
     .reveal { opacity: 1 !important; transform: none !important; }
     details > summary::after { content: ""; }
+    details > summary { font-weight: 600; color: #000; }
     a { color: #000; }
   }
+</style>
+<style media="print">
+  /* Closed <details> print open even when the print dialog skips the beforeprint event. */
+  details::details-content { content-visibility: visible !important; display: block !important; height: auto !important; }
 </style>
 </head>
 <body>
@@ -287,6 +388,8 @@
   const criteria = brief.criteria || [];
   const scores = R.scores || [];
   const names = Object.fromEntries(options.map(o => [o.id, o.name]));
+  const critName = id => (criteria.find(c => c.id === id) || {}).name || id;
+  const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---------- DOM helpers: every piece of data goes in as text, never as markup ---------- */
   const el = (tag, opts = {}, ...kids) => {
@@ -303,15 +406,18 @@
   const CATALOG = R.role_catalog || {};
   const roleName = id => CATALOG[id] && CATALOG[id].name ? String(CATALOG[id].name).replace(/^The\s+/, '') : (id === 'first-principles' ? 'First Principles' : titleCase(id));
   const roleSummary = id => (CATALOG[id] && CATALOG[id].summary) || '';
+  const joinAnd = xs => xs.length <= 1 ? (xs[0] || '') : xs.slice(0, -1).join(', ') + ' and ' + xs[xs.length - 1];
 
   const ICONS = {
     check: 'M4 10.5l4 4 8-9',
     cross: 'M5 5l10 10M15 5L5 15',
     alert: 'M10 3l8 14H2L10 3zM10 8v4M10 14.5v.5',
     arrow: 'M4 10h12M11 5l5 5-5 5',
+    up: 'M10 16V4M5 9l5-5 5 5',
     flag: 'M5 17V3M5 4h9l-2 3 2 3H5',
     scale: 'M10 3v14M4 17h12M4 7h12M4 7l-2 5h4l-2-5M16 7l-2 5h4l-2-5',
     stable: 'M3 10h14M6 6h8M6 14h8',
+    info: 'M10 2.5a7.5 7.5 0 1 0 0 15a7.5 7.5 0 1 0 0-15M10 9v5M10 6.2v.3',
   };
   const icon = (name, label) => {
     const ns = 'http' + '://www.w3.org/2000/svg';
@@ -354,6 +460,12 @@
     return s;
   };
 
+  /* ---------- Plain words for the numbers ---------- */
+  const SCORE_WORDS = { 1: 'Fails this criterion', 2: 'Weak', 3: 'Adequate', 4: 'Strong', 5: 'As good as it gets' };
+  const IMPACT_WORDS = { 1: 'Tiny impact', 2: 'Small impact', 3: 'Moderate impact', 4: 'Big impact', 5: 'Major impact' };
+  const LIKELY_WORDS = { 1: 'Unlikely', 2: 'Possible', 3: 'Fairly likely', 4: 'Likely', 5: 'Very likely' };
+  const CONF_WORDS = { high: 'High', medium: 'Medium', low: 'Low' };
+
   /* ---------- Scoring: mirrors scripts/scoring.py exactly ---------- */
   const TOL = 1e-6;
   const normalize = w => { const t = Object.values(w).reduce((a, b) => a + b, 0); return Object.fromEntries(Object.entries(w).map(([k, v]) => [k, t > 0 ? v / t : 0])); };
@@ -367,9 +479,11 @@
     for (const c of criteria) {
       for (const shift of [-delta, delta]) {
         const shifted = Object.fromEntries(Object.entries(n).map(([k, v]) => [k, Math.max(v + (k === c.id ? shift : 0), 0)]));
-        if (Object.values(shifted).reduce((a, b) => a + b, 0) === 0) continue;
+        const sum = Object.values(shifted).reduce((a, b) => a + b, 0);
+        if (sum === 0) continue;
         const now = winnersOf(totalsFor(shifted));
-        if (now.join('|') !== base) flips.push({ criterion: c.id, shift, winners: now });
+        // share: what this criterion would then count for, after the shares are rescaled to 100% (for the wording only)
+        if (now.join('|') !== base) flips.push({ criterion: c.id, shift, winners: now, share: shifted[c.id] / sum });
       }
     }
     return flips;
@@ -377,10 +491,12 @@
 
   const initialWeights = normalize(Object.fromEntries(criteria.map(c => [c.id, Number(c.weight) || 0])));
   const weights = { ...initialWeights };
+  // Whole percentages where exact, one decimal otherwise, so "4 × 27.3%" reads true.
+  const fmtPct = v => { const p = v * 100; return (Math.abs(p - Math.round(p)) < 0.05 ? String(Math.round(p)) : p.toFixed(1)) + '%'; };
 
   /* ---------- Header ---------- */
-  const mode = brief.mode === 'single' ? 'Single idea vs status quo' : `${options.length} options compared`;
-  const researchLabel = { online: 'Researched online', repo: 'Researched in repo', both: 'Researched online + repo', none: 'No research' }[brief.research];
+  const mode = brief.mode === 'single' ? 'One idea vs. no change' : `${options.length} options compared`;
+  const researchLabel = { online: 'Researched online', repo: 'Researched in the code', both: 'Researched online + code', none: 'No outside research' }[brief.research];
   const confTone = { high: 'good', medium: 'info', low: 'warn' }[R.confidence] || '';
   const toggle = el('button', { cls: 'theme-toggle', text: 'Theme', attrs: { type: 'button', 'aria-label': 'Switch light or dark theme' } });
   const currentTheme = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -394,23 +510,34 @@
     setToggleText();
   });
 
+  const councilSize = (R.reports || []).length;
   document.title = R.title || 'Critical assessment';
+  const h1 = el('h1', { text: R.title || brief.question || 'Critical assessment', attrs: { tabindex: '-1' } });
   const header = el('header', {},
     el('div', { cls: 'topbar' }, el('span', { cls: 'eyebrow', text: 'Critical assessment' }), toggle),
-    el('h1', { text: R.title || brief.question || 'Critical assessment' }),
+    h1,
     brief.question ? el('p', { cls: 'question', text: brief.question }) : null,
     el('div', { cls: 'chips' },
       chip(mode),
-      chip(`Confidence: ${R.confidence || 'n/a'}`, confTone),
+      chip(`Confidence: ${CONF_WORDS[R.confidence] || 'n/a'}`, confTone),
       researchLabel ? chip(researchLabel) : null,
-      chip(`${(R.reports || []).length} council voices + analyst`)),
+      chip(`${councilSize} council member${councilSize === 1 ? '' : 's'} + neutral analyst`)),
   );
   main.append(header);
 
-  const tocTargets = [['verdict', 'Verdict'], ['scores', 'Scores'], ['proscons', 'Pros & cons'], ['dissent', 'Dissent'],
-    ['missed', 'Blind spots'], ['drift', 'Supervisor drift'], ['council', 'Council'], ['brief', 'Brief & unknowns']];
-  const toc = el('nav', { cls: 'toc', attrs: { 'aria-label': 'Sections' } });
-  for (const [id, label] of tocTargets) toc.append(el('a', { text: label, attrs: { href: '#' + id } }));
+  // One plain line per section. Built before the sections, pruned to the ones that exist at the end.
+  const guideLines = [
+    ['verdict', 'Verdict', 'The recommendation, how sure it is, and the first thing to do.'],
+    ['scores', 'Scores', 'Each option is scored from 1 (fails) to 5 (as good as it gets) on each criterion. The overall score combines them by how much each criterion counts. Click any score to see why it got it.'],
+    ['proscons', 'Pros & cons', 'The main points for and against each option, biggest and most likely first.'],
+    [['dissent', 'Strongest disagreement'], ['missed', 'What everyone missed'], 'The best argument against the recommendation and why it was not followed, then points nobody on the council raised.'],
+    ['drift', 'Did the council change the recommendation?', 'The view of the lead reviewer, who ran this assessment, before hearing the council, next to where it ended up.'],
+    ['council', 'Council', 'Each member’s conclusion and reasons. Members worked alone, each from a different angle.'],
+    ['brief', 'The question & unknowns', 'The background everyone worked from, and facts that could still change the verdict.'],
+  ];
+  const guideList = el('ul', { cls: 'clean' });
+  header.append(el('details', { cls: 'guide' }, el('summary', { text: 'How to read this report' }), guideList));
+
   const rosterIds = (R.roster || []).map(r => r.role);
   if (rosterIds.length) {
     const models = Object.fromEntries((R.roster || []).map(r => [r.role, r.model]));
@@ -420,6 +547,9 @@
         el('strong', { text: roleName(id) + (models[id] ? ` · ${models[id]}` : '') }),
         txt(roleSummary(id) || 'No description in the role library.'))))));
   }
+  const tocTargets = [['verdict', 'Verdict'], ['scores', 'Scores'], ['proscons', 'Pros & cons'], ['dissent', 'Disagreement'],
+    ['missed', 'What was missed'], ['drift', 'Did the view change?'], ['council', 'Council'], ['brief', 'Question & unknowns']];
+  const toc = el('nav', { cls: 'toc', attrs: { 'aria-label': 'Sections' } });
   header.append(toc);
 
   /* ---------- Verdict ---------- */
@@ -434,7 +564,7 @@
   const [markBg, markInk] = toneVar(decisionView.tone);
   const mark = el('span', { cls: 'decision-mark', attrs: { style: `background: var(${markBg}); color: var(${markInk})` } }, icon(decisionView.icon, decisionView.text));
 
-  const vs = section('verdict', 'Verdict');
+  const vs = section('verdict', 'Verdict', 'What the council recommends, how sure it is, and the first step.');
   const vMain = el('div', { cls: 'verdict-main' },
     el('span', { cls: 'eyebrow', text: brief.mode === 'single' ? 'Recommendation on the idea' : 'Recommended option' }),
     el('div', { cls: 'decision' }, mark, el('span', { cls: 'decision-text', text: decisionView.text })),
@@ -450,20 +580,25 @@
   const confSteps = { low: 1, medium: 2, high: 3 }[R.confidence] || 0;
   vSide.append(el('div', { cls: 'stat' },
     el('div', { cls: 'stat-label', text: 'Confidence' }),
-    el('div', { cls: 'meter', attrs: { role: 'img', 'aria-label': `Confidence ${R.confidence || 'unknown'}` } }, [1, 2, 3].map(i => el('span', { cls: i <= confSteps ? 'on' : '' }))),
-    el('div', { cls: 'stat-value', text: titleCase(R.confidence || 'unknown') })));
+    el('div', { cls: 'meter', attrs: { role: 'img', 'aria-label': `Confidence ${R.confidence || 'unknown'}, ${confSteps} of 3` } }, [1, 2, 3].map(i => el('span', { cls: i <= confSteps ? 'on' : '' }))),
+    el('div', { cls: 'stat-value', text: CONF_WORDS[R.confidence] || 'Unknown' }),
+    el('div', { cls: 'stat-sub', text: 'How sure the recommendation is' })));
   const glanceLead = el('div', { cls: 'stat' });
   const glanceSens = el('div', { cls: 'stat' });
   vSide.append(glanceLead, glanceSens);
   if (R.dissent && R.dissent.role) vSide.append(el('div', { cls: 'stat' },
-    el('div', { cls: 'stat-label', text: 'Strongest dissent' }),
+    el('div', { cls: 'stat-label', text: 'Strongest disagreement' }),
     el('div', { cls: 'stat-value', text: roleName(R.dissent.role) }),
-    el('div', { cls: 'stat-sub', text: 'See below' })));
+    el('div', { cls: 'stat-sub' }, el('a', { text: 'Read the argument', attrs: { href: '#dissent' } }))));
   vs.append(el('div', { cls: 'card verdict' }, vMain, vSide));
 
   /* ---------- Scores ---------- */
-  const ss = section('scores', 'Scores', 'Weighted from the analyst’s 1–5 scores. Move the weights to test the ranking.');
-  const bars = el('div', { cls: 'bars', attrs: { role: 'list', 'aria-label': 'Weighted total per option, out of 5' } });
+  const ss = section('scores', 'Scores', 'Each option gets a score from 1 to 5 on every criterion. Those scores are combined into one overall score out of 5.');
+  const explainLead = el('p', { cls: 'explain-lead' });
+  const explain = el('div', { cls: 'explain' }, explainLead,
+    el('p', { cls: 'explain-how', text: 'Each criterion score (1–5) is multiplied by how much that criterion counts, then the results are added up.' }));
+
+  const bars = el('div', { cls: 'bars', attrs: { role: 'list', 'aria-label': 'Overall score per option, out of 5' } });
   const barRows = {};
   for (const o of options) {
     const fill = el('div', { cls: 'bar-fill' });
@@ -473,17 +608,61 @@
     barRows[o.id] = { row, fill, value };
     bars.append(row);
   }
+
+  // "How is this calculated?": one panel per option; the screen shows one, print shows all.
+  const calcPanels = {}, calcButtons = {};
+  let calcShown = null;
+  const seg = el('div', { cls: 'seg', attrs: { role: 'group', 'aria-label': 'Show the calculation for' } });
+  const calcBody = el('div', { cls: 'calc-body' }, options.length > 1 ? seg : null);
+  const showCalc = id => {
+    calcShown = id;
+    for (const o of options) {
+      calcPanels[o.id].panel.hidden = o.id !== id;
+      if (calcButtons[o.id]) calcButtons[o.id].setAttribute('aria-pressed', String(o.id === id));
+    }
+  };
+  for (const o of options) {
+    if (options.length > 1) {
+      const b = el('button', { text: o.name, attrs: { type: 'button', 'aria-pressed': 'false' } });
+      b.addEventListener('click', () => showCalc(o.id));
+      calcButtons[o.id] = b;
+      seg.append(b);
+    }
+    const title = el('p', { cls: 'calc-title' });
+    const rows = {};
+    const tb = el('tbody');
+    for (const c of criteria) {
+      const sc = cell(o.id, c.id);
+      const share = el('td', { cls: 'num' }), adds = el('td', { cls: 'num' });
+      rows[c.id] = { share, adds, score: sc ? sc.score : 0 };
+      tb.append(el('tr', {}, el('td', { text: c.name }), share, adds));
+    }
+    const totShare = el('td', { cls: 'num' }), totAdds = el('td', { cls: 'num' });
+    const note = el('p', { cls: 'calc-note' });
+    const table = el('table', { cls: 'calc-table' },
+      el('caption', { cls: 'visually-hidden', text: `How the overall score of ${o.name} is calculated` }),
+      el('thead', {}, el('tr', {}, el('th', { text: 'Criterion', attrs: { scope: 'col' } }),
+        el('th', { cls: 'num', text: 'Score × counts for', attrs: { scope: 'col' } }), el('th', { cls: 'num', text: '=\u00a0Adds', attrs: { scope: 'col' } }))),
+      tb,
+      el('tfoot', {}, el('tr', {}, el('td', { text: 'Overall score' }), totShare, totAdds)));
+    const panel = el('div', { cls: 'calc-panel', attrs: { role: 'region', 'aria-label': `Calculation for ${o.name}` } }, title, el('div', { cls: 'table-wrap', attrs: { style: 'border:0;background:transparent' } }, table), note);
+    calcPanels[o.id] = { panel, title, rows, totShare, totAdds, note };
+    calcBody.append(panel);
+  }
+  const calc = el('details', { cls: 'calc' }, el('summary', { text: 'How is this calculated?' }), calcBody);
+
+  // The 1–5 grid. Every score is a button that opens the analyst's reason.
   const table = el('table');
-  const caption = el('caption', { cls: 'visually-hidden', text: 'Score per option and criterion, 1 to 5, with weighted totals' });
+  const caption = el('caption', { cls: 'visually-hidden', text: 'Score per option and criterion, from 1 to 5, with the overall score out of 5' });
   const thead = el('thead');
   const headRow = el('tr', {}, el('th', { text: 'Option', attrs: { scope: 'col' } }));
   const weightCells = {};
   for (const c of criteria) {
     const w = el('span', { cls: 'w' });
     weightCells[c.id] = w;
-    headRow.append(el('th', { attrs: { scope: 'col', title: c.why || '' } }, txt(c.name), w));
+    headRow.append(el('th', { attrs: { scope: 'col' } }, txt(c.name), w));
   }
-  headRow.append(el('th', { text: 'Weighted', attrs: { scope: 'col', style: 'text-align:right' } }));
+  headRow.append(el('th', { text: 'Overall score', attrs: { scope: 'col', style: 'text-align:right' } }));
   thead.append(headRow);
   const tbody = el('tbody');
   const totalCells = {}, tableRows = {};
@@ -494,25 +673,45 @@
     return `background:${bg};color:${lightInk ? '#ffffff' : (dark ? '#0d1b2b' : '#11335e')}`;
   };
   const heatCells = [];
+  const SUPERVISOR_RE = /^Supervisor:\s*/;
+  const reasonsBody = el('div', { cls: 'reasons-body' });
   for (const o of options) {
     const tr = el('tr', {}, el('td', { cls: 'opt', text: o.name }));
+    const reasonList = el('ul', { cls: 'clean' });
     for (const c of criteria) {
       const sc = cell(o.id, c.id);
-      const td = el('td', { cls: 'heat', text: sc ? sc.score : '–', attrs: { title: sc ? `${c.name}: ${sc.rationale || ''}` : 'No score' } });
-      if (sc) heatCells.push([td, sc.score]);
+      const td = el('td', { cls: 'heat' });
+      if (sc) {
+        const btn = el('button', { cls: 'score-btn', attrs: { type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'aria-controls': 'score-pop',
+          'aria-label': `${o.name}, ${c.name}: ${sc.score} out of 5, ${String(SCORE_WORDS[sc.score] || '').toLowerCase()}. Show the analyst’s reason.` } },
+          el('span', { text: sc.score }));
+        btn.addEventListener('click', () => togglePop(btn, o, c, sc));
+        td.append(btn);
+        heatCells.push([td, sc.score]);
+        reasonList.append(el('li', {}, el('strong', { text: `${c.name}: ${sc.score} of 5 (${SCORE_WORDS[sc.score] || ''}). ` }), txt(String(sc.rationale || '').replace(SUPERVISOR_RE, ''))));
+      } else td.append(el('span', { text: '–', attrs: { 'aria-label': 'No score' } }));
       tr.append(td);
     }
     const tot = el('td', { cls: 'total' });
     totalCells[o.id] = tot; tableRows[o.id] = tr;
     tr.append(tot);
     tbody.append(tr);
+    reasonsBody.append(el('h5', { text: o.name }), reasonList);
   }
   const paintHeat = () => heatCells.forEach(([td, s]) => td.setAttribute('style', heatStyle(s)));
   table.append(caption, thead, tbody);
-  const legend = el('div', { cls: 'legend' }, txt('Score'), [1, 2, 3, 4, 5].map(i => [el('i', { attrs: { style: `background: var(--heat-${i})` } }), txt(String(i))]), el('span', { text: 'Hover a score for the analyst’s reason', attrs: { style: 'margin-left:10px' } }));
+  const legend = el('div', { cls: 'legend', attrs: { 'aria-label': 'What the scores mean' } },
+    [1, 2, 3, 4, 5].map(i => el('span', {}, el('i', { attrs: { style: `background: var(--heat-${i})` } }), txt(`${i} ${SCORE_WORDS[i].replace(' this criterion', '').toLowerCase()}`))));
+  const hintText = el('span', { text: 'Click or tap any score to see the analyst’s reason for it.' });
+  const hint = el('p', { cls: 'hint' }, icon('info'), hintText);
+  const tableWrap = el('div', { cls: 'table-wrap' }, table);
+  const updateHint = () => { hintText.textContent = 'Click or tap any score to see the analyst’s reason for it.' +
+    (tableWrap.scrollWidth > tableWrap.clientWidth + 1 ? ' Swipe the table sideways to see every criterion.' : ''); };
+  window.addEventListener('resize', updateHint, { passive: true });
+  const reasons = el('details', { cls: 'reasons' }, el('summary', { text: 'All score reasons' }), reasonsBody);
 
-  const sensLine = el('div', { cls: 'sensitivity' });
-  const reset = el('button', { cls: 'btn', text: 'Reset weights', attrs: { type: 'button' } });
+  const sensLine = el('div', { cls: 'sensitivity', attrs: { 'aria-live': 'polite' } });
+  const reset = el('button', { cls: 'btn', text: 'Reset', attrs: { type: 'button', 'aria-label': 'Reset to the original weights' } });
   const sliders = el('div', { cls: 'sliders' });
   const sliderOutputs = {}, sliderInputs = {};
   for (const c of criteria) {
@@ -526,56 +725,180 @@
       el('span', { cls: 'visually-hidden', text: c.why || '', attrs: { id: id + '-why' } })));
   }
   reset.addEventListener('click', () => { Object.assign(weights, initialWeights); for (const c of criteria) sliderInputs[c.id].value = String(weights[c.id]); draw(); });
-  ss.append(el('div', { cls: 'card' }, bars, el('div', { cls: 'table-wrap' }, table), legend,
-    el('div', { cls: 'weights' }, el('div', { cls: 'weights-head' }, el('h4', { text: 'Criterion weights', attrs: { style: 'margin:0' } }), reset), sliders),
-    sensLine));
+  ss.append(el('div', { cls: 'card' },
+    explain,
+    el('h4', { cls: 'sub-head', text: 'Overall score, out of 5' }), bars, calc,
+    el('h4', { cls: 'sub-head', text: 'Score on each criterion, from 1 to 5' }),
+    tableWrap, legend, hint, reasons,
+    el('div', { cls: 'weights' },
+      el('div', { cls: 'weights-head' }, el('h4', { cls: 'sub-head', text: 'How much each criterion counts', attrs: { style: 'margin:0' } }), reset),
+      el('p', { cls: 'weights-help', text: 'Drag a slider to try your own priorities. The shares always add up to 100%. The 1–5 scores never change, only how much each one counts toward the overall score.' }),
+      sliders),
+    el('div', { cls: 'sens' }, el('h4', { cls: 'sub-head', text: 'Would the winner change if priorities shifted a little?' }), sensLine)));
 
-  const fmtPct = v => Math.round(v * 100) + '%';
+  const optNames = ids => joinAnd(ids.map(k => names[k] || k));
   function draw() {
     const t = totalsFor(weights);
     const n = normalize(weights);
     const win = winnersOf(t);
     const changed = criteria.some(c => Math.abs(weights[c.id] - initialWeights[c.id]) > 1e-9);
+    const allZero = criteria.every(c => n[c.id] === 0);
     for (const o of options) {
       const v = t[o.id];
       const lead = win.includes(o.id) && v > 0;
       barRows[o.id].fill.style.transform = `scaleX(${Math.max(0, Math.min(1, v / 5))})`;
       barRows[o.id].value.textContent = v.toFixed(2);
       barRows[o.id].row.classList.toggle('lead', lead);
-      barRows[o.id].row.setAttribute('aria-label', `${o.name}: ${v.toFixed(2)} out of 5${lead ? ', leading' : ''}`);
+      barRows[o.id].row.setAttribute('aria-label', `${o.name}: ${v.toFixed(2)} out of 5${lead ? ', highest' : ''}`);
       totalCells[o.id].textContent = v.toFixed(2);
       tableRows[o.id].classList.toggle('lead', lead);
+
+      // The worked calculation for this option
+      const P = calcPanels[o.id];
+      let roundedSum = 0;
+      for (const c of criteria) {
+        const r = P.rows[c.id], part = n[c.id] * r.score;
+        roundedSum += Number(part.toFixed(2));
+        r.share.replaceChildren(txt(r.score), el('span', { cls: 'op', text: ' × ' }), txt(fmtPct(n[c.id])));
+        r.adds.replaceChildren(el('span', { cls: 'op', text: '= ' }), txt(part.toFixed(2)));
+      }
+      P.title.replaceChildren(el('strong', { text: o.name }), txt(`: ${v.toFixed(2)} out of 5`));
+      P.totShare.textContent = '';
+      P.totAdds.textContent = v.toFixed(2);
+      P.note.textContent = Math.abs(roundedSum - Number(v.toFixed(2))) > 0.001
+        ? 'Each line is rounded to two decimals, so the lines may not add up exactly to the overall score.' : '';
+      P.note.hidden = !P.note.textContent;
     }
-    for (const c of criteria) { weightCells[c.id].textContent = fmtPct(n[c.id]); sliderOutputs[c.id].textContent = fmtPct(n[c.id]); }
+    if (calcShown == null || !options.some(o => o.id === calcShown)) showCalc((win[0] && options.some(o => o.id === win[0])) ? win[0] : (options[0] || {}).id);
+    for (const c of criteria) { weightCells[c.id].textContent = 'counts ' + fmtPct(n[c.id]); sliderOutputs[c.id].textContent = fmtPct(n[c.id]); }
     reset.disabled = !changed;
 
-    // Leader and margin
+    // The headline sentence above the bars, in plain words
     const sorted = Object.entries(t).sort((a, b) => b[1] - a[1]);
-    glanceLead.replaceChildren(el('div', { cls: 'stat-label', text: changed ? 'Leader at your weights' : 'Leader on weighted score' }),
-      el('div', { cls: 'stat-value', text: win.length > 1 ? 'Tie: ' + win.map(k => names[k]).join(' / ') : (names[win[0]] || '—') }),
-      el('div', { cls: 'stat-sub', text: sorted.length > 1 ? `${sorted[0][1].toFixed(2)} / 5 · ${(sorted[0][1] - sorted[1][1]).toFixed(2)} ahead of the next` : '' }));
+    const prefix = changed ? 'With your slider settings, ' : '';
+    const others = sorted.filter(([k]) => !win.includes(k));
+    if (allZero) explainLead.textContent = 'Every criterion is set to count 0%, so there is nothing to compare. Use Reset to go back to the original weights.';
+    else if (win.length > 1) explainLead.textContent = `${prefix}${optNames(win)} tie on overall score at ${t[win[0]].toFixed(2)} out of 5.`;
+    else {
+      const lead = `${names[win[0]]}’s overall score is ${t[win[0]].toFixed(2)} out of 5`;
+      const next = others.length ? `, the highest. Next is ${names[others[0][0]]} at ${others[0][1].toFixed(2)}.` : '.';
+      explainLead.textContent = prefix + lead + next;
+    }
 
-    // Sensitivity
-    const flips = sensitivity(weights);
-    const flipCrit = [...new Set(flips.map(f => f.criterion))].map(id => (criteria.find(c => c.id === id) || {}).name || id);
-    glanceSens.replaceChildren(el('div', { cls: 'stat-label', text: 'Weight sensitivity' }),
-      el('div', { cls: 'stat-value', text: flipCrit.length ? 'Sensitive' : 'Stable' }),
-      el('div', { cls: 'stat-sub', text: flipCrit.length ? 'Leader changes if ' + flipCrit.join(', ') + ' moves ±10 pts' : 'Leader holds under ±10 pt weight shifts' }));
-    sensLine.replaceChildren(icon(flipCrit.length ? 'alert' : 'stable'),
-      el('span', { text: flipCrit.length
-        ? `The ranking is fragile: moving the weight of ${flipCrit.join(', ')} by 10 points changes the leader. Weigh that criterion deliberately.`
-        : 'The ranking is robust: no single weight change of 10 points changes the leader.' }));
+    glanceLead.replaceChildren(el('div', { cls: 'stat-label', text: changed ? 'Highest with your weights' : 'Highest overall score' }),
+      el('div', { cls: 'stat-value', text: allZero ? '—' : win.length > 1 ? 'Tie: ' + win.map(k => names[k]).join(' / ') : (names[win[0]] || '—') }),
+      el('div', { cls: 'stat-sub', text: sorted.length > 1 && !allZero
+        ? `${sorted[0][1].toFixed(2)} out of 5` + (others.length && win.length === 1 ? `, ${(sorted[0][1] - others[0][1]).toFixed(2)} ahead of ${names[others[0][0]]}` : '')
+        : '' }));
+
+    // Would the winner change? Same test as scoring.sensitivity: nudge each share by 10 points, one at a time.
+    const flips = allZero ? [] : sensitivity(weights);
+    const flipCrit = [...new Set(flips.map(f => f.criterion))];
+    const leaderText = win.length > 1 ? `${optNames(win)} tied in front` : `${names[win[0]] || '—'} in front`;
+    glanceSens.replaceChildren(el('div', { cls: 'stat-label', text: 'If priorities shift a little' }),
+      el('div', { cls: 'stat-value', text: flipCrit.length ? 'Winner could change' : 'Same winner' }),
+      el('div', { cls: 'stat-sub', text: flipCrit.length
+        ? (flipCrit.length > 2 ? `Depends on how much ${flipCrit.length} of the ${criteria.length} criteria count` : `Depends on how much ${joinAnd(flipCrit.map(critName))} count${flipCrit.length > 1 ? '' : 's'}`)
+        : 'Checked by moving each criterion 10 points up or down' }));
+    if (allZero) sensLine.replaceChildren(el('p', { text: 'Not available while every criterion counts 0%.' }));
+    else if (!flipCrit.length) sensLine.replaceChildren(icon('stable'),
+      el('p', { text: `No. Giving any one criterion about 10 points more or less weight still leaves ${leaderText}.` }));
+    else sensLine.replaceChildren(icon('alert'), el('div', {},
+      el('p', { text: 'Yes. A small change in priorities changes the winner:' }),
+      el('ul', {}, flips.map(f => el('li', { text: `If ${critName(f.criterion)} counted ${fmtPct(f.share)} instead of ${fmtPct(n[f.criterion])}, ${optNames(f.winners)} would ${f.winners.length > 1 ? 'tie for the lead' : 'come out ahead'}.` }))),
+      el('p', { text: flipCrit.length > 1 ? 'Decide deliberately how much these criteria matter to you.' : `Decide deliberately how much ${critName(flipCrit[0])} matters to you.`, attrs: { style: 'margin-top:6px' } })));
     sensLine.style.color = flipCrit.length ? 'var(--warn-ink)' : 'var(--ink-2)';
   }
+
+  /* ---------- Score popover: one at a time, anchored to its cell ---------- */
+  const pop = el('div', { cls: 'pop', attrs: { id: 'score-pop', role: 'dialog', 'aria-modal': 'false', 'aria-labelledby': 'score-pop-title', tabindex: '-1', hidden: '' } });
+  const popArrow = el('span', { cls: 'pop-arrow', attrs: { 'aria-hidden': 'true' } });
+  const popClose = el('button', { cls: 'pop-close', attrs: { type: 'button', 'aria-label': 'Close' } }, icon('cross'));
+  const popTitle = el('p', { cls: 'pop-title', attrs: { id: 'score-pop-title' } });
+  const popScore = el('p', { cls: 'pop-score' });
+  const popBody = el('p', { cls: 'pop-body' });
+  const popNote = el('p', { cls: 'pop-note', text: 'The lead reviewer changed this score after reading the council.' });
+  pop.append(popArrow, el('div', { cls: 'pop-top' }, el('span', { cls: 'eyebrow', text: 'The analyst’s reason' }), popClose), popTitle, popScore, popBody, popNote);
+  document.body.append(pop);
+  let popAnchor = null, popFrame = 0;
+
+  const placePop = () => {
+    popFrame = 0;
+    if (!popAnchor) return;
+    const r = popAnchor.getBoundingClientRect();
+    const vw = document.documentElement.clientWidth, vh = window.innerHeight, gap = 10, margin = 12;
+    // Close when the cell has scrolled out of view, rather than chasing it off screen.
+    if (r.bottom < 0 || r.top > vh || r.right < 0 || r.left > vw) { closePop(false); return; }
+    const w = pop.offsetWidth, h = pop.offsetHeight;
+    const below = vh - r.bottom - gap - margin, above = r.top - gap - margin;
+    const side = below >= h || below >= above ? 'below' : 'above';
+    let top = side === 'below' ? r.bottom + gap : r.top - gap - h;
+    top = Math.max(margin, Math.min(top, vh - h - margin));
+    const cx = r.left + r.width / 2;
+    const left = Math.max(margin, Math.min(cx - w / 2, vw - w - margin));
+    const ax = Math.max(16, Math.min(cx - left, w - 16));
+    pop.dataset.side = side;
+    pop.style.setProperty('--arrow-x', ax + 'px');
+    pop.style.setProperty('--pop-from', side === 'below' ? '-6px' : '6px');
+    pop.style.setProperty('--pop-origin', `${ax}px ${side === 'below' ? '0' : '100%'}`);
+    pop.style.left = Math.round(left) + 'px';
+    pop.style.top = Math.round(top) + 'px';
+  };
+  const schedulePlace = () => { if (popAnchor && !popFrame) popFrame = requestAnimationFrame(placePop); };
+
+  function openPop(btn, o, c, sc) {
+    if (popAnchor && popAnchor !== btn) closePop(false);
+    popAnchor = btn;
+    btn.setAttribute('aria-expanded', 'true');
+    const raw = String(sc.rationale || '');
+    popTitle.textContent = c.name;
+    const badge = el('b', { text: sc.score });
+    badge.setAttribute('style', heatStyle(sc.score));
+    popScore.replaceChildren(txt(o.name), txt(' ·'), badge, txt(`out of 5 · ${SCORE_WORDS[sc.score] || ''}`));
+    popBody.textContent = raw.replace(SUPERVISOR_RE, '') || 'No reason was recorded.';
+    popNote.hidden = !SUPERVISOR_RE.test(raw);
+    pop.classList.remove('open');
+    pop.hidden = false;
+    placePop();
+    void pop.offsetWidth; // start the transition from the closed state
+    pop.classList.add('open');
+    pop.focus({ preventScroll: true });
+  }
+  function closePop(restoreFocus = true) {
+    if (!popAnchor) return;
+    const btn = popAnchor;
+    popAnchor = null;
+    btn.setAttribute('aria-expanded', 'false');
+    pop.classList.remove('open');
+    pop.hidden = true;
+    if (restoreFocus) btn.focus({ preventScroll: true });
+  }
+  function togglePop(btn, o, c, sc) { if (popAnchor === btn) closePop(); else openPop(btn, o, c, sc); }
+  popClose.addEventListener('click', () => closePop());
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && popAnchor) { e.preventDefault(); closePop(); } });
+  document.addEventListener('pointerdown', e => {
+    if (!popAnchor || pop.contains(e.target) || (e.target.closest && e.target.closest('.score-btn'))) return;
+    // Clicking somewhere inert hands focus back to the cell; clicking a control lets that control take it.
+    closePop(!(e.target.closest && e.target.closest('a, button, input, select, textarea, summary, [tabindex]')));
+  });
+  // Tabbing out of the popover closes it without pulling focus back.
+  pop.addEventListener('focusout', e => { if (popAnchor && e.relatedTarget && !pop.contains(e.relatedTarget) && e.relatedTarget !== popAnchor) closePop(false); });
+  window.addEventListener('scroll', schedulePlace, { passive: true, capture: true });
+  window.addEventListener('resize', schedulePlace, { passive: true });
+  window.addEventListener('beforeprint', () => closePop(false));
+
   paintHeat();
   draw();
-  toggle.addEventListener('click', paintHeat);
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', paintHeat);
+  updateHint();
+  const repaint = () => { paintHeat(); if (popAnchor) popScore.querySelector('b').setAttribute('style', heatStyle(Number(popScore.querySelector('b').textContent))); };
+  toggle.addEventListener('click', repaint);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', repaint);
 
   /* ---------- Pros & cons ---------- */
-  const ps = section('proscons', 'Pros & cons', 'Merged from the analyst’s ledger and the council, ranked by impact (severity × likelihood).');
+  const ps = section('proscons', 'Pros & cons', 'The main points for and against each option, from the analyst and the council. Each is rated 1–5 for impact and for how likely it is; the bar shows the two multiplied, so the biggest, most likely points come first.');
   const pcGrid = el('div', { cls: 'grid' });
   const impactOf = i => (Number(i.severity) || 0) * (Number(i.likelihood) || 0);
+  const rated = (words, v) => `${words[v] || 'Unrated'} (${v}/5)`;
   for (const o of options) {
     const card = el('article', { cls: 'card option-card' });
     const head = el('div', { cls: 'role-head' }, el('div', {}, el('h3', { text: o.name }), o.description ? el('p', { cls: 'desc', text: o.description }) : null));
@@ -589,12 +912,13 @@
       if (!items.length) col.append(el('div', { cls: 'empty', text: 'None recorded' }));
       for (const i of items) {
         const pct = Math.round(impactOf(i) / 25 * 100);
+        const by = asList(i.raised_by);
         col.append(el('div', { cls: 'pc-item' },
           el('p', { text: i.claim }),
           el('div', { cls: 'impact' },
-            el('span', { cls: 'impact-bar', attrs: { role: 'img', 'aria-label': `Impact ${impactOf(i)} of 25` } }, el('b', { attrs: { style: `width:${pct}%;background:${colour}` } })),
-            el('span', { text: `severity ${i.severity} · likelihood ${i.likelihood}` }),
-            el('span', { cls: 'by' }, asList(i.raised_by).map(r => el('span', { text: roleName(r) }))))));
+            el('span', { cls: 'impact-bar', attrs: { role: 'img', 'aria-label': `Impact times likelihood: ${impactOf(i)} of 25` } }, el('b', { attrs: { style: `width:${pct}%;background:${colour}` } })),
+            el('span', { text: `${rated(IMPACT_WORDS, i.severity)} · ${rated(LIKELY_WORDS, i.likelihood)}` })),
+          by.length ? el('div', { cls: 'impact', attrs: { style: 'margin-top:6px' } }, el('span', { cls: 'by-label', text: 'Raised by' }), el('span', { cls: 'by' }, by.map(r => el('span', { text: roleName(r) })))) : null));
       }
       cols.append(col);
     }
@@ -605,32 +929,34 @@
 
   /* ---------- Dissent ---------- */
   if (R.dissent) {
-    const ds = section('dissent', 'Strongest dissent', 'The best argument the verdict did not follow.');
+    const ds = section('dissent', 'Strongest disagreement', 'The best argument against the recommendation, and why it was not followed.');
     ds.append(el('div', { cls: 'card' },
       el('blockquote', { text: R.dissent.position }),
       el('div', { cls: 'attribution' }, chip(roleName(R.dissent.role), 'violet')),
-      el('p', { cls: 'reason' }, el('strong', { text: 'Not adopted because: ' }), txt(R.dissent.why_rejected))));
+      el('p', { cls: 'reason' }, el('strong', { text: 'Why it was not followed: ' }), txt(R.dissent.why_rejected))));
   }
 
   /* ---------- Blind spots ---------- */
-  const ms = section('missed', 'What everyone missed', 'Points no council voice raised, added by the supervisor.');
+  const ms = section('missed', 'What everyone missed', 'Points nobody on the council raised, added by the lead reviewer after reading every report.');
   ms.append(el('div', { cls: 'card' }, el('ol', { cls: 'numbered' }, asList(R.blind_spots).map(b => el('li', { text: b })))));
 
   /* ---------- Drift ---------- */
-  const dr = section('drift', 'Supervisor drift', 'The supervisor sealed its own view before hearing the council.');
+  const dr = section('drift', 'Did the council change the recommendation?', 'Before hearing the council, the lead reviewer wrote down its own view and set it aside. Here it is next to what happened after.');
   const pre = R.precommit || {};
   dr.append(el('div', { cls: 'drift' },
-    el('div', { cls: 'card' }, el('span', { cls: 'eyebrow', text: 'Before the council' }),
+    el('div', { cls: 'card' }, el('span', { cls: 'eyebrow', text: 'View before the council' }),
       el('p', { text: pre.position || '', attrs: { style: 'font-size:17px;margin:10px 0 0' } }),
       asList(pre.reasons).length ? el('ul', { cls: 'clean reasoning', attrs: { style: 'margin-top:10px' } }, asList(pre.reasons).map(r => el('li', { text: r }))) : null,
-      pre.main_risk ? el('p', { cls: 'muted', text: 'Main risk: ' + pre.main_risk, attrs: { style: 'font-size:14px;margin:10px 0 0' } }) : null),
+      pre.main_risk ? el('p', { cls: 'muted', text: 'Biggest risk it saw: ' + pre.main_risk, attrs: { style: 'font-size:14px;margin:10px 0 0' } }) : null),
     el('div', { cls: 'arrow' }, icon('arrow')),
-    el('div', { cls: 'card' }, el('span', { cls: 'eyebrow', text: 'After the council' }), el('p', { text: R.drift || '', attrs: { style: 'font-size:17px;margin:10px 0 0' } }))));
+    el('div', { cls: 'card' }, el('span', { cls: 'eyebrow', text: 'After hearing the council' }), el('p', { text: R.drift || '', attrs: { style: 'font-size:17px;margin:10px 0 0' } }))));
 
   /* ---------- Council ---------- */
-  const cs = section('council', 'Council', 'Each voice judged the brief through one lens, independently and in parallel.');
+  const cs = section('council', 'Council', 'Each member looked at the question from one angle, on its own, without seeing the others’ answers.');
   const TAGS = { Brief: 'neutral', Source: 'info', Mechanism: 'violet', Knowledge: 'warn', Supervisor: 'neutral' };
+  const TAG_LABELS = { Brief: 'Background', Source: 'Source', Mechanism: 'Reasoning', Knowledge: 'Knowledge', Supervisor: 'Lead reviewer' };
   const splitTag = s => { const m = /^(Brief|Source|Mechanism|Knowledge|Supervisor):\s*/.exec(s); return m ? [m[1], s.slice(m[0].length)] : [null, s]; };
+  const FLIP_RE = /^flip:\s*/i;
   const roster = Object.fromEntries((R.roster || []).map(r => [r.role, r]));
   const council = el('div', { cls: 'council' });
   for (const r of R.reports || []) {
@@ -638,40 +964,76 @@
     const cTone = { high: 'good', medium: 'info', low: 'warn' }[r.confidence] || '';
     const card = el('article', { cls: 'card' },
       el('div', { cls: 'role-head' }, el('div', { cls: 'role-name', text: roleName(r.role) }),
-        el('div', { cls: 'chips' }, chip(r.confidence || '?', cTone), meta.model ? chip(meta.model) : null)),
+        el('div', { cls: 'chips' }, chip(`${CONF_WORDS[r.confidence] || '?'} confidence`, cTone), meta.model ? chip(meta.model) : null)),
       roleSummary(r.role) ? el('p', { cls: 'role-summary', text: roleSummary(r.role) }) : null,
-      meta.why ? el('p', { cls: 'role-why' }, el('strong', { text: 'On this council: ' }), txt(meta.why)) : null,
+      meta.why ? el('p', { cls: 'role-why' }, el('strong', { text: 'Why it was included: ' }), txt(meta.why)) : null,
       el('p', { cls: 'role-position', text: r.position }));
     const reasoning = el('details', {}, el('summary', { text: 'Reasoning' }),
-      el('ul', { cls: 'clean reasoning' }, asList(r.reasoning).map(x => el('li', { cls: /^flip:/i.test(x) ? 'flip' : '', text: x }))),
+      el('ul', { cls: 'clean reasoning' }, asList(r.reasoning).map(x => FLIP_RE.test(x)
+        ? el('li', { cls: 'flip' }, el('strong', { text: 'What would change this view: ' }), txt(x.replace(FLIP_RE, '')))
+        : el('li', { text: x }))),
       r.surprise ? el('p', { cls: 'surprise' }, el('strong', { text: 'What others will miss: ' }), txt(r.surprise)) : null);
     const evidence = el('details', {}, el('summary', { text: `Evidence (${asList(r.evidence).length})` }),
-      el('ul', { cls: 'clean evidence' }, asList(r.evidence).map(x => { const [tag, rest] = splitTag(x); return el('li', {}, tag ? chip(tag, TAGS[tag]) : null, el('span', { cls: 'text' }, linkify(rest))); })));
+      el('ul', { cls: 'clean evidence' }, asList(r.evidence).map(x => { const [tag, rest] = splitTag(x); return el('li', {}, tag ? chip(TAG_LABELS[tag], TAGS[tag]) : null, el('span', { cls: 'text' }, linkify(rest))); })));
     card.append(reasoning, evidence);
     council.append(card);
   }
   cs.append(council);
 
   /* ---------- Brief & unknowns ---------- */
-  const bs = section('brief', 'Brief & unknowns', 'The neutral brief every voice received, and what would change the verdict.');
+  const bs = section('brief', 'The question & unknowns', 'The background every council member received, and what could still change the verdict.');
   const dl = el('dl');
   const add = (label, node) => { if (node) dl.append(el('dt', { text: label }), el('dd', {}, node)); };
   add('Question', brief.question ? el('p', { text: brief.question, attrs: { style: 'margin:0' } }) : null);
   add('Context', brief.context ? el('p', { text: brief.context, attrs: { style: 'margin:0' } }) : null);
-  add('Stakes', brief.stakes ? el('p', { text: brief.stakes, attrs: { style: 'margin:0' } }) : null);
+  add('What’s at stake', brief.stakes ? el('p', { text: brief.stakes, attrs: { style: 'margin:0' } }) : null);
   add('Options', options.length ? el('ul', { cls: 'clean reasoning' }, options.map(o => el('li', {}, el('strong', { text: o.name }), txt(o.description ? ' — ' + o.description : '')))) : null);
   add('Constraints', asList(brief.constraints).length ? el('ul', { cls: 'clean reasoning' }, asList(brief.constraints).map(c => el('li', { text: c }))) : null);
-  add('Criteria', criteria.length ? el('ul', { cls: 'clean reasoning' }, criteria.map(c => el('li', {}, el('strong', { text: `${c.name} (${fmtPct(initialWeights[c.id])})` }), txt(c.why ? ' — ' + c.why : '')))) : null);
+  add('Criteria and how much each counts', criteria.length ? el('ul', { cls: 'clean reasoning' }, criteria.map(c => el('li', {}, el('strong', { text: `${c.name} (${fmtPct(initialWeights[c.id])})` }), txt(c.why ? ' — ' + c.why : '')))) : null);
   add('Evidence gathered', (brief.evidence || []).length ? el('ul', { cls: 'clean evidence' }, brief.evidence.map(e => el('li', {}, el('span', { cls: 'text' }, txt(e.claim || ''), el('span', { cls: 'src' }, txt(' · '), linkify(e.source || '')))))) : null);
   const unknownsCard = el('div', { cls: 'card' }, el('h3', { text: 'Unknowns' }), el('p', { cls: 'muted', text: 'Facts that could change the verdict if they turned out differently.', attrs: { style: 'font-size:14px;margin:0 0 12px' } }),
     asList(R.unknowns).length ? el('ol', { cls: 'numbered' }, asList(R.unknowns).map(u => el('li', { text: u }))) : el('p', { cls: 'muted', text: 'None recorded.' }));
   bs.append(el('div', { cls: 'brief-grid' }, el('div', { cls: 'card' }, dl), unknownsCard));
 
-  main.append(el('footer', {}, el('span', { text: 'Generated by the critically-assess skill' }), el('span', { text: 'Scores are 1–5 · weights are normalized · print-friendly' })));
+  main.append(el('footer', {}, el('span', { text: 'Generated by the critically-assess skill' }), el('span', { text: 'Scores run from 1 (fails) to 5 (as good as it gets) · criterion shares add up to 100%' })));
+
+  /* ---------- Guide and contents: only sections that exist ---------- */
+  for (const g of guideLines) {
+    const links = (Array.isArray(g[0]) ? g.slice(0, -1) : [g.slice(0, 2)]).filter(([id]) => document.getElementById(id));
+    if (links.length) guideList.append(el('li', {}, el('div', {}, links.map(([id, label]) => el('a', { text: label, attrs: { href: '#' + id } }))), el('span', { text: g[g.length - 1] })));
+  }
+  for (const [id, label] of tocTargets) if (document.getElementById(id)) toc.append(el('a', { text: label, attrs: { href: '#' + id } }));
+
+  /* ---------- Back to top ---------- */
+  const toTop = el('button', { cls: 'to-top', attrs: { type: 'button', 'aria-label': 'Back to top', title: 'Back to top' } }, icon('up'));
+  document.body.append(toTop);
+  let pastVerdict = false, scrollingUp = false, lastY = window.scrollY, topFrame = 0;
+  // Where the page has no side margin for the button (phones, narrow windows), show it only while
+  // scrolling back up or at the very end, so it never sits on top of text being read.
+  const crowded = () => window.innerWidth < 1088;
+  const atEnd = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
+  const updateTop = () => {
+    topFrame = 0;
+    const y = window.scrollY;
+    if (Math.abs(y - lastY) > 4) { scrollingUp = y < lastY; lastY = y; }
+    const show = pastVerdict && (!crowded() || scrollingUp || atEnd());
+    toTop.classList.toggle('show', show);
+    if (!show && document.activeElement === toTop) toTop.blur();
+  };
+  const verdictEl = document.getElementById('verdict');
+  if ('IntersectionObserver' in window && verdictEl) {
+    new IntersectionObserver(([e]) => { pastVerdict = !e.isIntersecting && e.boundingClientRect.top < 0; updateTop(); }).observe(verdictEl);
+  }
+  window.addEventListener('scroll', () => { if (!topFrame) topFrame = requestAnimationFrame(updateTop); }, { passive: true });
+  window.addEventListener('resize', () => { if (!topFrame) topFrame = requestAnimationFrame(updateTop); }, { passive: true });
+  toTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
+    h1.focus({ preventScroll: true });
+  });
 
   /* ---------- Gentle reveal on scroll ---------- */
   const reveals = document.querySelectorAll('.reveal');
-  if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  if ('IntersectionObserver' in window && !reduceMotion()) {
     const io = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
     reveals.forEach(r => io.observe(r));
   } else reveals.forEach(r => r.classList.add('in'));
