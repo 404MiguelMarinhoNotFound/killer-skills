@@ -1,12 +1,14 @@
 """Plain-English checks for the text a reader sees in the report.
 
-Flags the habits that made early reports hard to read: very long sentences, sentences that
-chain several ideas with semicolons, options called by their letter instead of their name,
-the skill's internal vocabulary, and acronyms the reader was never told the meaning of.
+Flags the habits that made early reports hard to read: note-style text (arrows, slashes, clauses
+chained with semicolons), items that open by pointing at text the reader cannot see, options called
+by their letter instead of their name, the skill's internal vocabulary, and acronyms the reader was
+never told the meaning of.
+
+There is deliberately no length limit. A word cap pushed writers to compress ideas into shorthand,
+which is the opposite of clear; a big idea needs the words it takes to explain it.
 """
 import re
-
-MAX_WORDS = 35
 
 # Acronyms most technical readers know. Anything else must be spelled out once, e.g.
 # "point-in-time recovery (PITR)", or appear in the user's own question or options.
@@ -28,6 +30,11 @@ INTERNAL_TERMS = [
 
 _LETTER_CONTEXT = (r"option|options|favour|favor|favours|favors|choose|chose|pick|picked|reject|rejects|rejected|keep|"
                    r"adopt|over|than|vs\.?|versus|and|or|with|to|prefer|prefers|recommend|recommends")
+# Each item is shown on its own, so an opening pronoun or a pointer to "above" refers to nothing.
+_LEANING_START = re.compile(r"^(?:it|this|that|these|those|they|same)\b(?!-)", re.IGNORECASE)
+_POINTS_ELSEWHERE = re.compile(r"\b(?:as (?:noted|mentioned|said|discussed) (?:above|earlier|before)|see above|as above)\b", re.IGNORECASE)
+_NOTE_STYLE = re.compile(r"->|=>|→|←|(?<!\w)w/o?(?=\s)|(?<!\w)b/c\b")
+_URL = re.compile(r"\S+://\S+")
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9\"'(])")
 _ACRONYM = re.compile(r"\b[A-Z][A-Z0-9]{1,6}s?\b")
 _DEFINED = re.compile(r"\(([A-Z][A-Z0-9]{1,6}s?)\)")
@@ -60,12 +67,11 @@ def check_text(text, options, known=frozenset(), defined=frozenset()):
     text = str(text or "")
     letter_pats = _letter_patterns(options)
     allowed = COMMON_ACRONYMS | set(known) | set(defined) | set(_DEFINED.findall(text))
+    if _LEANING_START.match(text.strip()) or _POINTS_ELSEWHERE.search(text):
+        problems.append(f"leans on text the reader cannot see; name the subject so the item stands alone: {_excerpt(text)}")
     for s in _sentences(text):
-        words = len(s.split())
-        if words > MAX_WORDS:
-            problems.append(f"sentence of {words} words, split it (max {MAX_WORDS}): {_excerpt(s)}")
-        if s.count(";") >= 2 or (";" in s and ":" in s):
-            problems.append(f"packs several ideas into one sentence, split it: {_excerpt(s)}")
+        if s.count(";") >= 2 or (";" in s and ":" in s) or _NOTE_STYLE.search(s):
+            problems.append(f"reads like notes; write out how the ideas connect, in full sentences: {_excerpt(s)}")
     if any(p.search(text) for p in letter_pats):
         names = ", ".join(f"{k} = {v}" for k, v in options.items())
         problems.append(f"uses an option letter, write the option's name ({names}): {_excerpt(text)}")
@@ -132,6 +138,9 @@ def check_reports(reports, brief):
         role = r.get("role", "?")
         texts = [("position", r.get("position")), ("surprise", r.get("surprise"))]
         texts += [(f"reasoning[{i}]", x) for i, x in enumerate(r.get("reasoning") or [])]
+        # Evidence is shown too; drop the tag and any URL before checking the prose around them.
+        texts += [(f"evidence[{i}]", _URL.sub("", re.sub(r"^\w+:\s*", "", str(x))))
+                  for i, x in enumerate(r.get("evidence") or [])]
         defined = _defined_anywhere(t for _, t in texts)
         out += [f"{role}.{name}: {p}" for name, text in texts if text for p in check_text(text, options, known, defined)]
     return out

@@ -14,14 +14,27 @@ def test_plain_sentences_pass():
     assert issues("Use Postgres. Finance can run new reports on the same data without a second system.") == []
 
 
-def test_long_sentences_are_flagged():
-    long = " ".join(["word"] * 36) + "."
-    assert any("words" in i for i in issues(long))
+def test_long_sentences_are_not_capped():
+    # A big idea needs the words it takes; length alone is never a problem.
+    long = ("Moving to the managed service means nobody on the team has to patch or restart database servers any more, "
+            "which frees roughly a day a month for the two engineers who carry the pager at night today.")
+    assert len(long.split()) > 35 and issues(long) == []
 
 
-def test_packed_sentences_are_flagged():
-    packed = "Adds a dependency to the skill; not installed here; a missing import stops every run."
-    assert any("several ideas" in i for i in issues(packed))
+def test_note_style_is_flagged():
+    for text in ("Adds a dependency to the skill; not installed here; a missing import stops every run.",
+                 "Broker -> extra runtime to run and patch.",
+                 "Works w/ the current schema.",
+                 "Lower ops burden vs. the incumbent; migration risk: real."):
+        assert any("reads like notes" in i for i in issues(text)), text
+
+
+def test_items_that_lean_on_unseen_text_are_flagged():
+    for text in ("It adds a second failure point.", "This cuts both ways.", "They would need retraining.",
+                 "Same cost story, but worse at scale.", "As noted above, Postgres is cheaper."):
+        assert any("leans on text" in i for i in issues(text)), text
+    assert issues("Postgres adds no second system to run. It stays one database.") == []
+    assert issues("Itemised billing makes DynamoDB costs easy to trace.") == []
 
 
 def test_option_letters_are_flagged_but_the_article_a_is_not():
@@ -64,3 +77,11 @@ def test_council_reports_are_checked_as_warnings():
     report["position"] = "Favour A; B needs a pipeline; the brief is silent."
     warnings = clarity.check_reports([report], sample_run.BRIEF)
     assert warnings and warnings[0].startswith("contrarian.position")
+
+
+def test_council_evidence_is_checked_without_its_tag_or_url():
+    report = sample_run.role_report("contrarian")
+    report["evidence"] = ["Source: https://example.com/README.md shows the retry path -> double writes."]
+    warnings = clarity.check_reports([report], sample_run.BRIEF)
+    assert any(w.startswith("contrarian.evidence[0]") and "notes" in w for w in warnings)
+    assert not any("README" in w for w in warnings)
