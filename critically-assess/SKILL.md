@@ -78,7 +78,7 @@ Read every report, then write `result.json` as described in `reference/contracts
 Run `validate.py` again and fix `result.json` until it prints OK.
 
 ### 9. Render and answer
-Run `python "<SKILL_DIR>/scripts/render.py" <run_dir>`. It writes `report.html` and prints a short summary. Reply in chat with that summary and the report path. Do not paste the full report into chat.
+Run `python "<SKILL_DIR>/scripts/render.py" <run_dir>`. It writes `report.html`, prints a short summary, and opens the report in the user's default browser when the machine has one (add `--no-open` if the user asked not to). Reply in chat with that summary. If it printed "Opened in your default browser", say so; otherwise give the `file://` link it printed so the user can open it. Do not paste the full report into chat.
 
 ## Anti-patterns
 - Letting a subagent see another subagent's output, the conversation or your pre-commitment, including by leaving the pre-commitment inside the working directory while the council runs.
