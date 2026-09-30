@@ -71,7 +71,7 @@ RESULT = {
     "dissent": {"role": "executor", "position": "DynamoDB ships faster",
                 "why_rejected": "reporting cost dominates"},
     "blind_spots": ["Nobody priced the reporting replica"],
-    "drift": "None: the council confirmed the pre-commitment",
+    "drift": "No change: the council agreed with the first view",
     "verdict": {"decision": "A", "summary": "Postgres fits the reporting needs", "conditions": []},
     "first_step": "Prototype the finance report query on RDS",
     "confidence": "medium",

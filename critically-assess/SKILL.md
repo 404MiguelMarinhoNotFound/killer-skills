@@ -75,10 +75,23 @@ Read every report, then write `result.json` as described in `reference/contracts
 - Give a real verdict. The only form of "it depends" is `conditional-go` with explicit conditions.
 - Give one first step, not a list.
 
-Run `validate.py` again and fix `result.json` until it prints OK.
+#### Write for the reader
+Everything in `result.json` ends up in the report, and the reader never saw the brief, the council's replies or your notes. Rewrite what you take from the reports instead of pasting it.
+- Call each option by its name. The letters A, B, C are ids for the files only.
+- Leave out this skill's own vocabulary: brief, pre-commitment, council voice, lens, roster, step numbers, file names. Say what you mean ("before hearing the council, I leaned towards...").
+- One idea per sentence. Aim for 15 to 20 words and never pass 35. Split a sentence rather than chain it with semicolons or colons.
+- Put the point first, then the reason. Use the active voice and everyday words.
+- Spell out an acronym the first time, as in "point-in-time recovery (PITR)", unless the user used it.
+- Give numbers with their unit and what they mean: "about 3 weeks of work for the 3-person team".
+
+Two rewrites from real runs:
+- Before: "None: I precommitted to no-go on portability and run-dependent rules; the council agreed." After: "No change. Before hearing the council, I leaned towards keeping the current checks, and every role agreed."
+- Before: "Adds a dependency (jsonschema 4.26 -> attrs, referencing, compiled rpds-py) to a skill promising 'Python 3.10+ and nothing else'; not installed here; a missing import stops every run at step 7 and step 9 render." After: "Adopting jsonschema adds a third-party package to a skill that promises to need only Python. Where the package is missing, every run fails before the report is built."
+
+Run `validate.py` again and fix `result.json` until it prints OK. It also checks the writing: it rejects long or packed sentences, option letters, internal terms and unexplained acronyms in `result.json`, and lists the same problems in the council's replies as `WARN` lines, so you know what to rewrite when you carry that text over.
 
 ### 9. Render and answer
-Run `python "<SKILL_DIR>/scripts/render.py" <run_dir>`. It writes `report.html`, prints a short summary, and opens the report in the user's default browser when the machine has one (add `--no-open` if the user asked not to). Reply in chat with that summary. If it printed "Opened in your default browser", say so; otherwise give the `file://` link it printed so the user can open it. Do not paste the full report into chat.
+Run `python "<SKILL_DIR>/scripts/render.py" <run_dir>`. It writes `report.html`, prints a short summary, and opens the report in the user's default browser when the machine has one (add `--no-open` if the user asked not to). Reply in chat with that summary, written the same plain way. If it printed "Opened in your default browser", say so; otherwise give the `file://` link it printed so the user can open it. Do not paste the full report into chat.
 
 ## Anti-patterns
 - Letting a subagent see another subagent's output, the conversation or your pre-commitment, including by leaving the pre-commitment inside the working directory while the council runs.
