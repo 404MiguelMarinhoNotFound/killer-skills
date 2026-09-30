@@ -14,6 +14,8 @@ You are the supervisor. You research, write one neutral brief, commit to your ow
 - The user wants something made (write, build, draft): do the task.
 - The choice is trivial or instantly reversible: give a one-line opinion.
 
+Once this skill is running, finish the whole workflow below. If partway through you think a full council is not worth it, say so and ask the user; never quietly swap in your own quick answer.
+
 ## Workflow
 
 ### 1. Detect the mode
@@ -84,9 +86,9 @@ Everything in `result.json` ends up in the report, and the reader never saw the 
 - Spell out an acronym the first time, as in "point-in-time recovery (PITR)", unless the user used it.
 - Give numbers with their unit and what they mean: "about 3 weeks of work for the 3-person team".
 
-Two rewrites from real runs:
-- Before: "None: I precommitted to no-go on portability and run-dependent rules; the council agreed." After: "No change. Before hearing the council, I leaned towards keeping the current checks, and every role agreed."
-- Before: "Adds a dependency (jsonschema 4.26 -> attrs, referencing, compiled rpds-py) to a skill promising 'Python 3.10+ and nothing else'; not installed here; a missing import stops every run at step 7 and step 9 render." After: "Adopting jsonschema adds a third-party package to a skill that promises to need only Python. Where the package is missing, every run fails before the report is built."
+Two rewrites showing the pattern (the topic is only an illustration):
+- Before: "None: I precommitted to B on cost and hiring lead time; the council agreed." After: "No change. Before hearing the council, I leaned towards hiring a contractor, and every role agreed."
+- Before: "Adds a broker (RabbitMQ -> Erlang runtime, clustering, TLS certs) to a stack promising 'one database and nothing else'; not in staging; an outage stops checkout at step 3." After: "Adding RabbitMQ means running a second system next to the database. If it goes down, customers cannot check out."
 
 Run `validate.py` again and fix `result.json` until it prints OK. It also checks the writing: it rejects long or packed sentences, option letters, internal terms and unexplained acronyms in `result.json`, and lists the same problems in the council's replies as `WARN` lines, so you know what to rewrite when you carry that text over.
 
