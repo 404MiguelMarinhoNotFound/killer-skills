@@ -1,6 +1,7 @@
 ---
 id: executor
 name: The Executor
+summary: Tests feasibility: effort, bottlenecks, the cheapest early test and the first concrete step within the constraints.
 model: sonnet
 tension_with: [first-principles]
 use_when: the decision turns into real work with limited time, money or people

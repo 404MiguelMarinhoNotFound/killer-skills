@@ -1,6 +1,7 @@
 ---
 id: contrarian
 name: The Contrarian
+summary: Hunts for the flaw that would sink each option, and aims hardest at the apparent favourite.
 model: opus
 tension_with: [expansionist]
 use_when: any decision with real stakes or a cost to undo
