@@ -1,5 +1,9 @@
 """Inject result.json into the HTML template and print a terminal summary."""
 import json
+import os
+import platform
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -44,7 +48,35 @@ def terminal_summary(result):
     return "\n".join(lines)
 
 
-def main(run_dir):
+def open_in_browser(path):
+    """Open the report in the default browser when this machine has one. Returns True if launched.
+
+    Skipped when disabled (--no-open or CRITICALLY_ASSESS_NO_OPEN), in CI, and on Linux without a
+    display, where a generic opener could fall back to a text browser and hang the terminal.
+    """
+    if os.environ.get("CRITICALLY_ASSESS_NO_OPEN") or os.environ.get("CI"):
+        return False
+    target = str(Path(path).resolve())
+    quiet = {"stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL, "stdin": subprocess.DEVNULL}
+    try:
+        if sys.platform == "darwin":
+            subprocess.Popen(["open", target], **quiet)
+            return True
+        if sys.platform.startswith("win"):
+            os.startfile(target)  # type: ignore[attr-defined]
+            return True
+        if "microsoft" in platform.uname().release.lower() and shutil.which("wslview"):  # WSL: use the Windows browser
+            subprocess.Popen(["wslview", target], start_new_session=True, **quiet)
+            return True
+        if (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")) and shutil.which("xdg-open"):
+            subprocess.Popen(["xdg-open", target], start_new_session=True, **quiet)
+            return True
+    except OSError:
+        pass
+    return False
+
+
+def main(run_dir, open_report=True):
     run = Path(run_dir)
     result = json.loads((run / "result.json").read_text(encoding="utf-8"))
     problems = validate.validate_result(result)
@@ -58,7 +90,12 @@ def main(run_dir):
     out.write_text(render_html(page_data, TEMPLATE.read_text(encoding="utf-8")), encoding="utf-8")
     print(terminal_summary(result))
     print(f"\nReport: {out.resolve()}")
+    if open_report and open_in_browser(out):
+        print("Opened in your default browser.")
+    else:
+        print(f"Open it in a browser: {out.resolve().as_uri()}")
 
 
 if __name__ == "__main__":
-    main(sys.argv[1])
+    args = [a for a in sys.argv[1:] if a != "--no-open"]
+    main(args[0], open_report="--no-open" not in sys.argv[1:])
