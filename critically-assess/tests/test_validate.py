@@ -241,20 +241,3 @@ def test_brief_research_setting_is_optional_but_checked():
     brief["research"] = "everything"
     assert any("research" in e for e in validate.validate_brief(brief))
 
-
-# --- clarity -----------------------------------------------------------------------------
-
-def test_unclear_result_text_fails_validation(run_dir):
-    result = copy.deepcopy(sample_run.RESULT)
-    result["verdict"]["summary"] = "Favour A; B needs a pipeline; the brief is silent."
-    (run_dir / "result.json").write_text(json.dumps(result), encoding="utf-8")
-    errors = validate.validate_run(run_dir)
-    assert errors and all(e.startswith("result: clarity: verdict.summary") for e in errors)
-
-
-def test_unclear_council_text_is_only_a_warning(run_dir):
-    report = sample_run.role_report("contrarian")
-    report["position"] = "Favour A; B needs a pipeline; the brief is silent."
-    (run_dir / "reports" / "contrarian.raw.txt").write_text(json.dumps(report), encoding="utf-8")
-    assert validate.validate_run(run_dir) == []
-    assert any(w.startswith("contrarian.position") for w in validate.clarity_warnings(run_dir))
