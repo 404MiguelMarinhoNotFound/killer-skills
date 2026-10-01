@@ -12,7 +12,7 @@ CONFIDENCE = ("low", "medium", "high")
 SINGLE_DECISIONS = ("go", "no-go", "conditional-go")
 RESULT_KEYS = ("title", "brief", "precommit", "roster", "reports", "analyst", "ledger", "scores",
                "dissent", "blind_spots", "drift", "verdict", "first_step", "confidence", "unknowns")
-ROLE_KEYS = ("role", "position", "reasoning", "per_option", "surprise", "confidence", "evidence")
+ROLE_KEYS = ("role", "pick", "point", "position", "reasoning", "per_option", "surprise", "confidence", "evidence")
 RESEARCH = ("online", "repo", "both", "none")
 COUNCIL_TAGS = ("Brief:", "Source:", "Mechanism:", "Knowledge:")
 ANALYST_TAGS = ("Brief:", "Mechanism:", "Knowledge:", "Supervisor:")
@@ -116,9 +116,11 @@ def validate_role_report(report, option_ids):
     e = [f"{role}: missing '{k}'" for k in ROLE_KEYS if k not in report]
     if e:
         return e
-    for key in ("position", "surprise"):
+    for key in ("point", "position", "surprise"):
         if not _is_text(report[key]):
             e.append(f"{role}: {key} must be a non-empty string")
+    if report["pick"] not in option_ids:
+        e.append(f"{role}: pick must be the id of the option your lens favours, one of {list(option_ids)}")
     if not _is_text_list(report["reasoning"]) or not 1 <= len(report["reasoning"]) <= 3:
         e.append(f"{role}: reasoning must be a list of 1-3 strings")
     if not _is_text_list(report["evidence"], allow_empty=False):
@@ -259,6 +261,8 @@ def validate_result(result):
     else:
         for item in result["ledger"]:
             e += _check_ledger_item(item, option_ids, "result")
+            if not _is_text(item.get("point")):
+                e.append(f"result: ledger item without a point: {item.get('claim')}")
             if not _is_text_list(item.get("raised_by"), allow_empty=False):
                 e.append(f"result: ledger raised_by must be a non-empty list of role ids: {item.get('claim')}")
     return e + _check_scores(result["scores"], option_ids, criterion_ids, "result")

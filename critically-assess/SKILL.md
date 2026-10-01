@@ -72,6 +72,7 @@ Read every report, then write `result.json` as described in `reference/contracts
 - Never dismiss a council view without saying why.
 - Rank evidence by its tag: `Source:` and `Brief:` facts first, then `Mechanism:` reasoning, then `Knowledge:` recall. Every voice shares the same training, so a `Knowledge:` claim raised by several voices counts once. When the verdict would rest on a `Knowledge:` claim, check it yourself if the research setting allows it; otherwise add it to `unknowns`. When two `Source:` items disagree, say which you trust and why.
 - If two or more roles argued against your pre-commitment, treat that as a real signal and answer it directly. If a role changed your mind, say so in `drift`.
+- Give every ledger item a `point` as well as its `claim`. The report lists the points under each option's name, one line each, so a reader can scan them; the full claim opens when they click. The point says what the item is, not why: "Adds a Redis server the team has never run." The claim then explains it.
 - Always record the strongest dissent, including one you reject. You may side with a lone dissenter when its reasoning is strongest.
 - `blind_spots` must name at least one thing no voice raised. Look for it on purpose: second-order effects, the cost of reversing, who else is affected, what happens if the central assumption is wrong.
 - Give a real verdict. The only form of "it depends" is `conditional-go` with explicit conditions.
@@ -83,7 +84,7 @@ Everything in `result.json` ends up in the report, and the reader never saw the 
 - Leave out this skill's own vocabulary: brief, pre-commitment, council voice, lens, roster, step numbers, file names. Say what you mean ("before hearing the council, I leaned towards...").
 - Explain, don't compress. There is no word limit: length follows the idea. A simple point gets a short sentence, and that sentence must still be complete and clear. A big idea gets as many words and sentences as it takes to explain.
 - Unpack each concept instead of naming it. A reader follows a claim when they can see three things: what the thing is, what happens and through which chain of events, and why that matters for this user. A string of nouns ("migration risk", "ops burden", "lock-in") only names a concept; write out what it means here.
-- Make every item stand alone. The report shows each pro, con, score reason, blind spot and unknown on its own, so the reader cannot see the sentence before it. Name the subject every time, never open with "It", "This", "That" or "They", and never point to "above" or "the same".
+- Make every item stand alone. The report shows each claim, score reason, blind spot and unknown on its own, so the reader cannot see the sentence before it. Only a ledger `point` may leave out the option's name, because the report lists it under that name. Name the subject every time, never open with "It", "This", "That" or "They", and never point to "above" or "the same".
 - Write sentences, not notes: no arrows, slashes, dropped verbs or chains of clauses joined by semicolons. Where ideas connect, say how ("because", "so", "which means").
 - Put the point first, then the reason. Use the active voice and everyday words.
 - Spell out an acronym the first time, as in "point-in-time recovery (PITR)", unless the user used it.

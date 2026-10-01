@@ -26,6 +26,8 @@ COUNCIL = ["contrarian", "first-principles", "executor"]
 def role_report(role):
     return {
         "role": role,
+        "pick": "A",
+        "point": f"{role} point",
         "position": f"{role} position",
         "reasoning": ["r1", "r2"],
         "per_option": [
@@ -65,7 +67,7 @@ RESULT = {
     "roster": [{"role": r, "model": "opus", "why": "test"} for r in COUNCIL + ["analyst"]],
     "reports": [role_report(r) for r in COUNCIL],
     "analyst": ANALYST,
-    "ledger": [{"option": "A", "kind": "pro", "claim": "SQL joins for finance", "severity": 4,
+    "ledger": [{"option": "A", "kind": "pro", "point": "SQL joins", "claim": "SQL joins for finance", "severity": 4,
                 "likelihood": 5, "raised_by": ["analyst", "executor"]}],
     "scores": ANALYST["scores"],
     "dissent": {"role": "executor", "position": "DynamoDB ships faster",

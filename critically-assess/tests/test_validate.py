@@ -209,6 +209,8 @@ def test_result_brief_is_validated():
     lambda r: r["ledger"][0].update(raised_by="analyst"),
     lambda r: r["ledger"][0].update(severity="high"),
     lambda r: r["reports"][0].update(reasoning="abc"),
+    lambda r: r["ledger"][0].pop("point"),
+    lambda r: r["reports"][0].update(pick="Z"),
     lambda r: r.update(unknowns=None),
 ])
 def test_result_fields_the_report_reads_are_required(mutate):
@@ -241,3 +243,14 @@ def test_brief_research_setting_is_optional_but_checked():
     brief["research"] = "everything"
     assert any("research" in e for e in validate.validate_brief(brief))
 
+
+
+def test_role_pick_and_point_are_required():
+    report = sample_run.role_report("contrarian")
+    report["pick"] = "D"
+    assert any("pick" in e for e in validate.validate_role_report(report, OPTS))
+    report["pick"] = "B"
+    report["point"] = " "
+    assert any("point" in e for e in validate.validate_role_report(report, OPTS))
+    report.pop("pick")
+    assert any("missing 'pick'" in e for e in validate.validate_role_report(report, OPTS))

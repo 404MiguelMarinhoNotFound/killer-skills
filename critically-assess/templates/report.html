@@ -5,379 +5,207 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Critical assessment</title>
 <style>
-  /* Tokens. Warm monochrome, colour only where it carries meaning. */
+  /* Design read: decision memo for a technical reader. Calm editorial utility, system sans, one accent (emerald), one radius (10px). */
   :root {
+    --bg: #fafafa; --surface: #ffffff; --sunk: #f4f4f5;
+    --ink: #18181b; --ink-2: #3f3f46; --muted: #71717a; --line: #e4e4e7; --line-2: #d4d4d8;
+    --accent: #047857; --accent-ink: #065f46; --accent-soft: #ecfdf5; --accent-line: #a7f3d0;
+    --risk: #9f1239; --risk-soft: #fff1f2;
+    --pip-off: #e4e4e7;
+    --r: 10px;
+    --shadow: 0 1px 2px rgb(24 24 27 / .04), 0 8px 24px -12px rgb(24 24 27 / .10);
     color-scheme: light;
-    --canvas: #f7f6f3;
-    --surface: #ffffff;
-    --surface-2: #fbfbfa;
-    --ink: #1f2124;
-    --ink-2: #4a4b4d;
-    --muted: #787774;
-    --line: #e7e5e0;
-    --line-strong: #d6d3cc;
-    --accent: #2a78d6;
-    --accent-ink: #1f5fae;
-    --bar-rest: #cfccc4;
-    --good-bg: #edf3ec;  --good-ink: #2f6a33;
-    --bad-bg: #fdebec;   --bad-ink: #9f2f2d;
-    --warn-bg: #fbf3db;  --warn-ink: #7d5500;
-    --info-bg: #e1f3fe;  --info-ink: #1f6c9f;
-    --neutral-bg: #f1f0ec; --neutral-ink: #57564f;
-    --violet-bg: #efeafb; --violet-ink: #5b45a8;
-    --heat-1: #eef4fd; --heat-2: #cde2fb; --heat-3: #86b6ef; --heat-4: #3987e5; --heat-5: #1c5cab;
-    --shadow-hover: 0 2px 10px rgba(20, 20, 20, 0.05);
-    --shadow-pop: 0 8px 28px rgba(20, 20, 20, 0.08), 0 1px 2px rgba(20, 20, 20, 0.04);
-    --serif: "Iowan Old Style", "Charter", "Source Serif Pro", "Palatino Linotype", Palatino, Georgia, serif;
-    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Helvetica Neue", sans-serif;
-    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-    --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   @media (prefers-color-scheme: dark) {
-    :root:where(:not([data-theme="light"])) {
-      color-scheme: dark;
-      --canvas: #111110; --surface: #1a1a19; --surface-2: #1f1f1d;
-      --ink: #f1f0ec; --ink-2: #c9c7c0; --muted: #9a9892;
-      --line: #2e2e2b; --line-strong: #3d3d39;
-      --accent: #3987e5; --accent-ink: #86b6ef; --bar-rest: #4a4945;
-      --good-bg: #1c2b1d; --good-ink: #8fd18f;
-      --bad-bg: #331c1c; --bad-ink: #f0a3a1;
-      --warn-bg: #332a14; --warn-ink: #f0c867;
-      --info-bg: #15293a; --info-ink: #8cc7f0;
-      --neutral-bg: #262624; --neutral-ink: #c3c2b7;
-      --violet-bg: #251f3d; --violet-ink: #b8acf2;
-      --heat-1: #243449; --heat-2: #184f95; --heat-3: #256abf; --heat-4: #3987e5; --heat-5: #86b6ef;
-      --shadow-hover: 0 2px 12px rgba(0, 0, 0, 0.35);
-      --shadow-pop: 0 10px 32px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+    :root:not([data-theme="light"]) {
+      --bg: #0c0c0e; --surface: #141417; --sunk: #1b1b1f;
+      --ink: #f4f4f5; --ink-2: #d4d4d8; --muted: #a1a1aa; --line: #27272a; --line-2: #3f3f46;
+      --accent: #34d399; --accent-ink: #6ee7b7; --accent-soft: #0b2a20; --accent-line: #14532d;
+      --risk: #fda4af; --risk-soft: #2a1116; --pip-off: #2e2e33;
+      --shadow: none; color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    color-scheme: dark;
-    --canvas: #111110; --surface: #1a1a19; --surface-2: #1f1f1d;
-    --ink: #f1f0ec; --ink-2: #c9c7c0; --muted: #9a9892;
-    --line: #2e2e2b; --line-strong: #3d3d39;
-    --accent: #3987e5; --accent-ink: #86b6ef; --bar-rest: #4a4945;
-    --good-bg: #1c2b1d; --good-ink: #8fd18f;
-    --bad-bg: #331c1c; --bad-ink: #f0a3a1;
-    --warn-bg: #332a14; --warn-ink: #f0c867;
-    --info-bg: #15293a; --info-ink: #8cc7f0;
-    --neutral-bg: #262624; --neutral-ink: #c3c2b7;
-    --violet-bg: #251f3d; --violet-ink: #b8acf2;
-    --heat-1: #243449; --heat-2: #184f95; --heat-3: #256abf; --heat-4: #3987e5; --heat-5: #86b6ef;
-    --shadow-hover: 0 2px 12px rgba(0, 0, 0, 0.35);
-    --shadow-pop: 0 10px 32px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.4);
+    --bg: #0c0c0e; --surface: #141417; --sunk: #1b1b1f;
+    --ink: #f4f4f5; --ink-2: #d4d4d8; --muted: #a1a1aa; --line: #27272a; --line-2: #3f3f46;
+    --accent: #34d399; --accent-ink: #6ee7b7; --accent-soft: #0b2a20; --accent-line: #14532d;
+    --risk: #fda4af; --risk-soft: #2a1116; --pip-off: #2e2e33;
+    --shadow: none; color-scheme: dark;
   }
 
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
-  body { margin: 0; background: var(--canvas); color: var(--ink); font: 16px/1.6 var(--sans); }
-  main { max-width: 1000px; margin: 0 auto; padding: 56px 24px 96px; }
-  a { color: var(--accent-ink); text-underline-offset: 3px; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.6 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-feature-settings: "tnum" 1;
+  }
+  main { max-width: 920px; margin: 0 auto; padding: 40px 24px 80px; }
+  h1, h2, h3 { margin: 0; letter-spacing: -0.015em; }
+  p { margin: 0; }
+  button { font: inherit; color: inherit; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
-  .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .muted { color: var(--muted); }
 
   /* Header */
-  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 40px; }
-  .eyebrow { font: 600 11px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-  .theme-toggle { font: 500 13px var(--sans); color: var(--ink-2); background: var(--surface); border: 1px solid var(--line);
-    border-radius: 6px; padding: 7px 12px; cursor: pointer; min-height: 36px; transition: transform .15s var(--ease), border-color .2s; }
-  .theme-toggle:hover { border-color: var(--line-strong); }
-  .theme-toggle:active { transform: scale(.98); }
-  h1 { font: 500 clamp(32px, 5vw, 48px)/1.1 var(--serif); letter-spacing: -0.02em; margin: 12px 0 16px; text-wrap: balance; }
-  .question { font-size: 18px; color: var(--ink-2); max-width: 70ch; margin: 0 0 20px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--sans); letter-spacing: .06em; text-transform: uppercase;
-    padding: 6px 10px; border-radius: 999px; background: var(--neutral-bg); color: var(--neutral-ink); white-space: nowrap; }
-  .chip.good { background: var(--good-bg); color: var(--good-ink); }
-  .chip.bad { background: var(--bad-bg); color: var(--bad-ink); }
-  .chip.warn { background: var(--warn-bg); color: var(--warn-ink); }
-  .chip.info { background: var(--info-bg); color: var(--info-ink); }
-  .chip.violet { background: var(--violet-bg); color: var(--violet-ink); }
-  .chip svg { width: 12px; height: 12px; }
-  .toc { display: flex; flex-wrap: wrap; gap: 4px 18px; margin: 28px 0 0; padding: 14px 0 0; border-top: 1px solid var(--line); font-size: 14px; }
-  .toc a { color: var(--muted); text-decoration: none; }
-  .toc a:hover { color: var(--ink); }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .theme { background: none; border: 1px solid var(--line-2); border-radius: var(--r); padding: 4px 12px; font-size: 13px; color: var(--ink-2); cursor: pointer; }
+  h1 { font-size: clamp(26px, 4vw, 34px); line-height: 1.15; font-weight: 650; margin-top: 14px; max-width: 26ch; }
+  .question { color: var(--ink-2); margin-top: 8px; max-width: 65ch; }
 
-  /* Sections and cards */
-  section { margin-top: 72px; scroll-margin-top: 24px; }
-  .section-head { margin-bottom: 20px; }
-  h2 { font: 500 26px/1.2 var(--serif); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
-  .section-note { color: var(--muted); font-size: 15px; margin: 6px 0 0; max-width: 68ch; }
-  h3 { font: 600 17px/1.35 var(--sans); margin: 0 0 6px; }
-  h4 { font: 600 11px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 20px 0 10px; }
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 28px; transition: box-shadow .2s var(--ease); }
-  .card:hover { box-shadow: var(--shadow-hover); }
-  .muted { color: var(--muted); }
-  .grid { display: grid; gap: 16px; }
-  .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  ul.clean { list-style: none; padding: 0; margin: 0; }
+  /* Layer 1: decision */
+  .decision { margin-top: 32px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
+  .decision-body { padding: 28px 28px 24px; }
+  .pick-label { font-size: 14px; color: var(--muted); }
+  .pick { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-top: 2px; }
+  .pick-name { font-size: clamp(30px, 5vw, 42px); font-weight: 700; letter-spacing: -0.025em; line-height: 1.1; }
+  .tag { display: inline-block; font-size: 13px; font-weight: 600; padding: 2px 10px; border-radius: var(--r); background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--accent-line); }
+  .summary { margin-top: 12px; font-size: 17px; color: var(--ink-2); max-width: 68ch; }
+  .conditions { margin: 14px 0 0; padding-left: 20px; color: var(--ink-2); }
+  .first { margin-top: 20px; border-left: 3px solid var(--accent); padding: 4px 0 4px 16px; }
+  .first strong { display: block; font-size: 14px; color: var(--accent-ink); }
+  .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); background: var(--sunk); }
+  .fact { padding: 14px 20px 16px; }
+  .fact + .fact { border-left: 1px solid var(--line); }
+  .fact-k { font-size: 13px; color: var(--muted); }
+  .fact-v { font-weight: 650; margin-top: 2px; }
+  .fact-s { font-size: 13.5px; color: var(--ink-2); line-height: 1.45; margin-top: 2px; }
 
-  /* Verdict */
-  .verdict { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 0; padding: 0; overflow: hidden; }
-  .verdict-main { padding: 32px; }
-  .verdict-side { padding: 32px; background: var(--surface-2); border-left: 1px solid var(--line); }
-  .decision { display: flex; align-items: center; gap: 14px; margin: 14px 0 12px; }
-  .decision-mark { flex: none; width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center; }
-  .decision-mark svg { width: 22px; height: 22px; }
-  .decision-text { font: 500 clamp(28px, 4vw, 38px)/1.1 var(--serif); letter-spacing: -0.02em; }
-  .summary { font-size: 17px; color: var(--ink-2); margin: 0; max-width: 60ch; }
-  .conditions li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--line); }
-  .conditions li:last-child { border-bottom: 0; }
-  .conditions svg { flex: none; width: 16px; height: 16px; margin-top: 4px; color: var(--warn-ink); }
-  .first-step { margin-top: 24px; padding: 16px 18px; border-left: 3px solid var(--accent); background: var(--info-bg); border-radius: 0 8px 8px 0; }
-  .first-step .label { font: 600 11px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--info-ink); margin-bottom: 8px; }
-  .first-step p { margin: 0; color: var(--ink); }
-  .meter { display: flex; gap: 4px; margin: 8px 0 6px; }
-  .meter span { height: 6px; flex: 1; border-radius: 3px; background: var(--line); }
-  .meter span.on { background: var(--accent); }
-  .stat { margin-bottom: 22px; }
-  .stat:last-child { margin-bottom: 0; }
-  .stat-label { font-size: 13px; color: var(--muted); }
-  .stat-value { font: 600 22px/1.25 var(--sans); }
-  .stat-sub { font-size: 13px; color: var(--ink-2); }
+  /* Watch-outs */
+  .watch { margin-top: 20px; }
+  .watch h2 { font-size: 15px; font-weight: 650; }
+  .watch ul { list-style: none; margin: 8px 0 0; padding: 0; }
+  .watch li { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 16px; padding: 12px 0; border-top: 1px solid var(--line); }
+  .watch-k { font-size: 13.5px; color: var(--muted); padding-top: 1px; }
+  .watch li details summary { list-style: none; cursor: pointer; }
+  .watch li details summary::-webkit-details-marker { display: none; }
+  .watch li details summary .more { color: var(--muted); font-size: 13.5px; white-space: nowrap; }
+  .watch li details p { margin-top: 6px; color: var(--ink-2); font-size: 15px; }
+  .linkbtn { background: none; border: 0; padding: 8px 0 0; color: var(--accent-ink); font-size: 14px; font-weight: 600; cursor: pointer; }
 
-  /* Scores */
-  .bars { display: grid; gap: 12px; margin-bottom: 28px; }
-  .bar-row { display: grid; grid-template-columns: minmax(90px, 200px) minmax(0, 1fr) 64px; align-items: center; gap: 14px; }
-  .bar-name { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .bar-track { position: relative; height: 22px; }
-  .bar-track::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--line); }
-  .bar-fill { position: absolute; left: 0; top: 1px; bottom: 1px; width: 100%; background: var(--bar-rest); border-radius: 0 4px 4px 0;
-    transform-origin: left center; transition: transform .6s var(--ease), background-color .3s; }
-  .bar-row.lead .bar-fill { background: var(--accent); }
-  .bar-row.lead .bar-name { font-weight: 700; }
-  .bar-value { font: 600 15px var(--sans); font-variant-numeric: tabular-nums; text-align: right; }
-  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--line); }
-  tr:last-child td { border-bottom: 0; }
-  th { font: 600 12px/1.3 var(--sans); color: var(--muted); background: var(--surface-2); vertical-align: bottom; min-width: 96px; max-width: 170px; }
-  th:first-child { min-width: 0; }
-  th .w { display: block; font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
-  td.opt { font-weight: 600; white-space: nowrap; position: sticky; left: 0; background: var(--surface); z-index: 1; }
-  th:first-child { position: sticky; left: 0; z-index: 1; }
-  td.heat { padding: 0; text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 64px; }
-  .score-btn { display: block; width: 100%; min-height: 44px; margin: 0; padding: 10px 12px; border: 0; border-radius: 0; background: transparent;
-    color: inherit; font: inherit; text-align: center; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-  .score-btn:hover { box-shadow: inset 0 0 0 2px color-mix(in srgb, currentColor 45%, transparent); }
-  .score-btn:focus-visible { outline: 2px solid currentColor; outline-offset: -5px; border-radius: 8px; }
-  .score-btn[aria-expanded="true"] { box-shadow: inset 0 0 0 2px currentColor; }
-  td.total { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
-  tr.lead td.opt::after { content: "Leads"; margin-left: 8px; font: 600 10px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase;
-    padding: 3px 7px; border-radius: 999px; background: var(--info-bg); color: var(--info-ink); vertical-align: 2px; }
-  .legend { display: flex; align-items: center; gap: 6px 14px; font-size: 13px; color: var(--muted); margin: 12px 2px 0; flex-wrap: wrap; }
-  .legend > span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-  .legend i { display: inline-block; width: 18px; height: 10px; border-radius: 2px; box-shadow: inset 0 0 0 1px var(--line); }
-  .hint { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--ink-2); margin: 10px 2px 0; }
-  .hint svg { flex: none; width: 15px; height: 15px; margin-top: 3px; color: var(--muted); }
-  .explain { margin: 0 0 24px; }
-  .explain-lead { font: 500 21px/1.35 var(--serif); letter-spacing: -0.01em; margin: 0 0 6px; text-wrap: pretty; }
-  .explain-how { font-size: 15px; color: var(--ink-2); margin: 0; max-width: 64ch; }
-  .sub-head { font: 600 11px/1.3 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0 0 12px; }
-  .calc { margin: -8px 0 32px; border-top: 0; border-bottom: 1px solid var(--line); }
-  .calc > summary { color: var(--accent-ink); }
-  .calc-body { padding: 2px 0 20px; }
-  .seg { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
-  .seg button { font: 500 13px var(--sans); color: var(--ink-2); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 999px;
-    padding: 6px 14px; min-height: 36px; cursor: pointer; touch-action: manipulation; transition: background-color .15s, color .15s; }
-  .seg button:hover { border-color: var(--muted); }
-  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
-  .calc-title { font-size: 15px; margin: 0 0 8px; }
-  table.calc-table { font-size: 14px; }
-  .calc-table th, .calc-table td { padding: 8px 10px; }
-  .calc-table th { min-width: 0; max-width: none; position: static; background: transparent; font-weight: 600; }
-  .calc-table td:first-child, .calc-table th:first-child { padding-left: 0; }
-  .calc-table td:last-child, .calc-table th:last-child { padding-right: 0; }
-  .calc-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .calc-table .op { color: var(--muted); font-weight: 400; }
-  .calc-table tfoot td { font-weight: 700; border-top: 1px solid var(--line-strong); border-bottom: 0; }
-  .calc-note { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
-  .reasons { margin-top: 18px; }
-  .reasons-body { padding: 0 0 12px; }
-  .reasons-body h5 { font: 600 14px/1.3 var(--sans); margin: 14px 0 4px; }
-  .reasons-body li { padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); }
-  .reasons-body li strong { color: var(--ink); font-weight: 600; }
-  .weights { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
-  .weights-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
-  .weights-help { font-size: 14px; color: var(--ink-2); margin: 0 0 16px; max-width: 70ch; }
-  .sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 28px; }
-  .slider label { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
-  .slider output { font-variant-numeric: tabular-nums; color: var(--muted); }
-  input[type=range] { width: 100%; accent-color: var(--accent); min-height: 28px; }
-  .btn { font: 500 13px var(--sans); color: var(--ink); background: var(--surface); border: 1px solid var(--line-strong); border-radius: 6px;
-    padding: 7px 12px; cursor: pointer; min-height: 36px; }
-  .btn:hover { background: var(--surface-2); }
-  .btn[disabled] { opacity: .45; cursor: default; }
-  .sens { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--line); }
-  .sensitivity { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; color: var(--ink-2); }
-  .sensitivity svg { flex: none; width: 16px; height: 16px; margin-top: 4px; }
-  .sensitivity p { margin: 0; }
-  .sensitivity ul { margin: 6px 0 0; padding-left: 18px; }
-  .sensitivity li { margin: 2px 0; }
+  /* Sections */
+  section { margin-top: 64px; }
+  h2.big { font-size: 22px; font-weight: 650; }
+  .lede { color: var(--muted); margin-top: 4px; font-size: 15px; max-width: 65ch; }
 
-  /* Pros and cons */
-  .option-card h3 { font: 500 22px/1.2 var(--serif); letter-spacing: -0.01em; }
-  .option-card .desc { color: var(--muted); font-size: 14px; margin: 0 0 4px; }
-  .pc { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-  .pc-col h4 { display: flex; align-items: center; gap: 8px; }
-  .pc-col h4 i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
-  .pc-item { padding: 12px 0; border-top: 1px solid var(--line); }
-  .pc-item p { margin: 0 0 8px; }
-  .impact { display: flex; align-items: center; gap: 6px 10px; font: 500 13px var(--sans); color: var(--muted); flex-wrap: wrap; }
-  .by-label { font-size: 12px; color: var(--muted); }
-  .impact-bar { width: 72px; height: 4px; border-radius: 2px; background: var(--line); position: relative; overflow: hidden; }
-  .impact-bar b { position: absolute; inset: 0 auto 0 0; border-radius: 2px; }
-  .by { display: inline-flex; gap: 4px; flex-wrap: wrap; }
-  .by span { font: 500 11px var(--sans); color: var(--ink-2); border: 1px solid var(--line); border-radius: 4px; padding: 1px 6px; }
-  .empty { color: var(--muted); font-size: 14px; padding: 12px 0; border-top: 1px solid var(--line); }
+  /* Matrix */
+  .matrix-wrap { margin-top: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  table.matrix { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .matrix th, .matrix td { padding: 12px 14px; text-align: left; vertical-align: middle; }
+  .matrix thead th { font-size: 14px; font-weight: 650; border-bottom: 1px solid var(--line); line-height: 1.3; }
+  .matrix thead th .rec { display: block; font-size: 12px; font-weight: 600; color: var(--accent-ink); margin-top: 2px; }
+  .matrix th.crit { width: 34%; font-weight: 500; font-size: 15px; }
+  .matrix th.crit .w { display: block; font-size: 12.5px; color: var(--muted); font-weight: 400; }
+  .matrix tbody tr + tr th, .matrix tbody tr + tr td { border-top: 1px solid var(--line); }
+  .matrix .is-rec { background: var(--accent-soft); }
+  .matrix tfoot td, .matrix tfoot th { border-top: 1px solid var(--line-2); font-weight: 650; }
+  .total { font-size: 22px; letter-spacing: -0.02em; }
+  .total small { font-size: 13px; color: var(--muted); font-weight: 500; letter-spacing: 0; }
+  .total.lead { color: var(--accent-ink); }
+  .cellbtn { display: inline-flex; align-items: center; gap: 10px; background: none; border: 1px solid transparent; border-radius: 8px; padding: 4px 6px; margin: -5px -7px; cursor: pointer; }
+  .cellbtn:hover { border-color: var(--line-2); }
+  .cellbtn[aria-pressed="true"] { border-color: var(--accent); background: var(--surface); }
+  .pips { display: inline-flex; gap: 3px; }
+  .pips i { width: 8px; height: 8px; border-radius: 2px; background: var(--pip-off); }
+  .pips i.on { background: var(--ink-2); }
+  .is-rec .pips i.on { background: var(--accent); }
+  .num { font-size: 14px; color: var(--muted); min-width: 1ch; }
+  .reason { padding: 14px 16px; border-top: 1px solid var(--line); background: var(--sunk); font-size: 15px; color: var(--ink-2); min-height: 52px; }
+  .reason b { color: var(--ink); }
 
-  /* Dissent, blind spots, drift */
-  blockquote { margin: 0; font: italic 400 21px/1.45 var(--serif); color: var(--ink); }
-  .attribution { margin-top: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-  .reason { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink-2); }
-  ol.numbered { counter-reset: n; list-style: none; padding: 0; margin: 0; }
-  ol.numbered li { counter-increment: n; display: grid; grid-template-columns: 32px 1fr; gap: 8px; padding: 12px 0; border-top: 1px solid var(--line); }
-  ol.numbered li:first-child { border-top: 0; padding-top: 0; }
-  ol.numbered li::before { content: counter(n, decimal-leading-zero); font: 500 13px var(--mono); color: var(--muted); padding-top: 3px; }
-  .drift { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: stretch; }
-  .drift .arrow { display: grid; place-items: center; color: var(--muted); }
-  .drift .arrow svg { width: 22px; height: 22px; }
+  /* Priorities */
+  details.prio { border-top: 1px solid var(--line); }
+  details.prio > summary { cursor: pointer; padding: 12px 16px; font-size: 14.5px; font-weight: 600; color: var(--accent-ink); }
+  .sliders { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 28px; padding: 4px 16px 18px; }
+  .slider label { display: flex; justify-content: space-between; font-size: 14px; color: var(--ink-2); }
+  .slider input { width: 100%; accent-color: var(--accent); }
+  .prio-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 16px 16px; font-size: 14px; color: var(--ink-2); }
+  .reset { background: none; border: 1px solid var(--line-2); border-radius: var(--r); padding: 4px 12px; font-size: 13px; cursor: pointer; }
 
-  /* Council */
-  .council { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 16px; align-items: start; }
-  .role-head { display: flex; justify-content: space-between; align-items: center; gap: 10px 16px; margin-bottom: 10px; flex-wrap: wrap; }
-  .role-name { font: 500 20px/1.2 var(--serif); }
-  .role-summary { font-size: 14px; color: var(--ink-2); margin: 0 0 6px; }
-  .role-why { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
-  .role-why strong { font-weight: 600; color: var(--ink-2); }
-  .guide { margin-top: 22px; }
-  .guide + .who { border-top: 1px solid var(--line); }
-  .guide > summary, .who > summary { font-size: 14px; color: var(--ink-2); }
-  .guide ul { padding-bottom: 8px; }
-  .guide li { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 2px 24px; padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); }
-  .guide li a { color: var(--ink); font-weight: 600; text-decoration: none; display: block; }
-  .guide li a:hover { text-decoration: underline; }
-  .who { border-top: 1px solid var(--line); }
-  .who ul { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 4px 28px; padding-bottom: 8px; }
-  .who li { padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); }
-  .who li strong { display: block; color: var(--ink); font-weight: 600; }
-  .role-position { margin: 0 0 12px; }
-  details { border-top: 1px solid var(--line); }
-  details > summary { list-style: none; cursor: pointer; padding: 12px 0; font: 500 14px var(--sans); color: var(--ink-2); display: flex; justify-content: space-between; align-items: center; }
-  details > summary::-webkit-details-marker { display: none; }
-  details > summary::after { content: "+"; font: 400 18px/1 var(--mono); color: var(--muted); }
-  details[open] > summary::after { content: "\2212"; }
-  .reasoning li { padding: 6px 0 6px 14px; position: relative; font-size: 15px; }
-  .reasoning li::before { content: ""; position: absolute; left: 0; top: 15px; width: 5px; height: 5px; border-radius: 1px; background: var(--line-strong); }
-  .reasoning li.flip { background: var(--warn-bg); border-radius: 6px; padding: 8px 10px 8px 14px; margin: 4px 0; }
-  .reasoning li.flip::before { background: var(--warn-ink); top: 17px; left: 4px; }
-  .reasoning li.flip strong { font-weight: 600; }
-  .evidence li { display: flex; gap: 10px; align-items: baseline; padding: 7px 0; font-size: 14px; border-top: 1px solid var(--line); }
-  .evidence li:first-child { border-top: 0; }
-  .evidence .chip { flex: none; min-width: 96px; justify-content: center; }
-  .evidence .text { min-width: 0; overflow-wrap: anywhere; }
-  .surprise { margin-top: 14px; font-size: 14px; color: var(--ink-2); }
-  .surprise strong { color: var(--ink); }
+  /* For / against */
+  .tabs { display: flex; gap: 4px; margin-top: 28px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 12px 10px; font-size: 15px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+  .tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); font-weight: 600; }
+  .fa { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; margin-top: 18px; }
+  .fa h3 { font-size: 14px; font-weight: 650; }
+  .fa h3.for { color: var(--accent-ink); }
+  .fa h3.against { color: var(--risk); }
+  .fa ol { list-style: none; margin: 6px 0 0; padding: 0; }
+  .fa li { border-top: 1px solid var(--line); }
+  .fa li:first-child { border-top: 0; }
+  .item > summary { list-style: none; cursor: pointer; padding: 10px 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
+  .item > summary::-webkit-details-marker { display: none; }
+  .item > summary::after { content: "+"; color: var(--muted); font-size: 18px; line-height: 1.2; }
+  .item[open] > summary::after { content: "\2212"; }
+  .item-body { padding: 0 0 12px; font-size: 14.5px; color: var(--ink-2); }
+  .item-meta { margin-top: 6px; font-size: 13px; color: var(--muted); }
 
-  /* Brief */
-  .brief-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; }
-  dl { margin: 0; }
-  dt { font: 600 11px/1 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 18px 0 8px; }
-  dt:first-child { margin-top: 0; }
-  dd { margin: 0; }
-  .src { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
-  footer { margin-top: 88px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  /* Layer 3 */
+  .council { margin-top: 18px; }
+  .agree { display: flex; gap: 4px; margin-top: 14px; }
+  .agree span { flex: 1; height: 6px; border-radius: 3px; background: var(--line-2); }
+  .agree span.yes { background: var(--accent); }
+  .member { border-top: 1px solid var(--line); }
+  .member:last-child { border-bottom: 1px solid var(--line); }
+  .member > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: 170px 170px minmax(0, 1fr) 16px; gap: 16px; padding: 14px 0; align-items: baseline; }
+  .member > summary::-webkit-details-marker { display: none; }
+  .member > summary::after { content: "+"; color: var(--muted); }
+  .member[open] > summary::after { content: "\2212"; }
+  .m-name { font-weight: 600; }
+  .m-pick { font-size: 14px; }
+  .m-pick.yes { color: var(--accent-ink); font-weight: 600; }
+  .m-point { color: var(--ink-2); font-size: 15px; }
+  .m-body { padding: 0 0 18px; display: grid; gap: 10px; font-size: 14.5px; color: var(--ink-2); max-width: 70ch; }
+  .m-body h4 { margin: 6px 0 0; font-size: 13px; color: var(--muted); font-weight: 600; }
+  .m-body ul { margin: 0; padding-left: 18px; }
+  .m-body .flip { color: var(--ink); }
 
-  /* Score popover: opened by click or keyboard, never by hover */
-  .pop { position: fixed; top: 0; left: 0; z-index: 50; width: min(340px, calc(100vw - 24px)); padding: 14px 16px 16px;
-    background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); border-radius: 10px; box-shadow: var(--shadow-pop);
-    font-size: 14px; line-height: 1.55; opacity: 0; transform: translateY(var(--pop-from, 6px)) scale(.98); transform-origin: var(--pop-origin, 50% 0);
-    transition: opacity .16s var(--ease), transform .2s var(--ease); }
-  .pop[hidden] { display: none; }
-  .pop.open { opacity: 1; transform: none; }
-  .pop:focus { outline: none; }
-  .pop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .pop-arrow { position: absolute; left: var(--arrow-x, 50%); width: 12px; height: 12px; margin-left: -6px; background: var(--surface);
-    border: 1px solid var(--line-strong); transform: rotate(45deg); }
-  .pop[data-side="below"] .pop-arrow { top: -7px; border-right: 0; border-bottom: 0; }
-  .pop[data-side="above"] .pop-arrow { bottom: -7px; border-left: 0; border-top: 0; }
-  .pop-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: -4px -8px 6px 0; }
-  .pop-close { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent;
-    color: var(--muted); cursor: pointer; touch-action: manipulation; }
-  .pop-close:hover { background: var(--neutral-bg); color: var(--ink); }
-  .pop-close svg { width: 14px; height: 14px; }
-  .pop-title { font: 600 15px/1.35 var(--sans); margin: 0 0 4px; }
-  .pop-score { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; color: var(--ink-2); font-size: 13px; flex-wrap: wrap; }
-  .pop-score b { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 5px; font-variant-numeric: tabular-nums; }
-  .pop-body { margin: 0; color: var(--ink); overflow-wrap: anywhere; }
-  .pop-note { margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+  .more-sec { margin-top: 28px; border-top: 1px solid var(--line); }
+  .more-sec > details { border-bottom: 1px solid var(--line); }
+  .more-sec > details > summary { cursor: pointer; padding: 14px 0; font-weight: 600; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+  .more-sec > details > summary::-webkit-details-marker { display: none; }
+  .more-sec > details > summary::after { content: "+"; color: var(--muted); font-weight: 400; }
+  .more-sec > details[open] > summary::after { content: "\2212"; }
+  .more-sec .sum-note { font-weight: 400; color: var(--muted); font-size: 14.5px; margin-left: auto; text-align: right; }
+  .bg { padding: 0 0 20px; display: grid; gap: 14px; font-size: 15px; color: var(--ink-2); max-width: 70ch; }
+  .bg h4 { margin: 0; font-size: 13px; color: var(--muted); font-weight: 600; }
+  .bg ul { margin: 4px 0 0; padding-left: 18px; }
+  .bg a { color: var(--accent-ink); }
+  footer { margin-top: 48px; font-size: 13px; color: var(--muted); }
 
-  /* Back to top */
-  .to-top { position: fixed; right: calc(16px + env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 40;
-    width: 44px; height: 44px; display: grid; place-items: center; padding: 0; border-radius: 50%; border: 1px solid var(--line-strong);
-    background: var(--surface); color: var(--ink-2); box-shadow: var(--shadow-hover); cursor: pointer; touch-action: manipulation;
-    opacity: 0; transform: translateY(8px); visibility: hidden;
-    transition: opacity .2s var(--ease), transform .2s var(--ease), border-color .2s, color .2s, visibility 0s linear .2s; }
-  .to-top.show { opacity: 1; transform: none; visibility: visible;
-    transition: opacity .2s var(--ease), transform .2s var(--ease), border-color .2s, color .2s, visibility 0s; }
-  .to-top:hover { color: var(--ink); border-color: var(--muted); }
-  .to-top:active { transform: scale(.96); }
-  .to-top svg { width: 18px; height: 18px; }
-  h1:focus { outline: none; }
-
-  /* Motion */
-  .reveal { opacity: 0; transform: translateY(12px); transition: opacity .6s var(--ease), transform .6s var(--ease); }
-  .reveal.in { opacity: 1; transform: none; }
-  @media (prefers-reduced-motion: reduce) {
-    .reveal { opacity: 1; transform: none; transition: none; }
-    .bar-fill, .card, .pop, .to-top, .to-top.show, .seg button { transition: none; }
-    .pop { transform: none; }
+  @media (prefers-reduced-motion: no-preference) {
+    details[open] > :not(summary) { animation: in .25s cubic-bezier(.16, 1, .3, 1); }
+    @keyframes in { from { opacity: 0; transform: translateY(-4px); } }
   }
 
-  /* Small screens */
   @media (max-width: 760px) {
-    main { padding: 32px 16px 72px; }
-    section { margin-top: 56px; }
-    .verdict { grid-template-columns: 1fr; }
-    .verdict-side { border-left: 0; border-top: 1px solid var(--line); }
-    .verdict-main, .verdict-side, .card { padding: 22px; }
-    .card.verdict { padding: 0; }
-    th { min-width: 84px; }
-    tr.lead td.opt::after { display: none; }
-    .grid-2, .grid-3, .pc, .brief-grid { grid-template-columns: 1fr; }
-    .drift { grid-template-columns: 1fr; }
-    .drift .arrow { transform: rotate(90deg); }
-    .bar-row { grid-template-columns: minmax(70px, 110px) minmax(0, 1fr) 48px; gap: 10px; }
-    .guide li { grid-template-columns: 1fr; }
-    .calc-table th, .calc-table td { padding: 8px 6px; font-size: 13.5px; }
-    .calc-table th.num { white-space: normal; }
-    .explain-lead { font-size: 19px; }
-    footer { padding-bottom: 56px; }
+    main { padding: 28px 16px 64px; }
+    .decision-body { padding: 22px 18px 18px; }
+    .facts { grid-template-columns: 1fr; }
+    .fact + .fact { border-left: 0; border-top: 1px solid var(--line); }
+    .watch li { grid-template-columns: 1fr; gap: 2px; }
+    .matrix th, .matrix td { padding: 10px 8px; }
+    .matrix th.crit { width: 32%; font-size: 14px; }
+    .matrix thead th { font-size: 13px; }
+    .cellbtn { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .pips i { width: 6px; height: 6px; }
+    .total { font-size: 18px; }
+    .sliders, .fa { grid-template-columns: 1fr; }
+    .fa { gap: 20px; }
+    .member > summary { grid-template-columns: minmax(0, 1fr) auto 16px; gap: 4px 12px; }
+    .m-point { grid-column: 1 / -1; grid-row: 2; }
   }
 
-  /* Print: everything open, nothing interactive */
   @media print {
-    body { background: #fff; color: #000; font-size: 12pt; }
-    main { max-width: none; padding: 0; }
-    .theme-toggle, .weights, .toc, .pop, .to-top, .seg, .hint { display: none !important; }
-    .calc-panel[hidden] { display: block !important; margin-top: 16px; }
-    .guide, .calc { border-top: 1px solid #ddd; }
-    .card { box-shadow: none !important; break-inside: avoid; }
-    section { margin-top: 28pt; break-inside: auto; }
-    .reveal { opacity: 1 !important; transform: none !important; }
-    details > summary::after { content: ""; }
-    details > summary { font-weight: 600; color: #000; }
-    a { color: #000; }
+    .theme, .tabs, details.prio, .linkbtn { display: none !important; }
+    details > :not(summary) { display: block !important; }
+    .decision { box-shadow: none; }
   }
-</style>
-<style media="print">
-  /* Closed <details> print open even when the print dialog skips the beforeprint event. */
-  details::details-content { content-visibility: visible !important; display: block !important; height: auto !important; }
 </style>
 </head>
 <body>
-<main id="report" aria-live="polite"></main>
+<main id="report"></main>
 <script id="data" type="application/json">__RESULT_JSON__</script>
 <script>
 (() => {
@@ -388,656 +216,303 @@
   const criteria = brief.criteria || [];
   const scores = R.scores || [];
   const names = Object.fromEntries(options.map(o => [o.id, o.name]));
-  const critName = id => (criteria.find(c => c.id === id) || {}).name || id;
-  const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const CATALOG = R.role_catalog || {};
+  const titleCase = s => String(s || '').split(/[-_\s]+/).map(w => w ? w[0].toUpperCase() + w.slice(1) : w).join(' ');
+  const roleName = id => (CATALOG[id] && CATALOG[id].name ? String(CATALOG[id].name).replace(/^The\s+/, '') : titleCase(id));
 
-  /* ---------- DOM helpers: every piece of data goes in as text, never as markup ---------- */
+  /* Everything from the data goes in as text, never as markup. */
   const el = (tag, opts = {}, ...kids) => {
     const e = document.createElement(tag);
     if (opts.cls) e.className = opts.cls;
     if (opts.text != null) e.textContent = String(opts.text);
     if (opts.attrs) for (const [k, v] of Object.entries(opts.attrs)) e.setAttribute(k, v);
-    for (const k of kids.flat(Infinity)) if (k != null) e.append(k);
+    for (const k of kids.flat(Infinity)) if (k != null && k !== false) e.append(typeof k === 'string' ? document.createTextNode(k) : k);
     return e;
   };
-  const txt = s => document.createTextNode(s == null ? '' : String(s));
-  const asList = x => (Array.isArray(x) ? x : x == null ? [] : [x]).map(String);
-  const titleCase = id => String(id || '').split(/[-_\s]+/).map(w => w ? w[0].toUpperCase() + w.slice(1) : w).join(' ');
-  const CATALOG = R.role_catalog || {};
-  const roleName = id => CATALOG[id] && CATALOG[id].name ? String(CATALOG[id].name).replace(/^The\s+/, '') : (id === 'first-principles' ? 'First Principles' : titleCase(id));
-  const roleSummary = id => (CATALOG[id] && CATALOG[id].summary) || '';
+  const list = x => (Array.isArray(x) ? x : x == null ? [] : [x]).map(String);
   const joinAnd = xs => xs.length <= 1 ? (xs[0] || '') : xs.slice(0, -1).join(', ') + ' and ' + xs[xs.length - 1];
-
-  const ICONS = {
-    check: 'M4 10.5l4 4 8-9',
-    cross: 'M5 5l10 10M15 5L5 15',
-    alert: 'M10 3l8 14H2L10 3zM10 8v4M10 14.5v.5',
-    arrow: 'M4 10h12M11 5l5 5-5 5',
-    up: 'M10 16V4M5 9l5-5 5 5',
-    flag: 'M5 17V3M5 4h9l-2 3 2 3H5',
-    scale: 'M10 3v14M4 17h12M4 7h12M4 7l-2 5h4l-2-5M16 7l-2 5h4l-2-5',
-    stable: 'M3 10h14M6 6h8M6 14h8',
-    info: 'M10 2.5a7.5 7.5 0 1 0 0 15a7.5 7.5 0 1 0 0-15M10 9v5M10 6.2v.3',
-  };
-  const icon = (name, label) => {
-    const ns = 'http' + '://www.w3.org/2000/svg';
-    const s = document.createElementNS(ns, 'svg');
-    s.setAttribute('viewBox', '0 0 20 20');
-    s.setAttribute('fill', 'none');
-    s.setAttribute('stroke', 'currentColor');
-    s.setAttribute('stroke-width', '2');
-    s.setAttribute('stroke-linecap', 'round');
-    s.setAttribute('stroke-linejoin', 'round');
-    if (label) { s.setAttribute('role', 'img'); s.setAttribute('aria-label', label); } else s.setAttribute('aria-hidden', 'true');
-    const p = document.createElementNS(ns, 'path');
-    p.setAttribute('d', ICONS[name]);
-    s.append(p);
-    return s;
-  };
-  const chip = (label, tone, iconName) => el('span', { cls: 'chip' + (tone ? ' ' + tone : '') }, iconName ? icon(iconName) : null, txt(label));
-
-  // Plain text in, with any web address turned into a safe link.
   const URL_RE = /\bhttps?:\/\/[^\s<>"')\]]+/g;
-  const linkify = (s) => {
-    const frag = document.createDocumentFragment();
-    const str = String(s == null ? '' : s);
-    let last = 0;
+  const linkify = s => {
+    const f = document.createDocumentFragment(); const str = String(s || ''); let last = 0;
     for (const m of str.matchAll(URL_RE)) {
-      frag.append(txt(str.slice(last, m.index)));
-      const a = el('a', { text: shortUrl(m[0]), attrs: { href: m[0], target: '_blank', rel: 'noopener noreferrer', title: m[0] } });
-      frag.append(a);
+      f.append(str.slice(last, m.index));
+      let label = m[0]; try { const u = new URL(m[0]); label = u.hostname.replace(/^www\./, ''); } catch {}
+      f.append(el('a', { text: label, attrs: { href: m[0], target: '_blank', rel: 'noopener noreferrer', title: m[0] } }));
       last = m.index + m[0].length;
     }
-    frag.append(txt(str.slice(last)));
-    return frag;
-  };
-  const shortUrl = u => { try { const x = new URL(u); const p = x.pathname.length > 32 ? x.pathname.slice(0, 30) + '…' : x.pathname; return x.hostname.replace(/^www\./, '') + (p === '/' ? '' : p); } catch { return u; } };
-
-  const section = (id, title, note) => {
-    const s = el('section', { cls: 'reveal', attrs: { id, 'aria-labelledby': id + '-h' } });
-    s.append(el('div', { cls: 'section-head' }, el('h2', { text: title, attrs: { id: id + '-h' } }), note ? el('p', { cls: 'section-note', text: note }) : null));
-    main.append(s);
-    return s;
+    f.append(str.slice(last)); return f;
   };
 
-  /* ---------- Plain words for the numbers ---------- */
-  const SCORE_WORDS = { 1: 'Fails this criterion', 2: 'Weak', 3: 'Adequate', 4: 'Strong', 5: 'As good as it gets' };
-  const IMPACT_WORDS = { 1: 'Tiny impact', 2: 'Small impact', 3: 'Moderate impact', 4: 'Big impact', 5: 'Major impact' };
-  const LIKELY_WORDS = { 1: 'Unlikely', 2: 'Possible', 3: 'Fairly likely', 4: 'Likely', 5: 'Very likely' };
-  const CONF_WORDS = { high: 'High', medium: 'Medium', low: 'Low' };
-
-  /* ---------- Scoring: mirrors scripts/scoring.py exactly ---------- */
+  /* Scoring: mirrors scripts/scoring.py */
   const TOL = 1e-6;
   const normalize = w => { const t = Object.values(w).reduce((a, b) => a + b, 0); return Object.fromEntries(Object.entries(w).map(([k, v]) => [k, t > 0 ? v / t : 0])); };
-  const cell = (o, c) => scores.find(x => x.option === o && x.criterion === c);
-  const totalsFor = w => { const n = normalize(w); const t = {}; for (const o of options) t[o.id] = criteria.reduce((s, c) => s + n[c.id] * ((cell(o.id, c.id) || {}).score || 0), 0); return t; };
-  const winnersOf = t => { const vals = Object.values(t); if (!vals.length) return []; const best = Math.max(...vals); return Object.keys(t).filter(k => Math.abs(t[k] - best) < TOL).sort(); };
-  const sensitivity = (w, delta = 0.1) => {
-    const base = winnersOf(totalsFor(w)).join('|');
-    const n = normalize(w);
-    const flips = [];
-    for (const c of criteria) {
-      for (const shift of [-delta, delta]) {
-        const shifted = Object.fromEntries(Object.entries(n).map(([k, v]) => [k, Math.max(v + (k === c.id ? shift : 0), 0)]));
-        const sum = Object.values(shifted).reduce((a, b) => a + b, 0);
-        if (sum === 0) continue;
-        const now = winnersOf(totalsFor(shifted));
-        // share: what this criterion would then count for, after the shares are rescaled to 100% (for the wording only)
-        if (now.join('|') !== base) flips.push({ criterion: c.id, shift, winners: now, share: shifted[c.id] / sum });
-      }
+  const cell = (o, c) => scores.find(x => x.option === o && x.criterion === c) || {};
+  const totalsFor = w => { const n = normalize(w); const t = {}; for (const o of options) t[o.id] = criteria.reduce((s, c) => s + n[c.id] * (cell(o.id, c.id).score || 0), 0); return t; };
+  const winnersOf = t => { const v = Object.values(t); if (!v.length) return []; const b = Math.max(...v); return Object.keys(t).filter(k => Math.abs(t[k] - b) < TOL).sort(); };
+  const flipsFor = (w, delta = 0.1) => {
+    const base = winnersOf(totalsFor(w)).join('|'); const n = normalize(w); const out = [];
+    for (const c of criteria) for (const s of [-delta, delta]) {
+      const sh = Object.fromEntries(Object.entries(n).map(([k, v]) => [k, Math.max(v + (k === c.id ? s : 0), 0)]));
+      if (Object.values(sh).reduce((a, b) => a + b, 0) === 0) continue;
+      const now = winnersOf(totalsFor(sh)); if (now.join('|') !== base) out.push({ c: c.id, s, now });
     }
-    return flips;
+    return out;
+  };
+  const initial = normalize(Object.fromEntries(criteria.map(c => [c.id, Number(c.weight) || 0])));
+  const weights = { ...initial };
+  const pct = v => Math.round(v * 100) + '%';
+  const critName = id => (criteria.find(c => c.id === id) || {}).name || id;
+
+  /* Which option each council member backed: the structured `pick`, else the first option named in its position. */
+  const pickOf = r => {
+    if (r.pick && names[r.pick]) return r.pick;
+    const pos = String(r.position || '').toLowerCase(); let best = null, at = Infinity;
+    for (const o of options) { const i = pos.indexOf(String(o.name).toLowerCase()); if (i >= 0 && i < at) { at = i; best = o.id; } }
+    return best;
   };
 
-  const initialWeights = normalize(Object.fromEntries(criteria.map(c => [c.id, Number(c.weight) || 0])));
-  const weights = { ...initialWeights };
-  // Whole percentages where exact, one decimal otherwise, so "4 × 27.3%" reads true.
-  const fmtPct = v => { const p = v * 100; return (Math.abs(p - Math.round(p)) < 0.05 ? String(Math.round(p)) : p.toFixed(1)) + '%'; };
+  const decision = (R.verdict || {}).decision;
+  // Single mode: a go backs the idea (A), a no-go backs the status quo (B), so the table and council can show agreement.
+  const recId = names[decision] ? decision
+    : brief.mode === 'single' && names.A && names.B ? (decision === 'no-go' ? 'B' : ['go', 'conditional-go'].includes(decision) ? 'A' : null)
+    : null;
+  const singleView = { 'go': 'Go', 'no-go': 'No-go', 'conditional-go': 'Go, with conditions', 'hybrid': 'A hybrid of the options' }[decision];
 
   /* ---------- Header ---------- */
-  const mode = brief.mode === 'single' ? 'One idea vs. no change' : `${options.length} options compared`;
-  const researchLabel = { online: 'Researched online', repo: 'Researched in the code', both: 'Researched online + code', none: 'No outside research' }[brief.research];
-  const confTone = { high: 'good', medium: 'info', low: 'warn' }[R.confidence] || '';
-  const toggle = el('button', { cls: 'theme-toggle', text: 'Theme', attrs: { type: 'button', 'aria-label': 'Switch light or dark theme' } });
-  const currentTheme = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  const setToggleText = () => { toggle.textContent = currentTheme() === 'dark' ? 'Light theme' : 'Dark theme'; };
-  try { const saved = localStorage.getItem('ca-theme'); if (saved) document.documentElement.dataset.theme = saved; } catch {}
-  setToggleText();
-  toggle.addEventListener('click', () => {
-    const next = currentTheme() === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = next;
-    try { localStorage.setItem('ca-theme', next); } catch {}
-    setToggleText();
-  });
-
-  const councilSize = (R.reports || []).length;
   document.title = R.title || 'Critical assessment';
-  const h1 = el('h1', { text: R.title || brief.question || 'Critical assessment', attrs: { tabindex: '-1' } });
-  const header = el('header', {},
-    el('div', { cls: 'topbar' }, el('span', { cls: 'eyebrow', text: 'Critical assessment' }), toggle),
-    h1,
-    brief.question ? el('p', { cls: 'question', text: brief.question }) : null,
-    el('div', { cls: 'chips' },
-      chip(mode),
-      chip(`Confidence: ${CONF_WORDS[R.confidence] || 'n/a'}`, confTone),
-      researchLabel ? chip(researchLabel) : null,
-      chip(`${councilSize} council member${councilSize === 1 ? '' : 's'} + neutral analyst`)),
-  );
-  main.append(header);
+  const toggle = el('button', { cls: 'theme', attrs: { type: 'button' } });
+  const theme = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  try { const t = localStorage.getItem('ca-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
+  const setToggle = () => { toggle.textContent = theme() === 'dark' ? 'Light' : 'Dark'; toggle.setAttribute('aria-label', 'Switch to ' + toggle.textContent.toLowerCase() + ' theme'); };
+  setToggle();
+  toggle.addEventListener('click', () => { const n = theme() === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = n; try { localStorage.setItem('ca-theme', n); } catch {} setToggle(); });
+  main.append(el('header', {},
+    el('div', { cls: 'top' }, el('span', { cls: 'eyebrow', text: 'Critical assessment' }), toggle),
+    el('h1', { text: R.title || brief.question || 'Critical assessment' }),
+    brief.question && R.title ? el('p', { cls: 'question', text: brief.question }) : null));
 
-  // One plain line per section. Built before the sections, pruned to the ones that exist at the end.
-  const guideLines = [
-    ['verdict', 'Verdict', 'The recommendation, how sure it is, and the first thing to do.'],
-    ['scores', 'Scores', 'Each option is scored from 1 (fails) to 5 (as good as it gets) on each criterion. The overall score combines them by how much each criterion counts. Click any score to see why it got it.'],
-    ['proscons', 'Pros & cons', 'The main points for and against each option, biggest and most likely first.'],
-    [['dissent', 'Strongest disagreement'], ['missed', 'What everyone missed'], 'The best argument against the recommendation and why it was not followed, then points nobody on the council raised.'],
-    ['drift', 'Did the council change the recommendation?', 'The view of the lead reviewer, who ran this assessment, before hearing the council, next to where it ended up.'],
-    ['council', 'Council', 'Each member’s conclusion and reasons. Members worked alone, each from a different angle.'],
-    ['brief', 'The question & unknowns', 'The background everyone worked from, and facts that could still change the verdict.'],
-  ];
-  const guideList = el('ul', { cls: 'clean' });
-  header.append(el('details', { cls: 'guide' }, el('summary', { text: 'How to read this report' }), guideList));
+  /* ---------- Layer 1: the decision ---------- */
+  const totals0 = totalsFor(initial);
+  const ranked = Object.entries(totals0).sort((a, b) => b[1] - a[1]);
+  const flips0 = flipsFor(initial);
+  const reports = R.reports || [];
+  const backers = recId ? reports.filter(r => pickOf(r) === recId) : [];
 
-  const rosterIds = (R.roster || []).map(r => r.role);
-  if (rosterIds.length) {
-    const models = Object.fromEntries((R.roster || []).map(r => [r.role, r.model]));
-    header.append(el('details', { cls: 'who' },
-      el('summary', { text: `Who was on the council (${rosterIds.length})` }),
-      el('ul', { cls: 'clean' }, rosterIds.map(id => el('li', {},
-        el('strong', { text: roleName(id) + (models[id] ? ` · ${models[id]}` : '') }),
-        txt(roleSummary(id) || 'No description in the role library.'))))));
-  }
-  const tocTargets = [['verdict', 'Verdict'], ['scores', 'Scores'], ['proscons', 'Pros & cons'], ['dissent', 'Disagreement'],
-    ['missed', 'What was missed'], ['drift', 'Did the view change?'], ['council', 'Council'], ['brief', 'Question & unknowns']];
-  const toc = el('nav', { cls: 'toc', attrs: { 'aria-label': 'Sections' } });
-  header.append(toc);
-
-  /* ---------- Verdict ---------- */
-  const decision = (R.verdict || {}).decision;
-  const decisionView = {
-    'go': { text: 'Go', tone: 'good', icon: 'check' },
-    'no-go': { text: 'No-go', tone: 'bad', icon: 'cross' },
-    'conditional-go': { text: 'Go, with conditions', tone: 'warn', icon: 'alert' },
-    'hybrid': { text: 'Hybrid approach', tone: 'violet', icon: 'scale' },
-  }[decision] || { text: names[decision] || decision || '—', tone: 'info', icon: 'flag' };
-  const toneVar = t => ({ good: ['--good-bg', '--good-ink'], bad: ['--bad-bg', '--bad-ink'], warn: ['--warn-bg', '--warn-ink'], violet: ['--violet-bg', '--violet-ink'], info: ['--info-bg', '--info-ink'] }[t]);
-  const [markBg, markInk] = toneVar(decisionView.tone);
-  const mark = el('span', { cls: 'decision-mark', attrs: { style: `background: var(${markBg}); color: var(${markInk})` } }, icon(decisionView.icon, decisionView.text));
-
-  const vs = section('verdict', 'Verdict', 'What the council recommends, how sure it is, and the first step.');
-  const vMain = el('div', { cls: 'verdict-main' },
-    el('span', { cls: 'eyebrow', text: brief.mode === 'single' ? 'Recommendation on the idea' : 'Recommended option' }),
-    el('div', { cls: 'decision' }, mark, el('span', { cls: 'decision-text', text: decisionView.text })),
+  const body = el('div', { cls: 'decision-body' },
+    el('p', { cls: 'pick-label', text: brief.mode === 'single' ? 'Recommendation' : 'Go with' }),
+    el('div', { cls: 'pick' }, el('span', { cls: 'pick-name', text: singleView || (recId ? names[recId] : decision || '') })),
     el('p', { cls: 'summary', text: (R.verdict || {}).summary || '' }));
-  const conds = asList((R.verdict || {}).conditions);
-  if (conds.length) {
-    vMain.append(el('h4', { text: 'Conditions' }),
-      el('ul', { cls: 'clean conditions' }, conds.map(c => el('li', {}, icon('alert'), el('span', { text: c })))));
+  const conds = list((R.verdict || {}).conditions);
+  if (conds.length) body.append(el('ul', { cls: 'conditions' }, conds.map(c => el('li', { text: c }))));
+  if (R.first_step) body.append(el('div', { cls: 'first' }, el('strong', { text: 'First step' }), el('span', { text: R.first_step })));
+
+  const conf = { high: 'High', medium: 'Medium', low: 'Low' }[R.confidence] || 'Unknown';
+  const confSub = { high: 'The facts that decide this were checked.', medium: 'Rests on at least one assumption that is still open.', low: 'Hinges on facts nobody could check.' }[R.confidence] || '';
+  const leader = ranked[0] ? ranked[0][0] : null;
+  const gap = ranked.length > 1 ? ranked[0][1] - ranked[1][1] : 0;
+  let scoreV, scoreS;
+  if (leader && leader === recId) {
+    scoreV = `Highest score, ${ranked[0][1].toFixed(1)} of 5`;
+    scoreS = flips0.length ? `Ahead by ${gap.toFixed(1)}, but a small change in priorities changes the leader.` : `Ahead by ${gap.toFixed(1)}, and still ahead if any priority moves 10 points.`;
+  } else if (leader) {
+    scoreV = `${names[leader]} scores highest`;
+    scoreS = recId ? 'The recommendation goes against the scores. The summary says why.'
+      : 'The recommendation combines options. The summary says how.';
   }
-  if (R.first_step) vMain.append(el('div', { cls: 'first-step' }, el('div', { cls: 'label', text: 'Start here' }), el('p', { text: R.first_step })));
+  const facts = el('div', { cls: 'facts' },
+    el('div', { cls: 'fact' }, el('div', { cls: 'fact-k', text: 'Confidence' }), el('div', { cls: 'fact-v', text: conf }), el('div', { cls: 'fact-s', text: confSub })),
+    scoreV ? el('div', { cls: 'fact' }, el('div', { cls: 'fact-k', text: 'Scores' }), el('div', { cls: 'fact-v', text: scoreV }), el('div', { cls: 'fact-s', text: scoreS })) : null,
+    reports.length && recId ? el('div', { cls: 'fact' }, el('div', { cls: 'fact-k', text: 'Council' }),
+      el('div', { cls: 'fact-v', text: `${backers.length} of ${reports.length} chose ${names[recId]}` }),
+      el('div', { cls: 'fact-s', text: 'Each member worked alone, from a different angle.' })) : null);
+  main.append(el('div', { cls: 'decision', attrs: { role: 'region', 'aria-label': 'Recommendation' } }, body, facts));
 
-  const vSide = el('aside', { cls: 'verdict-side', attrs: { 'aria-label': 'At a glance' } });
-  const confSteps = { low: 1, medium: 2, high: 3 }[R.confidence] || 0;
-  vSide.append(el('div', { cls: 'stat' },
-    el('div', { cls: 'stat-label', text: 'Confidence' }),
-    el('div', { cls: 'meter', attrs: { role: 'img', 'aria-label': `Confidence ${R.confidence || 'unknown'}, ${confSteps} of 3` } }, [1, 2, 3].map(i => el('span', { cls: i <= confSteps ? 'on' : '' }))),
-    el('div', { cls: 'stat-value', text: CONF_WORDS[R.confidence] || 'Unknown' }),
-    el('div', { cls: 'stat-sub', text: 'How sure the recommendation is' })));
-  const glanceLead = el('div', { cls: 'stat' });
-  const glanceSens = el('div', { cls: 'stat' });
-  vSide.append(glanceLead, glanceSens);
-  if (R.dissent && R.dissent.role) vSide.append(el('div', { cls: 'stat' },
-    el('div', { cls: 'stat-label', text: 'Strongest disagreement' }),
-    el('div', { cls: 'stat-value', text: roleName(R.dissent.role) }),
-    el('div', { cls: 'stat-sub' }, el('a', { text: 'Read the argument', attrs: { href: '#dissent' } }))));
-  vs.append(el('div', { cls: 'card verdict' }, vMain, vSide));
-
-  /* ---------- Scores ---------- */
-  const ss = section('scores', 'Scores', 'Each option gets a score from 1 to 5 on every criterion. Those scores are combined into one overall score out of 5.');
-  const explainLead = el('p', { cls: 'explain-lead' });
-  const explain = el('div', { cls: 'explain' }, explainLead,
-    el('p', { cls: 'explain-how', text: 'Each criterion score (1–5) is multiplied by how much that criterion counts, then the results are added up.' }));
-
-  const bars = el('div', { cls: 'bars', attrs: { role: 'list', 'aria-label': 'Overall score per option, out of 5' } });
-  const barRows = {};
-  for (const o of options) {
-    const fill = el('div', { cls: 'bar-fill' });
-    const value = el('div', { cls: 'bar-value' });
-    const row = el('div', { cls: 'bar-row', attrs: { role: 'listitem' } },
-      el('div', { cls: 'bar-name', text: o.name, attrs: { title: o.description || o.name } }), el('div', { cls: 'bar-track' }, fill), value);
-    barRows[o.id] = { row, fill, value };
-    bars.append(row);
-  }
-
-  // "How is this calculated?": one panel per option; the screen shows one, print shows all.
-  const calcPanels = {}, calcButtons = {};
-  let calcShown = null;
-  const seg = el('div', { cls: 'seg', attrs: { role: 'group', 'aria-label': 'Show the calculation for' } });
-  const calcBody = el('div', { cls: 'calc-body' }, options.length > 1 ? seg : null);
-  const showCalc = id => {
-    calcShown = id;
-    for (const o of options) {
-      calcPanels[o.id].panel.hidden = o.id !== id;
-      if (calcButtons[o.id]) calcButtons[o.id].setAttribute('aria-pressed', String(o.id === id));
+  /* What could make this wrong: dissent, blind spots, unknowns in one list. */
+  const risks = [];
+  if (R.dissent && R.dissent.position) risks.push({ k: `Strongest disagreement, from the ${roleName(R.dissent.role)}`, v: R.dissent.position, more: R.dissent.why_rejected ? 'Why it was not followed: ' + R.dissent.why_rejected : null });
+  list(R.blind_spots).forEach(b => risks.push({ k: 'Nobody on the council raised this', v: b }));
+  list(R.unknowns).forEach(u => risks.push({ k: 'Still unknown', v: u }));
+  if (risks.length) {
+    const ul = el('ul');
+    const row = r => el('li', {}, el('span', { cls: 'watch-k', text: r.k }),
+      r.more ? el('details', {}, el('summary', {}, r.v + ' ', el('span', { cls: 'more', text: 'Why not followed' })), el('p', { text: r.more })) : el('span', { text: r.v }));
+    const SHOW = 3;
+    risks.slice(0, SHOW).forEach(r => ul.append(row(r)));
+    const w = el('div', { cls: 'watch' }, el('h2', { text: 'What could make this wrong' }), ul);
+    if (risks.length > SHOW) {
+      const b = el('button', { cls: 'linkbtn', text: `Show ${risks.length - SHOW} more`, attrs: { type: 'button' } });
+      b.addEventListener('click', () => { risks.slice(SHOW).forEach(r => ul.append(row(r))); b.remove(); });
+      w.append(b);
     }
-  };
-  for (const o of options) {
-    if (options.length > 1) {
-      const b = el('button', { text: o.name, attrs: { type: 'button', 'aria-pressed': 'false' } });
-      b.addEventListener('click', () => showCalc(o.id));
-      calcButtons[o.id] = b;
-      seg.append(b);
-    }
-    const title = el('p', { cls: 'calc-title' });
-    const rows = {};
-    const tb = el('tbody');
-    for (const c of criteria) {
-      const sc = cell(o.id, c.id);
-      const share = el('td', { cls: 'num' }), adds = el('td', { cls: 'num' });
-      rows[c.id] = { share, adds, score: sc ? sc.score : 0 };
-      tb.append(el('tr', {}, el('td', { text: c.name }), share, adds));
-    }
-    const totShare = el('td', { cls: 'num' }), totAdds = el('td', { cls: 'num' });
-    const note = el('p', { cls: 'calc-note' });
-    const table = el('table', { cls: 'calc-table' },
-      el('caption', { cls: 'visually-hidden', text: `How the overall score of ${o.name} is calculated` }),
-      el('thead', {}, el('tr', {}, el('th', { text: 'Criterion', attrs: { scope: 'col' } }),
-        el('th', { cls: 'num', text: 'Score × counts for', attrs: { scope: 'col' } }), el('th', { cls: 'num', text: '=\u00a0Adds', attrs: { scope: 'col' } }))),
-      tb,
-      el('tfoot', {}, el('tr', {}, el('td', { text: 'Overall score' }), totShare, totAdds)));
-    const panel = el('div', { cls: 'calc-panel', attrs: { role: 'region', 'aria-label': `Calculation for ${o.name}` } }, title, el('div', { cls: 'table-wrap', attrs: { style: 'border:0;background:transparent' } }, table), note);
-    calcPanels[o.id] = { panel, title, rows, totShare, totAdds, note };
-    calcBody.append(panel);
+    main.append(w);
   }
-  const calc = el('details', { cls: 'calc' }, el('summary', { text: 'How is this calculated?' }), calcBody);
 
-  // The 1–5 grid. Every score is a button that opens the analyst's reason.
-  const table = el('table');
-  const caption = el('caption', { cls: 'visually-hidden', text: 'Score per option and criterion, from 1 to 5, with the overall score out of 5' });
-  const thead = el('thead');
-  const headRow = el('tr', {}, el('th', { text: 'Option', attrs: { scope: 'col' } }));
-  const weightCells = {};
-  for (const c of criteria) {
-    const w = el('span', { cls: 'w' });
-    weightCells[c.id] = w;
-    headRow.append(el('th', { attrs: { scope: 'col' } }, txt(c.name), w));
-  }
-  headRow.append(el('th', { text: 'Overall score', attrs: { scope: 'col', style: 'text-align:right' } }));
-  thead.append(headRow);
+  /* ---------- Layer 2: compare ---------- */
+  const cmp = el('section', { attrs: { 'aria-labelledby': 'cmp-h' } },
+    el('h2', { cls: 'big', text: 'How the options compare', attrs: { id: 'cmp-h' } }),
+    el('p', { cls: 'lede', text: 'Each option scored 1 to 5 per criterion by a neutral analyst. Select a score to see why.' }));
+  const table = el('table', { cls: 'matrix' });
+  const recCls = id => id === recId ? 'is-rec' : '';
+  table.append(el('thead', {}, el('tr', {},
+    el('th', { cls: 'crit', text: 'Criterion', attrs: { scope: 'col' } }),
+    options.map(o => el('th', { cls: recCls(o.id), attrs: { scope: 'col', title: o.description || '' } }, o.name, o.id === recId ? el('span', { cls: 'rec', text: 'Chosen' }) : null)))));
   const tbody = el('tbody');
-  const totalCells = {}, tableRows = {};
-  const heatStyle = s => {
-    const bg = `var(--heat-${Math.min(5, Math.max(1, s))})`;
-    const dark = currentTheme() === 'dark';
-    const lightInk = dark ? s <= 3 : s >= 4;
-    return `background:${bg};color:${lightInk ? '#ffffff' : (dark ? '#0d1b2b' : '#11335e')}`;
-  };
-  const heatCells = [];
-  const SUPERVISOR_RE = /^Supervisor:\s*/;
-  const reasonsBody = el('div', { cls: 'reasons-body' });
-  for (const o of options) {
-    const tr = el('tr', {}, el('td', { cls: 'opt', text: o.name }));
-    const reasonList = el('ul', { cls: 'clean' });
-    for (const c of criteria) {
-      const sc = cell(o.id, c.id);
-      const td = el('td', { cls: 'heat' });
-      if (sc) {
-        const btn = el('button', { cls: 'score-btn', attrs: { type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'aria-controls': 'score-pop',
-          'aria-label': `${o.name}, ${c.name}: ${sc.score} out of 5, ${String(SCORE_WORDS[sc.score] || '').toLowerCase()}. Show the analyst’s reason.` } },
-          el('span', { text: sc.score }));
-        btn.addEventListener('click', () => togglePop(btn, o, c, sc));
-        td.append(btn);
-        heatCells.push([td, sc.score]);
-        reasonList.append(el('li', {}, el('strong', { text: `${c.name}: ${sc.score} of 5 (${SCORE_WORDS[sc.score] || ''}). ` }), txt(String(sc.rationale || '').replace(SUPERVISOR_RE, ''))));
-      } else td.append(el('span', { text: '–', attrs: { 'aria-label': 'No score' } }));
-      tr.append(td);
-    }
-    const tot = el('td', { cls: 'total' });
-    totalCells[o.id] = tot; tableRows[o.id] = tr;
-    tr.append(tot);
-    tbody.append(tr);
-    reasonsBody.append(el('h5', { text: o.name }), reasonList);
-  }
-  const paintHeat = () => heatCells.forEach(([td, s]) => td.setAttribute('style', heatStyle(s)));
-  table.append(caption, thead, tbody);
-  const legend = el('div', { cls: 'legend', attrs: { 'aria-label': 'What the scores mean' } },
-    [1, 2, 3, 4, 5].map(i => el('span', {}, el('i', { attrs: { style: `background: var(--heat-${i})` } }), txt(`${i} ${SCORE_WORDS[i].replace(' this criterion', '').toLowerCase()}`))));
-  const hintText = el('span', { text: 'Click or tap any score to see the analyst’s reason for it.' });
-  const hint = el('p', { cls: 'hint' }, icon('info'), hintText);
-  const tableWrap = el('div', { cls: 'table-wrap' }, table);
-  const updateHint = () => { hintText.textContent = 'Click or tap any score to see the analyst’s reason for it.' +
-    (tableWrap.scrollWidth > tableWrap.clientWidth + 1 ? ' Swipe the table sideways to see every criterion.' : ''); };
-  window.addEventListener('resize', updateHint, { passive: true });
-  const reasons = el('details', { cls: 'reasons' }, el('summary', { text: 'All score reasons' }), reasonsBody);
-
-  const sensLine = el('div', { cls: 'sensitivity', attrs: { 'aria-live': 'polite' } });
-  const reset = el('button', { cls: 'btn', text: 'Reset', attrs: { type: 'button', 'aria-label': 'Reset to the original weights' } });
-  const sliders = el('div', { cls: 'sliders' });
-  const sliderOutputs = {}, sliderInputs = {};
+  const reason = el('div', { cls: 'reason', attrs: { 'aria-live': 'polite' } }, el('span', { cls: 'muted', text: 'Select any score to read the reason behind it.' }));
+  const weightLabels = {};
+  let pressed = null;
   for (const c of criteria) {
-    const id = 'w-' + c.id;
-    const out = el('output', { attrs: { for: id } });
-    const input = el('input', { attrs: { id, type: 'range', min: '0', max: '1', step: 'any', 'aria-describedby': id + '-why' } });
-    input.value = String(weights[c.id]);
-    input.addEventListener('input', () => { weights[c.id] = Number(input.value); draw(); });
-    sliderOutputs[c.id] = out; sliderInputs[c.id] = input;
-    sliders.append(el('div', { cls: 'slider' }, el('label', { attrs: { for: id } }, el('span', { text: c.name }), out), input,
-      el('span', { cls: 'visually-hidden', text: c.why || '', attrs: { id: id + '-why' } })));
+    const wl = el('span', { cls: 'w' }); weightLabels[c.id] = wl;
+    tbody.append(el('tr', {},
+      el('th', { cls: 'crit', attrs: { scope: 'row' } }, c.name, wl),
+      options.map(o => {
+        const sc = cell(o.id, c.id); const n = sc.score || 0;
+        const btn = el('button', { cls: 'cellbtn', attrs: { type: 'button', 'aria-pressed': 'false', 'aria-label': `${o.name}, ${c.name}: ${n} of 5. Show reason.` } },
+          el('span', { cls: 'pips', attrs: { 'aria-hidden': 'true' } }, [1, 2, 3, 4, 5].map(i => el('i', { cls: i <= n ? 'on' : '' }))),
+          el('span', { cls: 'num', text: n }));
+        btn.addEventListener('click', () => {
+          if (pressed) pressed.setAttribute('aria-pressed', 'false');
+          pressed = btn; btn.setAttribute('aria-pressed', 'true');
+          reason.replaceChildren(el('b', { text: `${o.name}, ${c.name}: ${n} of 5. ` }), String(sc.rationale || 'No reason recorded.').replace(/^Supervisor:\s*/, ''));
+        });
+        return el('td', { cls: recCls(o.id) }, btn);
+      })));
   }
-  reset.addEventListener('click', () => { Object.assign(weights, initialWeights); for (const c of criteria) sliderInputs[c.id].value = String(weights[c.id]); draw(); });
-  ss.append(el('div', { cls: 'card' },
-    explain,
-    el('h4', { cls: 'sub-head', text: 'Overall score, out of 5' }), bars, calc,
-    el('h4', { cls: 'sub-head', text: 'Score on each criterion, from 1 to 5' }),
-    tableWrap, legend, hint, reasons,
-    el('div', { cls: 'weights' },
-      el('div', { cls: 'weights-head' }, el('h4', { cls: 'sub-head', text: 'How much each criterion counts', attrs: { style: 'margin:0' } }), reset),
-      el('p', { cls: 'weights-help', text: 'Drag a slider to try your own priorities. The shares always add up to 100%. The 1–5 scores never change, only how much each one counts toward the overall score.' }),
-      sliders),
-    el('div', { cls: 'sens' }, el('h4', { cls: 'sub-head', text: 'Would the winner change if priorities shifted a little?' }), sensLine)));
+  table.append(tbody);
+  const totalCells = {};
+  table.append(el('tfoot', {}, el('tr', {},
+    el('th', { cls: 'crit', text: 'Overall, out of 5', attrs: { scope: 'row' } }),
+    options.map(o => { const t = el('span', { cls: 'total' }); totalCells[o.id] = t; return el('td', { cls: recCls(o.id) }, t); }))));
 
-  const optNames = ids => joinAnd(ids.map(k => names[k] || k));
+  // Priorities: sliders that re-weight the totals live.
+  const sliders = el('div', { cls: 'sliders' });
+  const inputs = {}; const outs = {};
+  for (const c of criteria) {
+    const out = el('span'); outs[c.id] = out;
+    const inp = el('input', { attrs: { type: 'range', min: '0', max: '100', step: '1', id: 'w-' + c.id } });
+    inputs[c.id] = inp;
+    inp.addEventListener('input', () => {
+      // Move this criterion, rescale the others so the shares still add to 100%.
+      const v = Number(inp.value) / 100; const rest = Object.keys(weights).filter(k => k !== c.id);
+      const restSum = rest.reduce((s, k) => s + weights[k], 0);
+      weights[c.id] = v;
+      for (const k of rest) weights[k] = restSum > 0 ? weights[k] / restSum * (1 - v) : (1 - v) / rest.length;
+      draw();
+    });
+    sliders.append(el('div', { cls: 'slider' }, el('label', { attrs: { for: 'w-' + c.id } }, c.name, out), inp));
+  }
+  const prioNote = el('span');
+  const reset = el('button', { cls: 'reset', text: 'Reset', attrs: { type: 'button' } });
+  reset.addEventListener('click', () => { Object.assign(weights, initial); draw(); });
+  const prio = el('details', { cls: 'prio' }, el('summary', { text: 'Try your own priorities' }), sliders, el('div', { cls: 'prio-foot' }, prioNote, reset));
+
   function draw() {
-    const t = totalsFor(weights);
-    const n = normalize(weights);
-    const win = winnersOf(t);
-    const changed = criteria.some(c => Math.abs(weights[c.id] - initialWeights[c.id]) > 1e-9);
-    const allZero = criteria.every(c => n[c.id] === 0);
-    for (const o of options) {
-      const v = t[o.id];
-      const lead = win.includes(o.id) && v > 0;
-      barRows[o.id].fill.style.transform = `scaleX(${Math.max(0, Math.min(1, v / 5))})`;
-      barRows[o.id].value.textContent = v.toFixed(2);
-      barRows[o.id].row.classList.toggle('lead', lead);
-      barRows[o.id].row.setAttribute('aria-label', `${o.name}: ${v.toFixed(2)} out of 5${lead ? ', highest' : ''}`);
-      totalCells[o.id].textContent = v.toFixed(2);
-      tableRows[o.id].classList.toggle('lead', lead);
-
-      // The worked calculation for this option
-      const P = calcPanels[o.id];
-      let roundedSum = 0;
-      for (const c of criteria) {
-        const r = P.rows[c.id], part = n[c.id] * r.score;
-        roundedSum += Number(part.toFixed(2));
-        r.share.replaceChildren(txt(r.score), el('span', { cls: 'op', text: ' × ' }), txt(fmtPct(n[c.id])));
-        r.adds.replaceChildren(el('span', { cls: 'op', text: '= ' }), txt(part.toFixed(2)));
-      }
-      P.title.replaceChildren(el('strong', { text: o.name }), txt(`: ${v.toFixed(2)} out of 5`));
-      P.totShare.textContent = '';
-      P.totAdds.textContent = v.toFixed(2);
-      P.note.textContent = Math.abs(roundedSum - Number(v.toFixed(2))) > 0.001
-        ? 'Each line is rounded to two decimals, so the lines may not add up exactly to the overall score.' : '';
-      P.note.hidden = !P.note.textContent;
-    }
-    if (calcShown == null || !options.some(o => o.id === calcShown)) showCalc((win[0] && options.some(o => o.id === win[0])) ? win[0] : (options[0] || {}).id);
-    for (const c of criteria) { weightCells[c.id].textContent = 'counts ' + fmtPct(n[c.id]); sliderOutputs[c.id].textContent = fmtPct(n[c.id]); }
-    reset.disabled = !changed;
-
-    // The headline sentence above the bars, in plain words
-    const sorted = Object.entries(t).sort((a, b) => b[1] - a[1]);
-    const prefix = changed ? 'With your slider settings, ' : '';
-    const others = sorted.filter(([k]) => !win.includes(k));
-    if (allZero) explainLead.textContent = 'Every criterion is set to count 0%, so there is nothing to compare. Use Reset to go back to the original weights.';
-    else if (win.length > 1) explainLead.textContent = `${prefix}${optNames(win)} tie on overall score at ${t[win[0]].toFixed(2)} out of 5.`;
-    else {
-      const lead = `${names[win[0]]}’s overall score is ${t[win[0]].toFixed(2)} out of 5`;
-      const next = others.length ? `, the highest. Next is ${names[others[0][0]]} at ${others[0][1].toFixed(2)}.` : '.';
-      explainLead.textContent = prefix + lead + next;
-    }
-
-    glanceLead.replaceChildren(el('div', { cls: 'stat-label', text: changed ? 'Highest with your weights' : 'Highest overall score' }),
-      el('div', { cls: 'stat-value', text: allZero ? '—' : win.length > 1 ? 'Tie: ' + win.map(k => names[k]).join(' / ') : (names[win[0]] || '—') }),
-      el('div', { cls: 'stat-sub', text: sorted.length > 1 && !allZero
-        ? `${sorted[0][1].toFixed(2)} out of 5` + (others.length && win.length === 1 ? `, ${(sorted[0][1] - others[0][1]).toFixed(2)} ahead of ${names[others[0][0]]}` : '')
-        : '' }));
-
-    // Would the winner change? Same test as scoring.sensitivity: nudge each share by 10 points, one at a time.
-    const flips = allZero ? [] : sensitivity(weights);
-    const flipCrit = [...new Set(flips.map(f => f.criterion))];
-    const leaderText = win.length > 1 ? `${optNames(win)} tied in front` : `${names[win[0]] || '—'} in front`;
-    glanceSens.replaceChildren(el('div', { cls: 'stat-label', text: 'If priorities shift a little' }),
-      el('div', { cls: 'stat-value', text: flipCrit.length ? 'Winner could change' : 'Same winner' }),
-      el('div', { cls: 'stat-sub', text: flipCrit.length
-        ? (flipCrit.length > 2 ? `Depends on how much ${flipCrit.length} of the ${criteria.length} criteria count` : `Depends on how much ${joinAnd(flipCrit.map(critName))} count${flipCrit.length > 1 ? '' : 's'}`)
-        : 'Checked by moving each criterion 10 points up or down' }));
-    if (allZero) sensLine.replaceChildren(el('p', { text: 'Not available while every criterion counts 0%.' }));
-    else if (!flipCrit.length) sensLine.replaceChildren(icon('stable'),
-      el('p', { text: `No. Giving any one criterion about 10 points more or less weight still leaves ${leaderText}.` }));
-    else sensLine.replaceChildren(icon('alert'), el('div', {},
-      el('p', { text: 'Yes. A small change in priorities changes the winner:' }),
-      el('ul', {}, flips.map(f => el('li', { text: `If ${critName(f.criterion)} counted ${fmtPct(f.share)} instead of ${fmtPct(n[f.criterion])}, ${optNames(f.winners)} would ${f.winners.length > 1 ? 'tie for the lead' : 'come out ahead'}.` }))),
-      el('p', { text: flipCrit.length > 1 ? 'Decide deliberately how much these criteria matter to you.' : `Decide deliberately how much ${critName(flipCrit[0])} matters to you.`, attrs: { style: 'margin-top:6px' } })));
-    sensLine.style.color = flipCrit.length ? 'var(--warn-ink)' : 'var(--ink-2)';
+    const t = totalsFor(weights); const win = winnersOf(t);
+    for (const c of criteria) { weightLabels[c.id].textContent = 'counts ' + pct(weights[c.id]); outs[c.id].textContent = pct(weights[c.id]); inputs[c.id].value = Math.round(weights[c.id] * 100); }
+    for (const o of options) { totalCells[o.id].className = 'total' + (win.includes(o.id) ? ' lead' : ''); totalCells[o.id].textContent = t[o.id].toFixed(2); }
+    const changed = Object.keys(weights).some(k => Math.abs(weights[k] - initial[k]) > 0.005);
+    prioNote.textContent = !changed ? 'These are the priorities the assessment used.'
+      : win.length > 1 ? `With these priorities, ${joinAnd(win.map(w => names[w]))} tie.`
+      : win[0] === recId ? `${names[win[0]]} still leads with these priorities.`
+      : `With these priorities, ${names[win[0]]} would lead instead.`;
   }
-
-  /* ---------- Score popover: one at a time, anchored to its cell ---------- */
-  const pop = el('div', { cls: 'pop', attrs: { id: 'score-pop', role: 'dialog', 'aria-modal': 'false', 'aria-labelledby': 'score-pop-title', tabindex: '-1', hidden: '' } });
-  const popArrow = el('span', { cls: 'pop-arrow', attrs: { 'aria-hidden': 'true' } });
-  const popClose = el('button', { cls: 'pop-close', attrs: { type: 'button', 'aria-label': 'Close' } }, icon('cross'));
-  const popTitle = el('p', { cls: 'pop-title', attrs: { id: 'score-pop-title' } });
-  const popScore = el('p', { cls: 'pop-score' });
-  const popBody = el('p', { cls: 'pop-body' });
-  const popNote = el('p', { cls: 'pop-note', text: 'The lead reviewer changed this score after reading the council.' });
-  pop.append(popArrow, el('div', { cls: 'pop-top' }, el('span', { cls: 'eyebrow', text: 'The analyst’s reason' }), popClose), popTitle, popScore, popBody, popNote);
-  document.body.append(pop);
-  let popAnchor = null, popFrame = 0;
-
-  const placePop = () => {
-    popFrame = 0;
-    if (!popAnchor) return;
-    const r = popAnchor.getBoundingClientRect();
-    const vw = document.documentElement.clientWidth, vh = window.innerHeight, gap = 10, margin = 12;
-    // Close when the cell has scrolled out of view, rather than chasing it off screen.
-    if (r.bottom < 0 || r.top > vh || r.right < 0 || r.left > vw) { closePop(false); return; }
-    const w = pop.offsetWidth, h = pop.offsetHeight;
-    const below = vh - r.bottom - gap - margin, above = r.top - gap - margin;
-    const side = below >= h || below >= above ? 'below' : 'above';
-    let top = side === 'below' ? r.bottom + gap : r.top - gap - h;
-    top = Math.max(margin, Math.min(top, vh - h - margin));
-    const cx = r.left + r.width / 2;
-    const left = Math.max(margin, Math.min(cx - w / 2, vw - w - margin));
-    const ax = Math.max(16, Math.min(cx - left, w - 16));
-    pop.dataset.side = side;
-    pop.style.setProperty('--arrow-x', ax + 'px');
-    pop.style.setProperty('--pop-from', side === 'below' ? '-6px' : '6px');
-    pop.style.setProperty('--pop-origin', `${ax}px ${side === 'below' ? '0' : '100%'}`);
-    pop.style.left = Math.round(left) + 'px';
-    pop.style.top = Math.round(top) + 'px';
-  };
-  const schedulePlace = () => { if (popAnchor && !popFrame) popFrame = requestAnimationFrame(placePop); };
-
-  function openPop(btn, o, c, sc) {
-    if (popAnchor && popAnchor !== btn) closePop(false);
-    popAnchor = btn;
-    btn.setAttribute('aria-expanded', 'true');
-    const raw = String(sc.rationale || '');
-    popTitle.textContent = c.name;
-    const badge = el('b', { text: sc.score });
-    badge.setAttribute('style', heatStyle(sc.score));
-    popScore.replaceChildren(txt(o.name), txt(' ·'), badge, txt(`out of 5 · ${SCORE_WORDS[sc.score] || ''}`));
-    popBody.textContent = raw.replace(SUPERVISOR_RE, '') || 'No reason was recorded.';
-    popNote.hidden = !SUPERVISOR_RE.test(raw);
-    pop.classList.remove('open');
-    pop.hidden = false;
-    placePop();
-    void pop.offsetWidth; // start the transition from the closed state
-    pop.classList.add('open');
-    pop.focus({ preventScroll: true });
-  }
-  function closePop(restoreFocus = true) {
-    if (!popAnchor) return;
-    const btn = popAnchor;
-    popAnchor = null;
-    btn.setAttribute('aria-expanded', 'false');
-    pop.classList.remove('open');
-    pop.hidden = true;
-    if (restoreFocus) btn.focus({ preventScroll: true });
-  }
-  function togglePop(btn, o, c, sc) { if (popAnchor === btn) closePop(); else openPop(btn, o, c, sc); }
-  popClose.addEventListener('click', () => closePop());
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && popAnchor) { e.preventDefault(); closePop(); } });
-  document.addEventListener('pointerdown', e => {
-    if (!popAnchor || pop.contains(e.target) || (e.target.closest && e.target.closest('.score-btn'))) return;
-    // Clicking somewhere inert hands focus back to the cell; clicking a control lets that control take it.
-    closePop(!(e.target.closest && e.target.closest('a, button, input, select, textarea, summary, [tabindex]')));
-  });
-  // Tabbing out of the popover closes it without pulling focus back.
-  pop.addEventListener('focusout', e => { if (popAnchor && e.relatedTarget && !pop.contains(e.relatedTarget) && e.relatedTarget !== popAnchor) closePop(false); });
-  window.addEventListener('scroll', schedulePlace, { passive: true, capture: true });
-  window.addEventListener('resize', schedulePlace, { passive: true });
-  window.addEventListener('beforeprint', () => closePop(false));
-
-  paintHeat();
   draw();
-  updateHint();
-  const repaint = () => { paintHeat(); if (popAnchor) popScore.querySelector('b').setAttribute('style', heatStyle(Number(popScore.querySelector('b').textContent))); };
-  toggle.addEventListener('click', repaint);
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', repaint);
+  cmp.append(el('div', { cls: 'matrix-wrap' }, table, reason, prio));
 
-  /* ---------- Pros & cons ---------- */
-  const ps = section('proscons', 'Pros & cons', 'The main points for and against each option, from the analyst and the council. Each is rated 1–5 for impact and for how likely it is; the bar shows the two multiplied, so the biggest, most likely points come first.');
-  const pcGrid = el('div', { cls: 'grid' });
-  const impactOf = i => (Number(i.severity) || 0) * (Number(i.likelihood) || 0);
-  const rated = (words, v) => `${words[v] || 'Unrated'} (${v}/5)`;
-  for (const o of options) {
-    const card = el('article', { cls: 'card option-card' });
-    const head = el('div', { cls: 'role-head' }, el('div', {}, el('h3', { text: o.name }), o.description ? el('p', { cls: 'desc', text: o.description }) : null));
-    if (decision === o.id) head.append(chip('Recommended', 'info', 'check'));
-    card.append(head);
-    const cols = el('div', { cls: 'pc' });
-    for (const kind of ['pro', 'con']) {
-      const items = (R.ledger || []).filter(i => i.option === o.id && i.kind === kind).sort((a, b) => impactOf(b) - impactOf(a));
-      const colour = kind === 'pro' ? 'var(--good-ink)' : 'var(--bad-ink)';
-      const col = el('div', { cls: 'pc-col' }, el('h4', {}, el('i', { attrs: { style: `background:${colour}` } }), txt(kind === 'pro' ? `Pros (${items.length})` : `Cons (${items.length})`)));
-      if (!items.length) col.append(el('div', { cls: 'empty', text: 'None recorded' }));
-      for (const i of items) {
-        const pct = Math.round(impactOf(i) / 25 * 100);
-        const by = asList(i.raised_by);
-        col.append(el('div', { cls: 'pc-item' },
-          el('p', { text: i.claim }),
-          el('div', { cls: 'impact' },
-            el('span', { cls: 'impact-bar', attrs: { role: 'img', 'aria-label': `Impact times likelihood: ${impactOf(i)} of 25` } }, el('b', { attrs: { style: `width:${pct}%;background:${colour}` } })),
-            el('span', { text: `${rated(IMPACT_WORDS, i.severity)} · ${rated(LIKELY_WORDS, i.likelihood)}` })),
-          by.length ? el('div', { cls: 'impact', attrs: { style: 'margin-top:6px' } }, el('span', { cls: 'by-label', text: 'Raised by' }), el('span', { cls: 'by' }, by.map(r => el('span', { text: roleName(r) })))) : null));
-      }
-      cols.append(col);
-    }
-    card.append(cols);
-    pcGrid.append(card);
-  }
-  ps.append(pcGrid);
-
-  /* ---------- Dissent ---------- */
-  if (R.dissent) {
-    const ds = section('dissent', 'Strongest disagreement', 'The best argument against the recommendation, and why it was not followed.');
-    ds.append(el('div', { cls: 'card' },
-      el('blockquote', { text: R.dissent.position }),
-      el('div', { cls: 'attribution' }, chip(roleName(R.dissent.role), 'violet')),
-      el('p', { cls: 'reason' }, el('strong', { text: 'Why it was not followed: ' }), txt(R.dissent.why_rejected))));
-  }
-
-  /* ---------- Blind spots ---------- */
-  const ms = section('missed', 'What everyone missed', 'Points nobody on the council raised, added by the lead reviewer after reading every report.');
-  ms.append(el('div', { cls: 'card' }, el('ol', { cls: 'numbered' }, asList(R.blind_spots).map(b => el('li', { text: b })))));
-
-  /* ---------- Drift ---------- */
-  const dr = section('drift', 'Did the council change the recommendation?', 'Before hearing the council, the lead reviewer wrote down its own view and set it aside. Here it is next to what happened after.');
-  const pre = R.precommit || {};
-  dr.append(el('div', { cls: 'drift' },
-    el('div', { cls: 'card' }, el('span', { cls: 'eyebrow', text: 'View before the council' }),
-      el('p', { text: pre.position || '', attrs: { style: 'font-size:17px;margin:10px 0 0' } }),
-      asList(pre.reasons).length ? el('ul', { cls: 'clean reasoning', attrs: { style: 'margin-top:10px' } }, asList(pre.reasons).map(r => el('li', { text: r }))) : null,
-      pre.main_risk ? el('p', { cls: 'muted', text: 'Biggest risk it saw: ' + pre.main_risk, attrs: { style: 'font-size:14px;margin:10px 0 0' } }) : null),
-    el('div', { cls: 'arrow' }, icon('arrow')),
-    el('div', { cls: 'card' }, el('span', { cls: 'eyebrow', text: 'After hearing the council' }), el('p', { text: R.drift || '', attrs: { style: 'font-size:17px;margin:10px 0 0' } }))));
-
-  /* ---------- Council ---------- */
-  const cs = section('council', 'Council', 'Each member looked at the question from one angle, on its own, without seeing the others’ answers.');
-  const TAGS = { Brief: 'neutral', Source: 'info', Mechanism: 'violet', Knowledge: 'warn', Supervisor: 'neutral' };
-  const TAG_LABELS = { Brief: 'Background', Source: 'Source', Mechanism: 'Reasoning', Knowledge: 'Knowledge', Supervisor: 'Lead reviewer' };
-  const splitTag = s => { const m = /^(Brief|Source|Mechanism|Knowledge|Supervisor):\s*/.exec(s); return m ? [m[1], s.slice(m[0].length)] : [null, s]; };
-  const FLIP_RE = /^flip:\s*/i;
-  const roster = Object.fromEntries((R.roster || []).map(r => [r.role, r]));
-  const council = el('div', { cls: 'council' });
-  for (const r of R.reports || []) {
-    const meta = roster[r.role] || {};
-    const cTone = { high: 'good', medium: 'info', low: 'warn' }[r.confidence] || '';
-    const card = el('article', { cls: 'card' },
-      el('div', { cls: 'role-head' }, el('div', { cls: 'role-name', text: roleName(r.role) }),
-        el('div', { cls: 'chips' }, chip(`${CONF_WORDS[r.confidence] || '?'} confidence`, cTone), meta.model ? chip(meta.model) : null)),
-      roleSummary(r.role) ? el('p', { cls: 'role-summary', text: roleSummary(r.role) }) : null,
-      meta.why ? el('p', { cls: 'role-why' }, el('strong', { text: 'Why it was included: ' }), txt(meta.why)) : null,
-      el('p', { cls: 'role-position', text: r.position }));
-    const reasoning = el('details', {}, el('summary', { text: 'Reasoning' }),
-      el('ul', { cls: 'clean reasoning' }, asList(r.reasoning).map(x => FLIP_RE.test(x)
-        ? el('li', { cls: 'flip' }, el('strong', { text: 'What would change this view: ' }), txt(x.replace(FLIP_RE, '')))
-        : el('li', { text: x }))),
-      r.surprise ? el('p', { cls: 'surprise' }, el('strong', { text: 'What others will miss: ' }), txt(r.surprise)) : null);
-    const evidence = el('details', {}, el('summary', { text: `Evidence (${asList(r.evidence).length})` }),
-      el('ul', { cls: 'clean evidence' }, asList(r.evidence).map(x => { const [tag, rest] = splitTag(x); return el('li', {}, tag ? chip(TAG_LABELS[tag], TAGS[tag]) : null, el('span', { cls: 'text' }, linkify(rest))); })));
-    card.append(reasoning, evidence);
-    council.append(card);
-  }
-  cs.append(council);
-
-  /* ---------- Brief & unknowns ---------- */
-  const bs = section('brief', 'The question & unknowns', 'The background every council member received, and what could still change the verdict.');
-  const dl = el('dl');
-  const add = (label, node) => { if (node) dl.append(el('dt', { text: label }), el('dd', {}, node)); };
-  add('Question', brief.question ? el('p', { text: brief.question, attrs: { style: 'margin:0' } }) : null);
-  add('Context', brief.context ? el('p', { text: brief.context, attrs: { style: 'margin:0' } }) : null);
-  add('What’s at stake', brief.stakes ? el('p', { text: brief.stakes, attrs: { style: 'margin:0' } }) : null);
-  add('Options', options.length ? el('ul', { cls: 'clean reasoning' }, options.map(o => el('li', {}, el('strong', { text: o.name }), txt(o.description ? ' — ' + o.description : '')))) : null);
-  add('Constraints', asList(brief.constraints).length ? el('ul', { cls: 'clean reasoning' }, asList(brief.constraints).map(c => el('li', { text: c }))) : null);
-  add('Criteria and how much each counts', criteria.length ? el('ul', { cls: 'clean reasoning' }, criteria.map(c => el('li', {}, el('strong', { text: `${c.name} (${fmtPct(initialWeights[c.id])})` }), txt(c.why ? ' — ' + c.why : '')))) : null);
-  add('Evidence gathered', (brief.evidence || []).length ? el('ul', { cls: 'clean evidence' }, brief.evidence.map(e => el('li', {}, el('span', { cls: 'text' }, txt(e.claim || ''), el('span', { cls: 'src' }, txt(' · '), linkify(e.source || '')))))) : null);
-  const unknownsCard = el('div', { cls: 'card' }, el('h3', { text: 'Unknowns' }), el('p', { cls: 'muted', text: 'Facts that could change the verdict if they turned out differently.', attrs: { style: 'font-size:14px;margin:0 0 12px' } }),
-    asList(R.unknowns).length ? el('ol', { cls: 'numbered' }, asList(R.unknowns).map(u => el('li', { text: u }))) : el('p', { cls: 'muted', text: 'None recorded.' }));
-  bs.append(el('div', { cls: 'brief-grid' }, el('div', { cls: 'card' }, dl), unknownsCard));
-
-  main.append(el('footer', {}, el('span', { text: 'Generated by the critically-assess skill' }), el('span', { text: 'Scores run from 1 (fails) to 5 (as good as it gets) · criterion shares add up to 100%' })));
-
-  /* ---------- Guide and contents: only sections that exist ---------- */
-  for (const g of guideLines) {
-    const links = (Array.isArray(g[0]) ? g.slice(0, -1) : [g.slice(0, 2)]).filter(([id]) => document.getElementById(id));
-    if (links.length) guideList.append(el('li', {}, el('div', {}, links.map(([id, label]) => el('a', { text: label, attrs: { href: '#' + id } }))), el('span', { text: g[g.length - 1] })));
-  }
-  for (const [id, label] of tocTargets) if (document.getElementById(id)) toc.append(el('a', { text: label, attrs: { href: '#' + id } }));
-
-  /* ---------- Back to top ---------- */
-  const toTop = el('button', { cls: 'to-top', attrs: { type: 'button', 'aria-label': 'Back to top', title: 'Back to top' } }, icon('up'));
-  document.body.append(toTop);
-  let pastVerdict = false, scrollingUp = false, lastY = window.scrollY, topFrame = 0;
-  // Where the page has no side margin for the button (phones, narrow windows), show it only while
-  // scrolling back up or at the very end, so it never sits on top of text being read.
-  const crowded = () => window.innerWidth < 1088;
-  const atEnd = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 80;
-  const updateTop = () => {
-    topFrame = 0;
-    const y = window.scrollY;
-    if (Math.abs(y - lastY) > 4) { scrollingUp = y < lastY; lastY = y; }
-    const show = pastVerdict && (!crowded() || scrollingUp || atEnd());
-    toTop.classList.toggle('show', show);
-    if (!show && document.activeElement === toTop) toTop.blur();
+  // For and against, one option at a time, biggest points first.
+  const ledger = (R.ledger || []).map(i => ({ ...i, weight: (i.severity || 0) * (i.likelihood || 0) }));
+  const IMPACT = { 1: 'Tiny impact', 2: 'Small impact', 3: 'Moderate impact', 4: 'Big impact', 5: 'Major impact' };
+  const LIKELY = { 1: 'unlikely', 2: 'possible', 3: 'fairly likely', 4: 'likely', 5: 'very likely' };
+  const item = i => {
+    const meta = `${IMPACT[i.severity] || ''}, ${LIKELY[i.likelihood] || ''}. Raised by ${joinAnd(list(i.raised_by).map(roleName))}.`;
+    const head = el('span', { text: i.point || i.claim });
+    return el('li', {}, el('details', { cls: 'item' }, el('summary', {}, head),
+      el('div', { cls: 'item-body' }, i.point ? el('p', { text: i.claim }) : null, el('p', { cls: 'item-meta', text: meta }))));
   };
-  const verdictEl = document.getElementById('verdict');
-  if ('IntersectionObserver' in window && verdictEl) {
-    new IntersectionObserver(([e]) => { pastVerdict = !e.isIntersecting && e.boundingClientRect.top < 0; updateTop(); }).observe(verdictEl);
-  }
-  window.addEventListener('scroll', () => { if (!topFrame) topFrame = requestAnimationFrame(updateTop); }, { passive: true });
-  window.addEventListener('resize', () => { if (!topFrame) topFrame = requestAnimationFrame(updateTop); }, { passive: true });
-  toTop.addEventListener('click', () => {
-    window.scrollTo({ top: 0, behavior: reduceMotion() ? 'auto' : 'smooth' });
-    h1.focus({ preventScroll: true });
+  const SHOW_N = 3;
+  const column = (o, kind) => {
+    const rows = ledger.filter(i => i.option === o && i.kind === kind).sort((a, b) => b.weight - a.weight);
+    const ol = el('ol'); rows.slice(0, SHOW_N).forEach(i => ol.append(item(i)));
+    const wrap = el('div', {}, el('h3', { cls: kind === 'pro' ? 'for' : 'against', text: kind === 'pro' ? 'For' : 'Against' }), ol);
+    if (!rows.length) ol.append(el('li', { cls: 'muted', text: 'Nothing raised.' }));
+    if (rows.length > SHOW_N) { const b = el('button', { cls: 'linkbtn', text: `Show ${rows.length - SHOW_N} more`, attrs: { type: 'button' } }); b.addEventListener('click', () => { rows.slice(SHOW_N).forEach(i => ol.append(item(i))); b.remove(); }); wrap.append(b); }
+    return wrap;
+  };
+  const tabs = el('div', { cls: 'tabs', attrs: { role: 'tablist', 'aria-label': 'Points for and against each option' } });
+  const panel = el('div', { cls: 'fa', attrs: { role: 'tabpanel' } });
+  const order = recId ? [recId, ...options.map(o => o.id).filter(i => i !== recId)] : options.map(o => o.id);
+  const tabBtns = order.map(id => {
+    const b = el('button', { cls: 'tab', text: names[id], attrs: { type: 'button', role: 'tab', 'aria-selected': 'false', id: 'tab-' + id } });
+    b.addEventListener('click', () => show(id)); return b;
   });
+  tabs.append(...tabBtns);
+  tabs.addEventListener('keydown', e => {
+    const i = tabBtns.indexOf(document.activeElement); if (i < 0) return;
+    const j = e.key === 'ArrowRight' ? (i + 1) % tabBtns.length : e.key === 'ArrowLeft' ? (i - 1 + tabBtns.length) % tabBtns.length : -1;
+    if (j >= 0) { e.preventDefault(); tabBtns[j].focus(); tabBtns[j].click(); }
+  });
+  function show(id) {
+    tabBtns.forEach(b => { const on = b.id === 'tab-' + id; b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; });
+    panel.setAttribute('aria-labelledby', 'tab-' + id);
+    panel.replaceChildren(column(id, 'pro'), column(id, 'con'));
+  }
+  if (order.length) show(order[0]);
+  cmp.append(tabs, panel);
+  main.append(cmp);
 
-  /* ---------- Gentle reveal on scroll ---------- */
-  const reveals = document.querySelectorAll('.reveal');
-  if ('IntersectionObserver' in window && !reduceMotion()) {
-    const io = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
-    reveals.forEach(r => io.observe(r));
-  } else reveals.forEach(r => r.classList.add('in'));
-  window.addEventListener('beforeprint', () => { document.querySelectorAll('details').forEach(d => d.open = true); reveals.forEach(r => r.classList.add('in')); });
+  /* ---------- Layer 3: how this was decided ---------- */
+  const how = el('section', { attrs: { 'aria-labelledby': 'how-h' } },
+    el('h2', { cls: 'big', text: 'How this was decided', attrs: { id: 'how-h' } }),
+    el('p', { cls: 'lede', text: `${reports.length} council members each argued one angle, without seeing the others. A neutral analyst scored the options, and the lead reviewer weighed it all.` }));
+  if (reports.length) {
+    how.append(el('div', { cls: 'agree', attrs: { role: 'img', 'aria-label': recId ? `${backers.length} of ${reports.length} members chose ${names[recId]}` : '' } },
+      reports.map(r => el('span', { cls: pickOf(r) === recId ? 'yes' : '' }))));
+    const council = el('div', { cls: 'council' });
+    for (const r of reports) {
+      const p = pickOf(r);
+      const reasoning = list(r.reasoning);
+      const bodyEl = el('div', { cls: 'm-body' },
+        r.point ? el('p', { text: r.position }) : null,
+        reasoning.length ? [el('h4', { text: 'Reasoning' }), el('ul', {}, reasoning.map(x => /^Flip:/i.test(x)
+          ? el('li', { cls: 'flip' }, el('strong', { text: 'What would change this view: ' }), x.replace(/^Flip:\s*/i, ''))
+          : el('li', { text: x })))] : null,
+        r.surprise ? [el('h4', { text: 'A point others may miss' }), el('p', { text: r.surprise })] : null,
+        list(r.evidence).length ? [el('h4', { text: 'Evidence' }), el('ul', {}, list(r.evidence).map(x => el('li', {}, linkify(x))))] : null);
+      council.append(el('details', { cls: 'member' },
+        el('summary', {},
+          el('span', { cls: 'm-name', text: roleName(r.role) }),
+          el('span', { cls: 'm-pick' + (p === recId ? ' yes' : ''), text: p ? 'Chose ' + names[p] : 'No clear pick' }),
+          el('span', { cls: 'm-point', text: r.point || r.position })),
+        bodyEl));
+    }
+    how.append(council);
+  }
+
+  const more = el('div', { cls: 'more-sec' });
+  const pre = R.precommit || {};
+  const drift = String(R.drift || '');
+  const unchanged = /^no change|^none/i.test(drift.trim());
+  if (pre.position || drift) more.append(el('details', {},
+    el('summary', {}, 'Did the council change the lead reviewer’s mind?', el('span', { cls: 'sum-note', text: unchanged ? 'No' : 'Yes' })),
+    el('div', { cls: 'bg' },
+      el('p', { text: drift }),
+      pre.position ? [el('h4', { text: 'View written down before the council' }), el('p', { text: pre.position }),
+        list(pre.reasons).length ? el('ul', {}, list(pre.reasons).map(x => el('li', { text: x }))) : null,
+        pre.main_risk ? el('p', { text: 'Main risk seen then: ' + pre.main_risk }) : null] : null)));
+
+  const research = { online: 'Researched online', repo: 'Researched in the code', both: 'Researched online and in the code', none: 'No outside research' }[brief.research] || '';
+  more.append(el('details', {},
+    el('summary', {}, 'Background and sources', el('span', { cls: 'sum-note', text: research })),
+    el('div', { cls: 'bg' },
+      brief.context ? [el('h4', { text: 'Situation' }), el('p', { text: brief.context })] : null,
+      brief.stakes ? [el('h4', { text: 'What is at stake' }), el('p', { text: brief.stakes })] : null,
+      list(brief.constraints).length ? [el('h4', { text: 'Constraints' }), el('ul', {}, list(brief.constraints).map(x => el('li', { text: x })))] : null,
+      options.length ? [el('h4', { text: 'Options' }), el('ul', {}, options.map(o => el('li', {}, el('strong', { text: o.name + '. ' }), o.description || '')))] : null,
+      criteria.length ? [el('h4', { text: 'Why each criterion counts' }), el('ul', {}, criteria.map(c => el('li', {}, el('strong', { text: `${c.name} (${pct(initial[c.id])}). ` }), c.why || '')))] : null,
+      (brief.evidence || []).length ? [el('h4', { text: 'Facts gathered' }), el('ul', {}, brief.evidence.map(e => el('li', {}, String(e.claim || '') + ' Source: ', linkify(e.source))))] : null)));
+  how.append(more);
+  main.append(how);
+
+  main.append(el('footer', { text: 'Made with the critically-assess skill.' }));
 })();
 </script>
 </body>
