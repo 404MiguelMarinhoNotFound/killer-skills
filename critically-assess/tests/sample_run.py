@@ -26,6 +26,8 @@ COUNCIL = ["contrarian", "first-principles", "executor"]
 def role_report(role):
     return {
         "role": role,
+        "pick": "A",
+        "point": f"{role} point",
         "position": f"{role} position",
         "reasoning": ["r1", "r2"],
         "per_option": [
@@ -65,16 +67,18 @@ RESULT = {
     "roster": [{"role": r, "model": "opus", "why": "test"} for r in COUNCIL + ["analyst"]],
     "reports": [role_report(r) for r in COUNCIL],
     "analyst": ANALYST,
-    "ledger": [{"option": "A", "kind": "pro", "claim": "SQL joins for finance", "severity": 4,
+    "ledger": [{"option": "A", "kind": "pro", "point": "SQL joins", "claim": "SQL joins for finance", "severity": 4,
                 "likelihood": 5, "raised_by": ["analyst", "executor"]}],
     "scores": ANALYST["scores"],
     "dissent": {"role": "executor", "position": "DynamoDB ships faster",
                 "why_rejected": "reporting cost dominates"},
     "blind_spots": ["Nobody priced the reporting replica"],
     "drift": "No change: the council agreed with the first view",
+    "view_changed": False,
     "verdict": {"decision": "A", "summary": "Postgres fits the reporting needs", "conditions": []},
     "first_step": "Prototype the finance report query on RDS",
     "confidence": "medium",
+    "confidence_why": "Peak traffic growth is still a guess",
     "unknowns": ["Peak traffic growth"],
 }
 
@@ -84,8 +88,7 @@ def write_run(path):
     (path / "reports").mkdir(parents=True, exist_ok=True)
     (path / "brief.json").write_text(json.dumps(BRIEF), encoding="utf-8")
     for r in COUNCIL:
-        (path / "reports" / f"{r}.raw.txt").write_text(json.dumps(role_report(r)), encoding="utf-8")
-    (path / "reports" / "analyst.raw.txt").write_text(
-        "Here you go:\n```json\n" + json.dumps(ANALYST) + "\n```", encoding="utf-8")
+        (path / "reports" / f"{r}.reply.json").write_text(json.dumps(role_report(r)), encoding="utf-8")
+    (path / "reports" / "analyst.reply.json").write_text(json.dumps(ANALYST, indent=2), encoding="utf-8")
     (path / "result.json").write_text(json.dumps(RESULT), encoding="utf-8")
     return path

@@ -48,8 +48,8 @@ A few diverse, canonical examples steer format and tone more reliably than prose
 ## 11. JSON answers to reasoning tasks
 When a model must reason and answer in JSON, it may skip the reasoning or write a draft before the final JSON. [SONNET55]
 - A closing line such as "think the problem through before you answer" raises accuracy.
-- A parser should keep the **last** complete JSON value, not everything from the first `{` to the last `}`.
-- **Here:** the closing instruction asks the role to think first, and `scripts/validate.py` keeps the last JSON object in the reply.
+- Keep the reasoning and the answer in separate places, so a draft can never be mistaken for the answer.
+- **Here:** the closing instruction asks the role to think first in its conversation, then write only the final JSON object to its own reply file. `scripts/validate.py` reads that file as strict JSON, so a draft, a code fence or a note around the object is an error rather than something to guess around.
 
 ## 12. Don't add work the model already does
 Opus-class models check their own work. Extra "double-check your answer" or verification steps add cost without adding quality. Instructions that limit output ("only report high-severity issues") are followed literally and lose findings. It is better to ask for everything and filter later. [OPUS5]

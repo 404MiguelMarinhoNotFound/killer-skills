@@ -1,46 +1,40 @@
-"""Normalize subagent replies and validate every file in a critically-assess run dir.
+"""Read the reply files the council wrote and validate every file in a critically-assess run dir.
 
 Validation never raises on bad data: every problem becomes an error line, prefixed
 with the role (or file) it belongs to, so one broken reply cannot sink the run.
 """
 import json
-import re
 import sys
 from pathlib import Path
 
-import clarity
 
 CONFIDENCE = ("low", "medium", "high")
 SINGLE_DECISIONS = ("go", "no-go", "conditional-go")
 RESULT_KEYS = ("title", "brief", "precommit", "roster", "reports", "analyst", "ledger", "scores",
-               "dissent", "blind_spots", "drift", "verdict", "first_step", "confidence", "unknowns")
-ROLE_KEYS = ("role", "position", "reasoning", "per_option", "surprise", "confidence", "evidence")
+               "dissent", "blind_spots", "drift", "view_changed", "verdict", "first_step", "confidence",
+               "confidence_why", "unknowns")
+ROLE_KEYS = ("role", "pick", "point", "position", "reasoning", "per_option", "surprise", "confidence", "evidence")
 RESEARCH = ("online", "repo", "both", "none")
 COUNCIL_TAGS = ("Brief:", "Source:", "Mechanism:", "Knowledge:")
 ANALYST_TAGS = ("Brief:", "Mechanism:", "Knowledge:", "Supervisor:")
 
 
-def extract_json(text):
-    """Return the last top-level JSON object in a reply.
+def read_reply(path):
+    """Return the JSON object a council member wrote to reports/<role>.reply.json.
 
-    Models sometimes write a draft or an example before their final JSON, so the last
-    complete object wins. Objects nested inside another are not counted on their own,
-    and code fences or prose around the JSON are ignored.
+    The member writes the file itself, so it must hold exactly one JSON object and nothing
+    else: no code fences, no notes before or after it. Anything else is an error, which
+    sends the role back to rewrite its file.
     """
-    decoder = json.JSONDecoder()
-    last, pos = None, 0
-    while (start := text.find("{", pos)) != -1:
-        try:
-            obj, end = decoder.raw_decode(text, start)
-        except ValueError:
-            pos = start + 1
-            continue
-        if isinstance(obj, dict):
-            last = obj
-        pos = end
-    if last is None:
-        raise ValueError("no JSON object found")
-    return last
+    text = Path(path).read_text(encoding="utf-8")
+    try:
+        data = json.loads(text)
+    except ValueError as exc:
+        raise ValueError(f"{Path(path).name} is not a single JSON object ({exc}); "
+                         "the file must hold only the JSON object, with no code fences or text around it")
+    if not isinstance(data, dict):
+        raise ValueError(f"{Path(path).name} must hold a JSON object, not a {type(data).__name__}")
+    return data
 
 
 def _is_score(x):
@@ -118,9 +112,11 @@ def validate_role_report(report, option_ids):
     e = [f"{role}: missing '{k}'" for k in ROLE_KEYS if k not in report]
     if e:
         return e
-    for key in ("position", "surprise"):
+    for key in ("point", "position", "surprise"):
         if not _is_text(report[key]):
             e.append(f"{role}: {key} must be a non-empty string")
+    if report["pick"] not in option_ids:
+        e.append(f"{role}: pick must be the id of the option your lens favours, one of {list(option_ids)}")
     if not _is_text_list(report["reasoning"]) or not 1 <= len(report["reasoning"]) <= 3:
         e.append(f"{role}: reasoning must be a list of 1-3 strings")
     if not _is_text_list(report["evidence"], allow_empty=False):
@@ -215,7 +211,7 @@ def validate_result(result):
     option_ids = [o["id"] for o in brief["options"]]
     criterion_ids = [c["id"] for c in brief["criteria"]]
 
-    for key in ("title", "drift", "first_step"):
+    for key in ("title", "drift", "first_step", "confidence_why"):
         if not _is_text(result[key]):
             e.append(f"result: {key} must be a non-empty string")
     for key, parent in (("position", "precommit"), ("role", "dissent"), ("position", "dissent"),
@@ -228,6 +224,8 @@ def validate_result(result):
         e.append("result: unknowns must be a list of strings")
     if result["confidence"] not in CONFIDENCE:
         e.append("result: confidence must be low, medium or high")
+    if not isinstance(result["view_changed"], bool):
+        e.append("result: view_changed must be true or false: did the council change your pre-council view?")
 
     verdict = result["verdict"] if isinstance(result["verdict"], dict) else {}
     decision = verdict.get("decision")
@@ -261,6 +259,8 @@ def validate_result(result):
     else:
         for item in result["ledger"]:
             e += _check_ledger_item(item, option_ids, "result")
+            if not _is_text(item.get("point")):
+                e.append(f"result: ledger item without a point: {item.get('claim')}")
             if not _is_text_list(item.get("raised_by"), allow_empty=False):
                 e.append(f"result: ledger raised_by must be a non-empty list of role ids: {item.get('claim')}")
     return e + _check_scores(result["scores"], option_ids, criterion_ids, "result")
@@ -283,27 +283,64 @@ def _safe(fn, who, *args):
         return [f"{who}: malformed ({type(exc).__name__}: {exc})"]
 
 
+FILLABLE = ("pick", "point")
+
+
+def apply_patch(data, patch, option_ids, role):
+    """Fill a council reply's missing `pick` or `point` from reports/<role>.patch.json.
+
+    The supervisor may only fill these two fields, and only where the reply left them out or
+    gave an unusable value, so the council's own words are never rewritten. Returns errors.
+    """
+    if not isinstance(patch, dict) or not patch:
+        return [f"{role}: patch must be a JSON object with 'pick' and/or 'point'"]
+    extra = sorted(set(patch) - set(FILLABLE))
+    if extra:
+        return [f"{role}: a patch may only fill {list(FILLABLE)}, not {extra}"]
+    e, filled = [], []
+    for key, value in patch.items():
+        current = data.get(key)
+        usable = current in option_ids if key == "pick" else _is_text(current)
+        if usable:
+            e.append(f"{role}: the reply already has a usable '{key}'; a patch only fills a missing one")
+        elif not _is_text(value):
+            e.append(f"{role}: patch '{key}' must be a non-empty string")
+        else:
+            data[key] = value
+            filled.append(key)
+    if filled:
+        data["filled_by_supervisor"] = filled
+    return e
+
+
 def validate_run(run_dir):
     run = Path(run_dir)
     reports = run / "reports"
     errors = []
     failed = set()
-    for raw in sorted(reports.glob("*.raw.txt")):
-        role = raw.name.removesuffix(".raw.txt")
+    brief, brief_err = _read(run / "brief.json")
+    known_ids = [str(o.get("id")) for o in brief.get("options", []) if isinstance(o, dict)] \
+        if isinstance(brief, dict) and isinstance(brief.get("options"), list) else []
+    for reply in sorted(reports.glob("*.reply.json")):
+        role = reply.name.removesuffix(".reply.json")
         normalized = reports / f"{role}.json"
         normalized.unlink(missing_ok=True)  # never validate a stale copy of an older reply
         try:
-            data = extract_json(raw.read_text(encoding="utf-8"))
-        except ValueError as exc:
-            errors.append(f"{role}: reply is not valid JSON ({exc})")
+            data = read_reply(reply)
+        except (OSError, ValueError) as exc:
+            errors.append(f"{role}: {exc}")
             failed.add(role)
             continue
         # The file name is the role id; subagents sometimes rename themselves.
         data["role"] = role
+        data.pop("filled_by_supervisor", None)  # only a patch file may set this
+        patch_path = reports / f"{role}.patch.json"
+        if patch_path.exists() and role != "analyst":
+            patch, err = _read(patch_path)
+            errors += [f"{role}: {err}"] if err else apply_patch(data, patch, known_ids, role)
         normalized.write_text(json.dumps(data, indent=2), encoding="utf-8")
-    brief, err = _read(run / "brief.json")
-    if err:
-        return errors + [err]
+    if brief_err:
+        return errors + [brief_err]
     errors += _safe(validate_brief, "brief", brief)
     if errors and not isinstance(brief, dict):
         return errors
@@ -311,7 +348,7 @@ def validate_run(run_dir):
     criteria = brief.get("criteria") if _dicts(brief.get("criteria")) else []
     option_ids = [str(o.get("id")) for o in options]
     criterion_ids = [str(c.get("id")) for c in criteria]
-    for path in sorted(reports.glob("*.json")):
+    for path in sorted(p for p in reports.glob("*.json") if not p.name.endswith((".patch.json", ".reply.json"))):
         if path.stem in failed:
             continue
         report, err = _read(path)
@@ -326,31 +363,12 @@ def validate_run(run_dir):
         if err:
             errors.append(err)
         else:
-            result_errors = _safe(validate_result, "result", result)
-            errors += result_errors
-            if not result_errors:  # plain-English checks only make sense on a well-formed result
-                errors += [f"result: clarity: {p}" for p in _safe(clarity.check_result, "clarity", result)]
+            errors += _safe(validate_result, "result", result)
     return errors
-
-
-def clarity_warnings(run_dir):
-    """Plain-English problems in the council's own text. Reported, never a reason to relaunch a role."""
-    run = Path(run_dir)
-    brief, err = _read(run / "brief.json")
-    if err or not isinstance(brief, dict):
-        return []
-    reports = []
-    for path in sorted((run / "reports").glob("*.json")):
-        report, err = _read(path)
-        if not err and isinstance(report, dict) and path.stem != "analyst":
-            reports.append(report)
-    return _safe(clarity.check_reports, "clarity", reports, brief)
 
 
 if __name__ == "__main__":
     problems = validate_run(sys.argv[1])
-    for w in clarity_warnings(sys.argv[1]):
-        print(f"WARN: {w}")
     for p in problems:
         print(f"ERROR: {p}")
     print("OK" if not problems else f"{len(problems)} error(s)")
