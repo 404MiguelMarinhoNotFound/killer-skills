@@ -74,9 +74,11 @@ RESULT = {
                 "why_rejected": "reporting cost dominates"},
     "blind_spots": ["Nobody priced the reporting replica"],
     "drift": "No change: the council agreed with the first view",
+    "view_changed": False,
     "verdict": {"decision": "A", "summary": "Postgres fits the reporting needs", "conditions": []},
     "first_step": "Prototype the finance report query on RDS",
     "confidence": "medium",
+    "confidence_why": "Peak traffic growth is still a guess",
     "unknowns": ["Peak traffic growth"],
 }
 

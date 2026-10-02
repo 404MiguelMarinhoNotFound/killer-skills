@@ -11,7 +11,8 @@ from pathlib import Path
 CONFIDENCE = ("low", "medium", "high")
 SINGLE_DECISIONS = ("go", "no-go", "conditional-go")
 RESULT_KEYS = ("title", "brief", "precommit", "roster", "reports", "analyst", "ledger", "scores",
-               "dissent", "blind_spots", "drift", "verdict", "first_step", "confidence", "unknowns")
+               "dissent", "blind_spots", "drift", "view_changed", "verdict", "first_step", "confidence",
+               "confidence_why", "unknowns")
 ROLE_KEYS = ("role", "pick", "point", "position", "reasoning", "per_option", "surprise", "confidence", "evidence")
 RESEARCH = ("online", "repo", "both", "none")
 COUNCIL_TAGS = ("Brief:", "Source:", "Mechanism:", "Knowledge:")
@@ -215,7 +216,7 @@ def validate_result(result):
     option_ids = [o["id"] for o in brief["options"]]
     criterion_ids = [c["id"] for c in brief["criteria"]]
 
-    for key in ("title", "drift", "first_step"):
+    for key in ("title", "drift", "first_step", "confidence_why"):
         if not _is_text(result[key]):
             e.append(f"result: {key} must be a non-empty string")
     for key, parent in (("position", "precommit"), ("role", "dissent"), ("position", "dissent"),
@@ -228,6 +229,8 @@ def validate_result(result):
         e.append("result: unknowns must be a list of strings")
     if result["confidence"] not in CONFIDENCE:
         e.append("result: confidence must be low, medium or high")
+    if not isinstance(result["view_changed"], bool):
+        e.append("result: view_changed must be true or false: did the council change your pre-council view?")
 
     verdict = result["verdict"] if isinstance(result["verdict"], dict) else {}
     decision = verdict.get("decision")
@@ -285,11 +288,44 @@ def _safe(fn, who, *args):
         return [f"{who}: malformed ({type(exc).__name__}: {exc})"]
 
 
+FILLABLE = ("pick", "point")
+
+
+def apply_patch(data, patch, option_ids, role):
+    """Fill a council reply's missing `pick` or `point` from reports/<role>.patch.json.
+
+    The supervisor may only fill these two fields, and only where the reply left them out or
+    gave an unusable value, so the council's own words are never rewritten. Returns errors.
+    """
+    if not isinstance(patch, dict) or not patch:
+        return [f"{role}: patch must be a JSON object with 'pick' and/or 'point'"]
+    extra = sorted(set(patch) - set(FILLABLE))
+    if extra:
+        return [f"{role}: a patch may only fill {list(FILLABLE)}, not {extra}"]
+    e, filled = [], []
+    for key, value in patch.items():
+        current = data.get(key)
+        usable = current in option_ids if key == "pick" else _is_text(current)
+        if usable:
+            e.append(f"{role}: the reply already has a usable '{key}'; a patch only fills a missing one")
+        elif not _is_text(value):
+            e.append(f"{role}: patch '{key}' must be a non-empty string")
+        else:
+            data[key] = value
+            filled.append(key)
+    if filled:
+        data["filled_by_supervisor"] = filled
+    return e
+
+
 def validate_run(run_dir):
     run = Path(run_dir)
     reports = run / "reports"
     errors = []
     failed = set()
+    brief, brief_err = _read(run / "brief.json")
+    known_ids = [str(o.get("id")) for o in brief.get("options", []) if isinstance(o, dict)] \
+        if isinstance(brief, dict) and isinstance(brief.get("options"), list) else []
     for raw in sorted(reports.glob("*.raw.txt")):
         role = raw.name.removesuffix(".raw.txt")
         normalized = reports / f"{role}.json"
@@ -302,10 +338,14 @@ def validate_run(run_dir):
             continue
         # The file name is the role id; subagents sometimes rename themselves.
         data["role"] = role
+        data.pop("filled_by_supervisor", None)  # only a patch file may set this
+        patch_path = reports / f"{role}.patch.json"
+        if patch_path.exists() and role != "analyst":
+            patch, err = _read(patch_path)
+            errors += [f"{role}: {err}"] if err else apply_patch(data, patch, known_ids, role)
         normalized.write_text(json.dumps(data, indent=2), encoding="utf-8")
-    brief, err = _read(run / "brief.json")
-    if err:
-        return errors + [err]
+    if brief_err:
+        return errors + [brief_err]
     errors += _safe(validate_brief, "brief", brief)
     if errors and not isinstance(brief, dict):
         return errors
@@ -313,7 +353,7 @@ def validate_run(run_dir):
     criteria = brief.get("criteria") if _dicts(brief.get("criteria")) else []
     option_ids = [str(o.get("id")) for o in options]
     criterion_ids = [str(c.get("id")) for c in criteria]
-    for path in sorted(reports.glob("*.json")):
+    for path in sorted(p for p in reports.glob("*.json") if not p.name.endswith(".patch.json")):
         if path.stem in failed:
             continue
         report, err = _read(path)

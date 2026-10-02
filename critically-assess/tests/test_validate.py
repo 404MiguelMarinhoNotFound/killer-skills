@@ -211,6 +211,8 @@ def test_result_brief_is_validated():
     lambda r: r["reports"][0].update(reasoning="abc"),
     lambda r: r["ledger"][0].pop("point"),
     lambda r: r["reports"][0].update(pick="Z"),
+    lambda r: r.update(view_changed="no"),
+    lambda r: r.pop("confidence_why"),
     lambda r: r.update(unknowns=None),
 ])
 def test_result_fields_the_report_reads_are_required(mutate):
@@ -254,3 +256,42 @@ def test_role_pick_and_point_are_required():
     assert any("point" in e for e in validate.validate_role_report(report, OPTS))
     report.pop("pick")
     assert any("missing 'pick'" in e for e in validate.validate_role_report(report, OPTS))
+
+
+# --- supervisor patches for a missing pick or point -----------------------------------
+
+def _without(run_dir, role, *keys):
+    report = sample_run.role_report(role)
+    for k in keys:
+        report.pop(k)
+    (run_dir / "reports" / f"{role}.raw.txt").write_text(json.dumps(report), encoding="utf-8")
+
+
+def test_patch_fills_a_missing_pick_and_point(run_dir):
+    _without(run_dir, "contrarian", "pick", "point")
+    assert any("missing 'pick'" in e for e in validate.validate_run(run_dir))
+    (run_dir / "reports" / "contrarian.patch.json").write_text(
+        json.dumps({"pick": "B", "point": "DynamoDB: fewer servers to run."}), encoding="utf-8")
+    assert validate.validate_run(run_dir) == []
+    filled = json.loads((run_dir / "reports" / "contrarian.json").read_text(encoding="utf-8"))
+    assert filled["pick"] == "B" and filled["filled_by_supervisor"] == ["pick", "point"]
+
+
+def test_patch_never_replaces_the_council_s_own_words(run_dir):
+    (run_dir / "reports" / "contrarian.patch.json").write_text(json.dumps({"pick": "B"}), encoding="utf-8")
+    assert any("already has a usable 'pick'" in e for e in validate.validate_run(run_dir))
+    (run_dir / "reports" / "contrarian.patch.json").write_text(json.dumps({"position": "x"}), encoding="utf-8")
+    assert any("may only fill" in e for e in validate.validate_run(run_dir))
+
+
+def test_patch_file_is_not_read_as_a_role_report(run_dir):
+    _without(run_dir, "contrarian", "point")
+    (run_dir / "reports" / "contrarian.patch.json").write_text(json.dumps({"point": "x"}), encoding="utf-8")
+    assert validate.validate_run(run_dir) == []
+
+
+def test_a_reply_cannot_claim_to_be_filled_by_the_supervisor(run_dir):
+    report = dict(sample_run.role_report("contrarian"), filled_by_supervisor=["pick"])
+    (run_dir / "reports" / "contrarian.raw.txt").write_text(json.dumps(report), encoding="utf-8")
+    validate.validate_run(run_dir)
+    assert "filled_by_supervisor" not in json.loads((run_dir / "reports" / "contrarian.json").read_text(encoding="utf-8"))

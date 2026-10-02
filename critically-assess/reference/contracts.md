@@ -38,7 +38,7 @@ Written first to `${TMPDIR:-/tmp}/critically-assess-sealed/<run-id>.json`, outsi
 
 ## reports/<role>.raw.txt (step 7)
 
-The subagent's reply, saved verbatim. The file name is the role id; `validate.py` overwrites the `role` field with it. Every council `evidence` item must start with `Brief:`, `Source:`, `Mechanism:` or `Knowledge:`; analyst ledger evidence with `Brief:`, `Mechanism:`, `Knowledge:` or `Supervisor:`. `scripts/validate.py` turns it into `reports/<role>.json`. Council roles follow `roles/_contract.md`, which includes `pick` (the option id the role favours) and `point` (its position in one line); the analyst follows its own contract in `roles/analyst.md`.
+The subagent's reply, saved verbatim. The file name is the role id; `validate.py` overwrites the `role` field with it. Every council `evidence` item must start with `Brief:`, `Source:`, `Mechanism:` or `Knowledge:`; analyst ledger evidence with `Brief:`, `Mechanism:`, `Knowledge:` or `Supervisor:`. `scripts/validate.py` turns it into `reports/<role>.json`. A council reply missing only `pick` or `point` can be completed with `reports/<role>.patch.json` holding just those fields; validation fills them in where the reply left them out and records them in `filled_by_supervisor`. Council roles follow `roles/_contract.md`, which includes `pick` (the option id the role favours) and `point` (its position in one line); the analyst follows its own contract in `roles/analyst.md`.
 
 ## result.json (step 8)
 
@@ -57,9 +57,11 @@ The subagent's reply, saved verbatim. The file name is the role id; `validate.py
   "dissent": {"role": "expansionist", "position": "The strongest view you did not adopt", "why_rejected": "..."},
   "blind_spots": ["Something no voice raised"],
   "drift": "How and why the verdict moved from precommit.json, or 'None' plus the reason",
+  "view_changed": false,
   "verdict": {"decision": "A", "summary": "The decision and its main reason, explained in plain words", "conditions": []},
   "first_step": "One concrete action",
   "confidence": "medium",
+  "confidence_why": "One sentence on what this confidence level rests on in this run",
   "unknowns": ["What would change the verdict if it turned out differently"]
 }
 ```
@@ -69,4 +71,4 @@ The subagent's reply, saved verbatim. The file name is the role id; `validate.py
 - `scores`: start from the analyst's. If you change one, prefix its rationale with `Supervisor:` and say why.
 - Every sentence the reader sees follows "Write for the reader" in SKILL.md step 8. That is judged in the coherence pass, not by a script; `validate.py` checks structure only.
 - `roster`: 3 to 5 council roles plus the analyst, leaving out any role dropped into `reports/dropped/`. Write `inherited` as the model if the subagent tool refused the model parameter, or `supervisor` for an analyst report you had to write yourself.
-- `validate.py` checks every field the report reads: the full option × criterion grid in `scores` (integers 1-5, known ids only), `raised_by` as a list of role ids, a `point` on every ledger item, each council report's `pick` as a known option id, and `dissent`, `verdict.summary`, `first_step` and `drift` as non-empty strings. `render.py` refuses to render a `result.json` that fails validation.
+- `validate.py` checks every field the report reads: the full option × criterion grid in `scores` (integers 1-5, known ids only), `raised_by` as a list of role ids, a `point` on every ledger item, each council report's `pick` as a known option id, `view_changed` as true or false, and `dissent`, `verdict.summary`, `first_step`, `drift` and `confidence_why` as non-empty strings. `render.py` refuses to render a `result.json` that fails validation.

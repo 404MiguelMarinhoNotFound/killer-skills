@@ -120,6 +120,10 @@
   .sliders { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 28px; padding: 4px 16px 18px; }
   .slider label { display: flex; justify-content: space-between; font-size: 14px; color: var(--ink-2); }
   .slider input { width: 100%; accent-color: var(--accent); }
+  .reasons { padding: 0 16px 16px; display: grid; gap: 14px; font-size: 14.5px; color: var(--ink-2); }
+  .reasons h4 { margin: 0; font-size: 13px; color: var(--muted); font-weight: 600; }
+  .reasons ul { margin: 4px 0 0; padding-left: 18px; }
+  .reasons b { color: var(--ink); font-weight: 600; }
   .prio-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 16px 16px; font-size: 14px; color: var(--ink-2); }
   .reset { background: none; border: 1px solid var(--line-2); border-radius: var(--r); padding: 4px 12px; font-size: 13px; cursor: pointer; }
 
@@ -197,8 +201,12 @@
     .m-point { grid-column: 1 / -1; grid-row: 2; }
   }
 
+  .print-only { display: none; }
   @media print {
-    .theme, .tabs, details.prio, .linkbtn { display: none !important; }
+    .print-only { display: block; }
+    .print-only .print-opt { margin-top: 18px; font-size: 16px; }
+    .fa[role="tabpanel"] { display: none; }
+    .theme, .tabs, details.prio:not(.all-reasons), .reason, .linkbtn { display: none !important; }
     details > :not(summary) { display: block !important; }
     .decision { box-shadow: none; }
   }
@@ -307,7 +315,7 @@
   if (R.first_step) body.append(el('div', { cls: 'first' }, el('strong', { text: 'First step' }), el('span', { text: R.first_step })));
 
   const conf = { high: 'High', medium: 'Medium', low: 'Low' }[R.confidence] || 'Unknown';
-  const confSub = { high: 'The facts that decide this were checked.', medium: 'Rests on at least one assumption that is still open.', low: 'Hinges on facts nobody could check.' }[R.confidence] || '';
+  const confSub = R.confidence_why || '';
   const leader = ranked[0] ? ranked[0][0] : null;
   const gap = ranked.length > 1 ? ranked[0][1] - ranked[1][1] : 0;
   let scoreV, scoreS;
@@ -372,7 +380,7 @@
         btn.addEventListener('click', () => {
           if (pressed) pressed.setAttribute('aria-pressed', 'false');
           pressed = btn; btn.setAttribute('aria-pressed', 'true');
-          reason.replaceChildren(el('b', { text: `${o.name}, ${c.name}: ${n} of 5. ` }), String(sc.rationale || 'No reason recorded.').replace(/^Supervisor:\s*/, ''));
+          reason.replaceChildren(el('b', { text: `${o.name}, ${c.name}: ${n} of 5. ` }), String(sc.rationale || 'No reason recorded.').replace(/^Supervisor:\s*/, 'Changed by the lead reviewer: '));
         });
         return el('td', { cls: recCls(o.id) }, btn);
       })));
@@ -416,7 +424,11 @@
       : `With these priorities, ${names[win[0]]} would lead instead.`;
   }
   draw();
-  cmp.append(el('div', { cls: 'matrix-wrap' }, table, reason, prio));
+  const allReasons = el('details', { cls: 'prio all-reasons' }, el('summary', { text: 'All score reasons' }),
+    el('div', { cls: 'reasons' }, criteria.map(c => el('div', {},
+      el('h4', { text: `${c.name} (counts ${pct(initial[c.id])})` }),
+      el('ul', {}, options.map(o => { const sc = cell(o.id, c.id); return el('li', {}, el('b', { text: `${o.name}, ${sc.score || 0} of 5. ` }), String(sc.rationale || 'No reason recorded.').replace(/^Supervisor:\s*/, 'Changed by the lead reviewer: ')); }))))));
+  cmp.append(el('div', { cls: 'matrix-wrap' }, table, reason, prio, allReasons));
 
   // For and against, one option at a time, biggest points first.
   const ledger = (R.ledger || []).map(i => ({ ...i, weight: (i.severity || 0) * (i.likelihood || 0) }));
@@ -429,12 +441,12 @@
       el('div', { cls: 'item-body' }, i.point ? el('p', { text: i.claim }) : null, el('p', { cls: 'item-meta', text: meta }))));
   };
   const SHOW_N = 3;
-  const column = (o, kind) => {
+  const column = (o, kind, all = false) => {
     const rows = ledger.filter(i => i.option === o && i.kind === kind).sort((a, b) => b.weight - a.weight);
-    const ol = el('ol'); rows.slice(0, SHOW_N).forEach(i => ol.append(item(i)));
+    const ol = el('ol'); rows.slice(0, all ? rows.length : SHOW_N).forEach(i => ol.append(item(i)));
     const wrap = el('div', {}, el('h3', { cls: kind === 'pro' ? 'for' : 'against', text: kind === 'pro' ? 'For' : 'Against' }), ol);
     if (!rows.length) ol.append(el('li', { cls: 'muted', text: 'Nothing raised.' }));
-    if (rows.length > SHOW_N) { const b = el('button', { cls: 'linkbtn', text: `Show ${rows.length - SHOW_N} more`, attrs: { type: 'button' } }); b.addEventListener('click', () => { rows.slice(SHOW_N).forEach(i => ol.append(item(i))); b.remove(); }); wrap.append(b); }
+    if (!all && rows.length > SHOW_N) { const b = el('button', { cls: 'linkbtn', text: `Show ${rows.length - SHOW_N} more`, attrs: { type: 'button' } }); b.addEventListener('click', () => { rows.slice(SHOW_N).forEach(i => ol.append(item(i))); b.remove(); }); wrap.append(b); }
     return wrap;
   };
   const tabs = el('div', { cls: 'tabs', attrs: { role: 'tablist', 'aria-label': 'Points for and against each option' } });
@@ -456,7 +468,9 @@
     panel.replaceChildren(column(id, 'pro'), column(id, 'con'));
   }
   if (order.length) show(order[0]);
-  cmp.append(tabs, panel);
+  // Print every option's full list, not only the open tab, then restore the tab view.
+  const printAll = el('div', { cls: 'print-only' }, order.map(id => [el('h3', { cls: 'print-opt', text: names[id] }), el('div', { cls: 'fa' }, column(id, 'pro', true), column(id, 'con', true))]));
+  cmp.append(tabs, panel, printAll);
   main.append(cmp);
 
   /* ---------- Layer 3: how this was decided ---------- */
@@ -472,6 +486,7 @@
       const reasoning = list(r.reasoning);
       const bodyEl = el('div', { cls: 'm-body' },
         r.point ? el('p', { text: r.position }) : null,
+        list(r.filled_by_supervisor).length ? el('p', { cls: 'muted', text: `The lead reviewer wrote this member's ${list(r.filled_by_supervisor).map(k => k === 'pick' ? 'choice' : 'one-line summary').join(' and ')} from its position, because the reply left ${list(r.filled_by_supervisor).length > 1 ? 'them' : 'it'} out.` }) : null,
         reasoning.length ? [el('h4', { text: 'Reasoning' }), el('ul', {}, reasoning.map(x => /^Flip:/i.test(x)
           ? el('li', { cls: 'flip' }, el('strong', { text: 'What would change this view: ' }), x.replace(/^Flip:\s*/i, ''))
           : el('li', { text: x })))] : null,
@@ -490,9 +505,9 @@
   const more = el('div', { cls: 'more-sec' });
   const pre = R.precommit || {};
   const drift = String(R.drift || '');
-  const unchanged = /^no change|^none/i.test(drift.trim());
+  const changed = typeof R.view_changed === 'boolean' ? (R.view_changed ? 'Yes' : 'No') : null;
   if (pre.position || drift) more.append(el('details', {},
-    el('summary', {}, 'Did the council change the lead reviewer’s mind?', el('span', { cls: 'sum-note', text: unchanged ? 'No' : 'Yes' })),
+    el('summary', {}, 'Did the council change the lead reviewer’s mind?', changed ? el('span', { cls: 'sum-note', text: changed }) : null),
     el('div', { cls: 'bg' },
       el('p', { text: drift }),
       pre.position ? [el('h4', { text: 'View written down before the council' }), el('p', { text: pre.position }),
