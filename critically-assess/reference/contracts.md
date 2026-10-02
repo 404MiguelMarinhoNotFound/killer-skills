@@ -30,15 +30,15 @@ Every file lives in the run directory `.critically-assess/runs/<YYYYMMDD-HHMMSS>
 
 ## precommit.json (step 4, sealed until step 7)
 
-Written first to `${TMPDIR:-/tmp}/critically-assess-sealed/<run-id>.json`, outside the working directory, and moved into the run folder only after every council reply is saved.
+Written first to `${TMPDIR:-/tmp}/critically-assess-sealed/<run-id>.json`, outside the working directory, and moved into the run folder only after every council member has written its reply file.
 
 ```json
 {"position": "Your view before the council", "reasons": ["first", "second", "third"], "main_risk": "The biggest risk in your own view"}
 ```
 
-## reports/<role>.raw.txt (step 7)
+## reports/<role>.reply.json (steps 6 and 7)
 
-The subagent's reply, saved verbatim. The file name is the role id; `validate.py` overwrites the `role` field with it. Every council `evidence` item must start with `Brief:`, `Source:`, `Mechanism:` or `Knowledge:`; analyst ledger evidence with `Brief:`, `Mechanism:`, `Knowledge:` or `Supervisor:`. `scripts/validate.py` turns it into `reports/<role>.json`. A council reply missing only `pick` or `point` can be completed with `reports/<role>.patch.json` holding just those fields; validation fills them in where the reply left them out and records them in `filled_by_supervisor`. Council roles follow `roles/_contract.md`, which includes `pick` (the option id the role favours) and `point` (its position in one line); the analyst follows its own contract in `roles/analyst.md`.
+Written by the subagent itself with the Write tool: exactly one JSON object, with no code fences or text around it. The supervisor never copies or edits it. The file name is the role id; `validate.py` sets the `role` field from it in the checked copy. Every council `evidence` item must start with `Brief:`, `Source:`, `Mechanism:` or `Knowledge:`; analyst ledger evidence with `Brief:`, `Mechanism:`, `Knowledge:` or `Supervisor:`. `scripts/validate.py` checks it and writes the checked copy to `reports/<role>.json`, which is what `result.json` takes the reports from. A council reply missing only `pick` or `point` can be completed with `reports/<role>.patch.json` holding just those fields; validation fills them in where the reply left them out and records them in `filled_by_supervisor`. Council roles follow `roles/_contract.md`, which includes `pick` (the option id the role favours) and `point` (its position in one line); the analyst follows its own contract in `roles/analyst.md`.
 
 ## result.json (step 8)
 

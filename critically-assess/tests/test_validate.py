@@ -10,14 +10,21 @@ OPTS = ["A", "B"]
 CRITS = ["fit", "ops"]
 
 
-def test_extract_json_handles_fences_and_prose():
-    assert validate.extract_json('Sure!\n```json\n{"a": 1}\n```\nDone.') == {"a": 1}
-    assert validate.extract_json('noise {"a": {"b": 2}} noise') == {"a": {"b": 2}}
+def test_reply_file_must_be_exactly_one_json_object(tmp_path):
+    f = tmp_path / "x.reply.json"
+    f.write_text('  {"a": 1}\n', encoding="utf-8")
+    assert validate.read_reply(f) == {"a": 1}
+    for bad in ('Sure!\n```json\n{"a": 1}\n```', '```json\n{"a": 1}\n```', '{"a": 1}\nDone.', '[1, 2]'):
+        f.write_text(bad, encoding="utf-8")
+        with pytest.raises(ValueError):
+            validate.read_reply(f)
 
 
-def test_extract_json_raises_when_no_object():
+def test_read_reply_raises_when_no_object(tmp_path):
     with pytest.raises(ValueError):
-        validate.extract_json("Sorry, I can't help with that.")
+        f = tmp_path / "x.reply.json"
+        f.write_text("Sorry, I can't help with that.", encoding="utf-8")
+        validate.read_reply(f)
 
 
 def test_sample_run_parts_are_valid():
@@ -77,24 +84,26 @@ def test_roster_needs_analyst_and_three_to_five_council_roles():
     assert any("3-5 council roles" in e for e in errors)
 
 
-def test_validate_run_normalizes_raw_replies(run_dir):
+def test_validate_run_reads_reply_files_and_leaves_them_untouched(run_dir):
+    before = (run_dir / "reports" / "analyst.reply.json").read_text(encoding="utf-8")
     assert validate.validate_run(run_dir) == []
     saved = json.loads((run_dir / "reports" / "analyst.json").read_text(encoding="utf-8"))
     assert saved["role"] == "analyst"
+    assert (run_dir / "reports" / "analyst.reply.json").read_text(encoding="utf-8") == before
 
 
 def test_validate_run_reports_unparseable_reply_per_role(run_dir):
-    (run_dir / "reports" / "executor.raw.txt").write_text("Sorry, I can't.", encoding="utf-8")
+    (run_dir / "reports" / "executor.reply.json").write_text("Sorry, I can't.", encoding="utf-8")
     errors = validate.validate_run(run_dir)
-    assert any(e.startswith("executor:") and "not valid JSON" in e for e in errors)
+    assert any(e.startswith("executor:") and "not a single JSON object" in e for e in errors)
 
 
 def test_validate_run_uses_filename_as_role_id(run_dir):
     renamed = sample_run.role_report("contrarian")
     renamed["role"] = "red-team"
-    (run_dir / "reports" / "contrarian.raw.txt").write_text(json.dumps(renamed), encoding="utf-8")
+    (run_dir / "reports" / "contrarian.reply.json").write_text(json.dumps(renamed), encoding="utf-8")
     analyst = dict(sample_run.ANALYST, role="neutral analyst")
-    (run_dir / "reports" / "analyst.raw.txt").write_text(json.dumps(analyst), encoding="utf-8")
+    (run_dir / "reports" / "analyst.reply.json").write_text(json.dumps(analyst), encoding="utf-8")
     assert validate.validate_run(run_dir) == []
     saved = json.loads((run_dir / "reports" / "contrarian.json").read_text(encoding="utf-8"))
     assert saved["role"] == "contrarian"
@@ -107,10 +116,11 @@ def test_validate_run_reports_missing_brief_without_crashing(run_dir):
 
 # --- Review Focus 1: odd replies become per-role errors, never a crash -------------------
 
-def test_extract_json_keeps_the_last_object_when_a_draft_comes_first():
-    text = 'Draft:\n```json\n{"a": 1}\n```\nNotes {not json}\n```json\n{"b": {"c": 2}}\n```'
-    assert validate.extract_json(text) == {"b": {"c": 2}}
-    assert validate.extract_json('```json\n{"a": 1}\n```\nSee {x} above.') == {"a": 1}
+def test_a_reply_file_with_prose_around_the_json_is_rejected_and_names_the_fix(run_dir):
+    (run_dir / "reports" / "executor.reply.json").write_text(
+        "Here you go:\n" + json.dumps(sample_run.role_report("executor")), encoding="utf-8")
+    errors = validate.validate_run(run_dir)
+    assert any(e.startswith("executor:") and "only the JSON object" in e for e in errors)
 
 
 @pytest.mark.parametrize("field,value", [
@@ -144,7 +154,7 @@ def test_malformed_briefs_are_errors_not_crashes(brief):
 
 
 def test_corrupt_files_in_run_dir_are_errors_not_crashes(run_dir):
-    (run_dir / "reports" / "contrarian.raw.txt").write_text('{"role": "x", "per_option": 7}', encoding="utf-8")
+    (run_dir / "reports" / "contrarian.reply.json").write_text('{"role": "x", "per_option": 7}', encoding="utf-8")
     (run_dir / "result.json").write_text("{broken", encoding="utf-8")
     errors = validate.validate_run(run_dir)
     assert any(e.startswith("contrarian:") for e in errors)
@@ -155,17 +165,17 @@ def test_corrupt_files_in_run_dir_are_errors_not_crashes(run_dir):
 
 def test_stale_json_is_removed_when_a_later_reply_fails(run_dir):
     assert validate.validate_run(run_dir) == []
-    (run_dir / "reports" / "analyst.raw.txt").write_text("I refuse.", encoding="utf-8")
+    (run_dir / "reports" / "analyst.reply.json").write_text("I refuse.", encoding="utf-8")
     errors = validate.validate_run(run_dir)
     assert not (run_dir / "reports" / "analyst.json").exists()
-    assert [e for e in errors if e.startswith("analyst:")] == [e for e in errors if "not valid JSON" in e]
+    assert [e for e in errors if e.startswith("analyst:")] == [e for e in errors if "not a single JSON object" in e]
 
 
 def test_dropped_roles_moved_to_subfolder_are_ignored(run_dir):
-    (run_dir / "reports" / "executor.raw.txt").write_text("Sorry, I can't.", encoding="utf-8")
+    (run_dir / "reports" / "executor.reply.json").write_text("Sorry, I can't.", encoding="utf-8")
     dropped = run_dir / "reports" / "dropped"
     dropped.mkdir()
-    (run_dir / "reports" / "executor.raw.txt").rename(dropped / "executor.raw.txt")
+    (run_dir / "reports" / "executor.reply.json").rename(dropped / "executor.reply.json")
     assert validate.validate_run(run_dir) == []
 
 
@@ -264,7 +274,7 @@ def _without(run_dir, role, *keys):
     report = sample_run.role_report(role)
     for k in keys:
         report.pop(k)
-    (run_dir / "reports" / f"{role}.raw.txt").write_text(json.dumps(report), encoding="utf-8")
+    (run_dir / "reports" / f"{role}.reply.json").write_text(json.dumps(report), encoding="utf-8")
 
 
 def test_patch_fills_a_missing_pick_and_point(run_dir):
@@ -292,6 +302,6 @@ def test_patch_file_is_not_read_as_a_role_report(run_dir):
 
 def test_a_reply_cannot_claim_to_be_filled_by_the_supervisor(run_dir):
     report = dict(sample_run.role_report("contrarian"), filled_by_supervisor=["pick"])
-    (run_dir / "reports" / "contrarian.raw.txt").write_text(json.dumps(report), encoding="utf-8")
+    (run_dir / "reports" / "contrarian.reply.json").write_text(json.dumps(report), encoding="utf-8")
     validate.validate_run(run_dir)
     assert "filled_by_supervisor" not in json.loads((run_dir / "reports" / "contrarian.json").read_text(encoding="utf-8"))

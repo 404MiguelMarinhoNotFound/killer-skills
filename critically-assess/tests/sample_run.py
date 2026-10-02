@@ -88,8 +88,7 @@ def write_run(path):
     (path / "reports").mkdir(parents=True, exist_ok=True)
     (path / "brief.json").write_text(json.dumps(BRIEF), encoding="utf-8")
     for r in COUNCIL:
-        (path / "reports" / f"{r}.raw.txt").write_text(json.dumps(role_report(r)), encoding="utf-8")
-    (path / "reports" / "analyst.raw.txt").write_text(
-        "Here you go:\n```json\n" + json.dumps(ANALYST) + "\n```", encoding="utf-8")
+        (path / "reports" / f"{r}.reply.json").write_text(json.dumps(role_report(r)), encoding="utf-8")
+    (path / "reports" / "analyst.reply.json").write_text(json.dumps(ANALYST, indent=2), encoding="utf-8")
     (path / "result.json").write_text(json.dumps(RESULT), encoding="utf-8")
     return path

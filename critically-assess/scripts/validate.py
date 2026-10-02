@@ -1,4 +1,4 @@
-"""Normalize subagent replies and validate every file in a critically-assess run dir.
+"""Read the reply files the council wrote and validate every file in a critically-assess run dir.
 
 Validation never raises on bad data: every problem becomes an error line, prefixed
 with the role (or file) it belongs to, so one broken reply cannot sink the run.
@@ -19,27 +19,22 @@ COUNCIL_TAGS = ("Brief:", "Source:", "Mechanism:", "Knowledge:")
 ANALYST_TAGS = ("Brief:", "Mechanism:", "Knowledge:", "Supervisor:")
 
 
-def extract_json(text):
-    """Return the last top-level JSON object in a reply.
+def read_reply(path):
+    """Return the JSON object a council member wrote to reports/<role>.reply.json.
 
-    Models sometimes write a draft or an example before their final JSON, so the last
-    complete object wins. Objects nested inside another are not counted on their own,
-    and code fences or prose around the JSON are ignored.
+    The member writes the file itself, so it must hold exactly one JSON object and nothing
+    else: no code fences, no notes before or after it. Anything else is an error, which
+    sends the role back to rewrite its file.
     """
-    decoder = json.JSONDecoder()
-    last, pos = None, 0
-    while (start := text.find("{", pos)) != -1:
-        try:
-            obj, end = decoder.raw_decode(text, start)
-        except ValueError:
-            pos = start + 1
-            continue
-        if isinstance(obj, dict):
-            last = obj
-        pos = end
-    if last is None:
-        raise ValueError("no JSON object found")
-    return last
+    text = Path(path).read_text(encoding="utf-8")
+    try:
+        data = json.loads(text)
+    except ValueError as exc:
+        raise ValueError(f"{Path(path).name} is not a single JSON object ({exc}); "
+                         "the file must hold only the JSON object, with no code fences or text around it")
+    if not isinstance(data, dict):
+        raise ValueError(f"{Path(path).name} must hold a JSON object, not a {type(data).__name__}")
+    return data
 
 
 def _is_score(x):
@@ -326,14 +321,14 @@ def validate_run(run_dir):
     brief, brief_err = _read(run / "brief.json")
     known_ids = [str(o.get("id")) for o in brief.get("options", []) if isinstance(o, dict)] \
         if isinstance(brief, dict) and isinstance(brief.get("options"), list) else []
-    for raw in sorted(reports.glob("*.raw.txt")):
-        role = raw.name.removesuffix(".raw.txt")
+    for reply in sorted(reports.glob("*.reply.json")):
+        role = reply.name.removesuffix(".reply.json")
         normalized = reports / f"{role}.json"
         normalized.unlink(missing_ok=True)  # never validate a stale copy of an older reply
         try:
-            data = extract_json(raw.read_text(encoding="utf-8"))
-        except ValueError as exc:
-            errors.append(f"{role}: reply is not valid JSON ({exc})")
+            data = read_reply(reply)
+        except (OSError, ValueError) as exc:
+            errors.append(f"{role}: {exc}")
             failed.add(role)
             continue
         # The file name is the role id; subagents sometimes rename themselves.
@@ -353,7 +348,7 @@ def validate_run(run_dir):
     criteria = brief.get("criteria") if _dicts(brief.get("criteria")) else []
     option_ids = [str(o.get("id")) for o in options]
     criterion_ids = [str(c.get("id")) for c in criteria]
-    for path in sorted(p for p in reports.glob("*.json") if not p.name.endswith(".patch.json")):
+    for path in sorted(p for p in reports.glob("*.json") if not p.name.endswith((".patch.json", ".reply.json"))):
         if path.stem in failed:
             continue
         report, err = _read(path)

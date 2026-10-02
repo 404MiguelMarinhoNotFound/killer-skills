@@ -51,20 +51,20 @@ Send one message containing one subagent call per roster role (the `Agent` tool;
    - `online`: "You may search the web if your lens needs a fact the brief does not settle. You do not have to. Do not read other files."
    - `repo`: "You may read files in the repository at `<working_dir>` if your lens needs a fact the brief does not settle. You do not have to. Do not search the web."
    - `none`, and always for the analyst: "Work from the brief alone: do not search the web or read other files."
-4. "Put exactly `<id>` in the `role` field. Never read `.critically-assess/` apart from your brief, and never edit, write or run anything. Where you are missing something you need, say so and name the assumption you made. End your reply with the JSON object; nothing after it is read. Before you answer, think the problem through from your role's angle. Then reread each item you wrote as a reader who sees only that item, and unpack any that would not make sense alone."
+4. "Put exactly `<id>` in the `role` field. Never read `.critically-assess/` apart from your brief. Where you are missing something you need, say so and name the assumption you made. Before you write anything, think the problem through from your role's angle. Then reread each item you wrote as a reader who sees only that item, and unpack any that would not make sense alone. When you are done, write your JSON object with the Write tool to `<run_dir>/reports/<id>.reply.json`: the file holds only that object, as plain JSON, with no code fences and no text before or after it. That file is the only thing you write; never edit or run anything. Then reply with one line: `Saved <the path you wrote>`."
 
 Never include the conversation, your research notes or the sealed pre-commitment. If the tool rejects the `model` parameter, relaunch without it and record the model as `inherited`.
 
 ### 7. Save and validate
-Save each reply verbatim to `reports/<role-id>.raw.txt`, then run:
+Each subagent writes its own reply file, `reports/<role-id>.reply.json`; you never copy replies yourself. Once every subagent has finished, check that each roster role has its file; a role whose file is missing counts as a failed reply below. Then run:
 
     python "<SKILL_DIR>/scripts/validate.py" <run_dir>
 
-It converts every raw reply to `reports/<role-id>.json` and checks it; every error line starts with the role it belongs to.
+It reads every reply file, checks it, and writes the checked copy to `reports/<role-id>.json`, leaving the subagent's own file untouched; every error line starts with the role it belongs to. A reply file that is not exactly one JSON object is an error.
 - If a council role's only errors are a missing or unusable `pick` or `point`, do not relaunch it. Write `reports/<role-id>.patch.json` with just those fields, taken from what its `position` already says, for example `{"pick": "B", "point": "Postgres queue: the only option two developers can ship before the sale."}`, and run `validate.py` again. It fills only fields the reply left out, never replaces the council's own words, and the report notes that you wrote them.
-- For any other errors, relaunch that single role once, with its error lines appended to the original prompt under `YOUR PREVIOUS REPLY WAS REJECTED:`, and overwrite its `.raw.txt` with the new reply.
-- A council role that fails twice is dropped: move its `.raw.txt` (and `.json`, if any) into `reports/dropped/`, leave it out of the roster, and add "<role> gave no usable report" to `unknowns`. Validation ignores `reports/dropped/`. If dropping would leave fewer than 3 council roles, launch a replacement role from the library instead.
-- The analyst cannot be dropped, because the scores come from it. If it fails twice, write its report yourself in the analyst format, start every `rationale` and `evidence` with `Supervisor:`, save it as `reports/analyst.raw.txt`, set the analyst's roster model to `supervisor`, and add "analyst scores written by the supervisor" to `unknowns`.
+- For any other errors, or a missing file, relaunch that single role once, with its error lines appended to the original prompt under `YOUR PREVIOUS REPLY WAS REJECTED:`. It overwrites its own reply file.
+- A council role that fails twice is dropped: move its `.reply.json` (and `.json` or `.patch.json`, if any) into `reports/dropped/`, leave it out of the roster, and add "<role> gave no usable report" to `unknowns`. Validation ignores `reports/dropped/`. If dropping would leave fewer than 3 council roles, launch a replacement role from the library instead.
+- The analyst cannot be dropped, because the scores come from it. If it fails twice, write its report yourself in the analyst format, start every `rationale` and `evidence` with `Supervisor:`, save it as `reports/analyst.reply.json`, set the analyst's roster model to `supervisor`, and add "analyst scores written by the supervisor" to `unknowns`.
 
 Re-run `validate.py` until it prints OK before moving on. Then move the sealed pre-commitment into `<run_dir>/precommit.json`; the council is finished, so it no longer needs hiding.
 
