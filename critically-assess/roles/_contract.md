@@ -27,7 +27,7 @@ How to fill each field:
 - `confidence`: `high` when facts in the brief settle it, `medium` when you rely on a reasonable assumption, `low` when it hinges on something the brief does not say.
 - `evidence`: 1 to 3 items behind your strongest claims, each starting with one tag:
   - `Brief:` restates a fact the brief gives.
-  - `Source:` gives the URL or file path you actually opened, then what it shows.
+  - `Source:` gives the URL or repository file path you actually opened, then what it shows. Use it only when your instructions let you look things up; the supervisor's checks reject a `Source:` item without a URL or a path that exists in the repository.
   - `Mechanism:` explains step by step how the effect would come about.
   - `Knowledge:` is a general pattern you recall but did not check, such as how projects like this usually go. Keep it to patterns; a specific number, price, version or date needs `Brief:` or `Source:`.
 
