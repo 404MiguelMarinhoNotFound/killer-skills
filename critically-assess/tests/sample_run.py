@@ -1,4 +1,5 @@
 """One valid multi-mode run, shared by validate/scoring/render tests."""
+import hashlib
 import json
 from pathlib import Path
 
@@ -62,7 +63,7 @@ ANALYST = {
 RESULT = {
     "title": "Postgres vs DynamoDB for orders",
     "brief": BRIEF,
-    "precommit": {"position": "Postgres", "reasons": ["joins", "team knows SQL", "RDS is managed"],
+    "precommit": {"pick": "A", "position": "Postgres", "reasons": ["joins", "team knows SQL", "RDS is managed"],
                   "main_risk": "ops load"},
     "roster": [{"role": r, "model": "opus", "why": "test"} for r in COUNCIL + ["analyst"]],
     "reports": [role_report(r) for r in COUNCIL],
@@ -87,8 +88,13 @@ def write_run(path):
     path = Path(path)
     (path / "reports").mkdir(parents=True, exist_ok=True)
     (path / "brief.json").write_text(json.dumps(BRIEF), encoding="utf-8")
+    (path / "roster.json").write_text(json.dumps(RESULT["roster"]), encoding="utf-8")
+    # The view is sealed before the council runs: its hash first, the view itself moved in afterwards.
+    pre = json.dumps(RESULT["precommit"])
+    (path / "precommit.sha256").write_text(hashlib.sha256(pre.encode("utf-8")).hexdigest() + "\n", encoding="utf-8")
     for r in COUNCIL:
         (path / "reports" / f"{r}.reply.json").write_text(json.dumps(role_report(r)), encoding="utf-8")
     (path / "reports" / "analyst.reply.json").write_text(json.dumps(ANALYST, indent=2), encoding="utf-8")
+    (path / "precommit.json").write_text(pre, encoding="utf-8")
     (path / "result.json").write_text(json.dumps(RESULT), encoding="utf-8")
     return path

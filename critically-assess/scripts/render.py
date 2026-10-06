@@ -78,12 +78,13 @@ def open_in_browser(path):
 
 def main(run_dir, open_report=True):
     run = Path(run_dir)
-    result = json.loads((run / "result.json").read_text(encoding="utf-8"))
-    problems = validate.validate_result(result)
+    # The whole run is checked, not just result.json, so a report never shows rewritten council words.
+    problems = validate.validate_run(run) if (run / "result.json").exists() else ["result.json not found"]
     if problems:
         print("result.json is not valid; fix it and run validate.py first:")
         print("\n".join(f"ERROR: {p}" for p in problems))
         sys.exit(1)
+    result = json.loads((run / "result.json").read_text(encoding="utf-8"))
     out = run / "report.html"
     # Role names and one-line summaries come from the role files, so the report never drifts from the library.
     page_data = {**result, "role_catalog": role_library.catalog(ROLES_DIR)}
@@ -98,4 +99,7 @@ def main(run_dir, open_report=True):
 
 if __name__ == "__main__":
     args = [a for a in sys.argv[1:] if a != "--no-open"]
+    if len(args) != 1:
+        print("usage: render.py <run_dir> [--no-open]")
+        sys.exit(2)
     main(args[0], open_report="--no-open" not in sys.argv[1:])

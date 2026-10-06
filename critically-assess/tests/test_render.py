@@ -106,3 +106,10 @@ def test_main_prints_a_link_when_it_cannot_open(run_dir, capsys):
     render.main(run_dir)
     out = capsys.readouterr().out
     assert "file://" in out and "Open it in a browser" in out
+
+
+def test_cli_without_a_run_dir_prints_usage():
+    import subprocess, sys
+    out = subprocess.run([sys.executable, str(render.TEMPLATE.parent.parent / "scripts" / "render.py")],
+                         capture_output=True, text=True)
+    assert out.returncode == 2 and "usage" in out.stdout
