@@ -176,6 +176,7 @@ def test_dropped_roles_moved_to_subfolder_are_ignored(run_dir):
     dropped = run_dir / "reports" / "dropped"
     dropped.mkdir()
     (run_dir / "reports" / "executor.reply.json").rename(dropped / "executor.reply.json")
+    (run_dir / "result.json").unlink()  # the synthesis comes after dropping, so none exists yet
     assert validate.validate_run(run_dir) == []
 
 
@@ -278,6 +279,7 @@ def _without(run_dir, role, *keys):
 
 
 def test_patch_fills_a_missing_pick_and_point(run_dir):
+    (run_dir / "result.json").unlink()
     _without(run_dir, "contrarian", "pick", "point")
     assert any("missing 'pick'" in e for e in validate.validate_run(run_dir))
     (run_dir / "reports" / "contrarian.patch.json").write_text(
@@ -295,6 +297,7 @@ def test_patch_never_replaces_the_council_s_own_words(run_dir):
 
 
 def test_patch_file_is_not_read_as_a_role_report(run_dir):
+    (run_dir / "result.json").unlink()
     _without(run_dir, "contrarian", "point")
     (run_dir / "reports" / "contrarian.patch.json").write_text(json.dumps({"point": "x"}), encoding="utf-8")
     assert validate.validate_run(run_dir) == []
@@ -305,3 +308,46 @@ def test_a_reply_cannot_claim_to_be_filled_by_the_supervisor(run_dir):
     (run_dir / "reports" / "contrarian.reply.json").write_text(json.dumps(report), encoding="utf-8")
     validate.validate_run(run_dir)
     assert "filled_by_supervisor" not in json.loads((run_dir / "reports" / "contrarian.json").read_text(encoding="utf-8"))
+
+
+# --- The synthesis may weigh the council but never rewrite it --------------------------------
+
+def _result_errors(run_dir, mutate):
+    result = copy.deepcopy(sample_run.RESULT)
+    result["scores"] = copy.deepcopy(result["scores"])  # unshare from the analyst's scores
+    mutate(result)
+    (run_dir / "result.json").write_text(json.dumps(result), encoding="utf-8")
+    return validate.validate_run(run_dir)
+
+
+@pytest.mark.parametrize("mutate, expected", [
+    (lambda r: r["ledger"][0].update(raised_by=["ghost"]), "raised_by names roles not in the roster"),
+    (lambda r: r["dissent"].update(role="ghost"), "dissent.role must be a role in the roster"),
+    (lambda r: r["reports"].pop(), "one report per council role"),
+    (lambda r: r["roster"].append({"role": "executor", "model": "opus", "why": "x"}), "more than once"),
+    (lambda r: r.update(analyst={}), "result.analyst: ledger must be a list"),
+])
+def test_result_roles_must_agree_with_the_roster(run_dir, mutate, expected):
+    assert any(expected in e for e in _result_errors(run_dir, mutate))
+
+
+def test_result_must_carry_the_brief_the_council_answered(run_dir):
+    errors = _result_errors(run_dir, lambda r: r["brief"]["criteria"][1].update(weight=5))
+    assert any("brief must be brief.json exactly" in e for e in errors)
+
+
+@pytest.mark.parametrize("mutate, role", [
+    (lambda r: r["reports"][0].update(position="Now agrees with the lead reviewer"), "contrarian"),
+    (lambda r: r["analyst"]["ledger"][0].update(claim="A rewritten claim"), "analyst"),
+])
+def test_result_must_copy_reports_unchanged(run_dir, mutate, role):
+    errors = _result_errors(run_dir, mutate)
+    assert any(f"the {role} report must be copied unchanged" in e for e in errors)
+
+
+def test_a_changed_score_must_say_the_supervisor_changed_it(run_dir):
+    errors = _result_errors(run_dir, lambda r: r["scores"][2].update(score=4))
+    assert any("differs from the analyst's 2" in e for e in errors)
+    errors = _result_errors(run_dir, lambda r: r["scores"][2].update(
+        score=4, rationale="Supervisor: the reporting replica covers most joins"))
+    assert errors == []

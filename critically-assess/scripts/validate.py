@@ -248,12 +248,24 @@ def validate_result(result):
         e.append("result: roster must include the analyst")
     if not 3 <= len(council) <= 5:
         e.append(f"result: roster needs 3-5 council roles, got {len(council)}")
+    if len(set(map(str, roles))) != len(roles):
+        e.append("result: roster lists a role more than once")
+    known_roles = set(map(str, roles))
 
     if not _dicts(result["reports"]):
         e.append("result: reports must be a list of report objects")
     else:
         for report in result["reports"]:
             e += [f"result.reports: {x}" for x in validate_role_report(report, option_ids)]
+        reported = sorted(str(r.get("role")) for r in result["reports"])
+        if reported != sorted(map(str, council)):
+            e.append(f"result: reports must hold one report per council role in the roster {sorted(map(str, council))}, "
+                     f"got {reported}")
+    analyst_errors = validate_analyst_report(result["analyst"], option_ids, criterion_ids)
+    e += [f"result.{x}" for x in analyst_errors]
+    if isinstance(result["dissent"], dict) and _is_text(result["dissent"].get("role")) \
+            and result["dissent"]["role"] not in known_roles:
+        e.append(f"result: dissent.role must be a role in the roster, got {result['dissent']['role']}")
     if not _dicts(result["ledger"]):
         e.append("result: ledger must be a list of objects")
     else:
@@ -263,7 +275,48 @@ def validate_result(result):
                 e.append(f"result: ledger item without a point: {item.get('claim')}")
             if not _is_text_list(item.get("raised_by"), allow_empty=False):
                 e.append(f"result: ledger raised_by must be a non-empty list of role ids: {item.get('claim')}")
-    return e + _check_scores(result["scores"], option_ids, criterion_ids, "result")
+            else:
+                unknown = [r for r in item["raised_by"] if r not in known_roles]
+                if unknown:
+                    e.append(f"result: ledger raised_by names roles not in the roster {unknown}: {item.get('claim')}")
+    score_errors = _check_scores(result["scores"], option_ids, criterion_ids, "result")
+    if not score_errors and not analyst_errors:
+        e += _check_supervisor_overrides(result["scores"], result["analyst"]["scores"])
+    return e + score_errors
+
+
+def _check_supervisor_overrides(scores, analyst_scores):
+    """A score that differs from the analyst's must say the supervisor changed it, and why."""
+    given = {(s["option"], s["criterion"]): s["score"] for s in analyst_scores}
+    e = []
+    for s in scores:
+        key = (s["option"], s["criterion"])
+        rationale = s.get("rationale")
+        if s["score"] != given.get(key) and not (isinstance(rationale, str) and rationale.strip().startswith("Supervisor:")):
+            e.append(f"result: score for {key} differs from the analyst's {given.get(key)}; "
+                     "start its rationale with 'Supervisor:' and say why")
+    return e
+
+
+def check_result_matches_run(result, brief, reports):
+    """result.json must carry the brief and the checked reports exactly as they are on disk.
+
+    The synthesis may weigh the council but never rewrite it, and the brief the council answered
+    is the one the reader sees. `reports` maps role id to its checked copy in reports/<role>.json.
+    """
+    e = []
+    if result.get("brief") != brief:
+        e.append("result: brief must be brief.json exactly as the council received it")
+    for report in list(result.get("reports") or []) + [result.get("analyst")]:
+        if not isinstance(report, dict):
+            continue
+        role = "analyst" if report is result.get("analyst") else report.get("role")
+        on_disk = reports.get(role)
+        if on_disk is None:
+            e.append(f"result: no checked report reports/{role}.json for role {role}")
+        elif {k: v for k, v in report.items() if k != "role"} != {k: v for k, v in on_disk.items() if k != "role"}:
+            e.append(f"result: the {role} report must be copied unchanged from reports/{role}.json")
+    return e
 
 
 def _read(path):
@@ -348,13 +401,16 @@ def validate_run(run_dir):
     criteria = brief.get("criteria") if _dicts(brief.get("criteria")) else []
     option_ids = [str(o.get("id")) for o in options]
     criterion_ids = [str(c.get("id")) for c in criteria]
+    checked = {}
     for path in sorted(p for p in reports.glob("*.json") if not p.name.endswith((".patch.json", ".reply.json"))):
         if path.stem in failed:
             continue
         report, err = _read(path)
         if err:
             errors.append(f"{path.stem}: {err}")
-        elif path.stem == "analyst":
+            continue
+        checked[path.stem] = report
+        if path.stem == "analyst":
             errors += _safe(validate_analyst_report, "analyst", report, option_ids, criterion_ids)
         else:
             errors += _safe(validate_role_report, path.stem, report, option_ids)
@@ -363,7 +419,10 @@ def validate_run(run_dir):
         if err:
             errors.append(err)
         else:
-            errors += _safe(validate_result, "result", result)
+            result_errors = _safe(validate_result, "result", result)
+            errors += result_errors
+            if not result_errors:
+                errors += _safe(check_result_matches_run, "result", result, brief, checked)
     return errors
 
 

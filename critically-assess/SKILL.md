@@ -69,7 +69,7 @@ It reads every reply file, checks it, and writes the checked copy to `reports/<r
 Re-run `validate.py` until it prints OK before moving on. Then move the sealed pre-commitment into `<run_dir>/precommit.json`; the council is finished, so it no longer needs hiding.
 
 ### 8. Synthesize
-Read every report, then write `result.json` as described in `reference/contracts.md`:
+Read every report, then write `result.json` as described in `reference/contracts.md`. Copy the brief and every checked report into it unchanged; `validate.py` rejects any edit to them, so your judgement goes into the ledger, scores, dissent and verdict instead:
 - Weigh evidence quality, not the number of voices that agree. Each council position is the verdict of one lens, so a split council is expected; agreement across lenses that were built to disagree is the stronger signal.
 - Never dismiss a council view without saying why.
 - Rank evidence by its tag: `Source:` and `Brief:` facts first, then `Mechanism:` reasoning, then `Knowledge:` recall. Every voice shares the same training, so a `Knowledge:` claim raised by several voices counts once. When the verdict would rest on a `Knowledge:` claim, check it yourself if the research setting allows it; otherwise add it to `unknowns`. When two `Source:` items disagree, say which you trust and why.
