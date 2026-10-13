@@ -184,6 +184,12 @@ def test_dropped_roles_moved_to_subfolder_are_ignored(run_dir):
     dropped.mkdir()
     (run_dir / "reports" / "executor.reply.json").rename(dropped / "executor.reply.json")
     reopen_council(run_dir)  # replies are written before the council closes
+    # Dropping left 2 council roles, so a replacement joins the roster and replies.
+    roster = json.loads((run_dir / "roster.json").read_text())
+    roster.append({"role": "expansionist", "model": "sonnet", "why": "replaces the executor"})
+    (run_dir / "roster.json").write_text(json.dumps(roster))
+    (run_dir / "reports" / "expansionist.reply.json").write_text(
+        json.dumps(sample_run.role_report("expansionist")), encoding="utf-8")
     assert validate.validate_run(run_dir) == []
 
 
@@ -251,7 +257,8 @@ def test_role_evidence_must_carry_a_known_tag():
 def test_analyst_evidence_must_carry_a_known_tag():
     analyst = copy.deepcopy(sample_run.ANALYST)
     analyst["ledger"][0]["evidence"] = "trust me"
-    assert any("evidence tag" in e for e in validate.validate_analyst_report(analyst, OPTS, CRITS))
+    errors = validate.validate_analyst_report(analyst, OPTS, CRITS)
+    assert any("must start with one of" in e and "'trust me'" in e for e in errors)
     analyst["ledger"][0]["evidence"] = "Supervisor: written by the supervisor"
     assert validate.validate_analyst_report(analyst, OPTS, CRITS) == []
 
@@ -366,7 +373,7 @@ def test_view_must_be_sealed_before_any_reply(run_dir):
     (run_dir / "precommit.sha256").unlink()
     assert any("seal your view" in e for e in validate.validate_run(run_dir))
     reply = run_dir / "reports" / "contrarian.reply.json"
-    validate.seal(run_dir / "precommit.json", run_dir)
+    (run_dir / "precommit.sha256").write_text(validate.sha256_of(run_dir / "precommit.json") + "\n")
     import os
     os.utime(reply, ns=(1, 1))  # a reply written long before the seal
     assert any("newer than a council reply" in e for e in validate.validate_run(run_dir))
@@ -486,7 +493,8 @@ def test_unseal_refuses_while_a_reply_has_errors_and_closes_the_council(run_dir,
     for reply in (run_dir / "reports").glob("*.reply.json"):
         os.utime(reply, ns=(reply.stat().st_mtime_ns, (run_dir / "precommit.sha256").stat().st_mtime_ns))
     assert validate.unseal(sealed, run_dir) == []
-    assert not sealed.exists() and (run_dir / "precommit.json").exists()
+    # The sealed file stays put, so a mistaken unseal never destroys the only copy.
+    assert sealed.exists() and (run_dir / "precommit.json").exists()
     late = run_dir / "reports" / "executor.reply.json"
     os.utime(late, ns=(late.stat().st_atime_ns, (run_dir / "precommit.json").stat().st_mtime_ns + 10**9))
     assert any("written after the view was unsealed" in e for e in validate.validate_run(run_dir))
@@ -499,3 +507,109 @@ def test_a_summary_that_does_not_name_the_choice_is_warned(run_dir):
     warnings = []
     assert validate.validate_run(run_dir, warnings) == []
     assert any("verdict.summary does not name it" in w for w in warnings)
+
+
+# --- Stress-test findings: the seal must survive mistakes, and an empty council must not close -----
+
+def _open_council(run_dir, tmp_path):
+    """The state just before unsealing: replies in, the view still sealed outside the run folder."""
+    sealed_dir = tmp_path / "sealed"
+    sealed_dir.mkdir()
+    sealed = sealed_dir / "view.json"
+    (run_dir / "result.json").unlink()
+    (run_dir / "precommit.json").rename(sealed)
+    return sealed
+
+
+def test_unseal_refuses_an_empty_council(run_dir, tmp_path):
+    sealed = _open_council(run_dir, tmp_path)
+    for reply in (run_dir / "reports").glob("*.reply.json"):
+        reply.unlink()
+    errors = validate.unseal(sealed, run_dir)
+    assert any("no reply yet from" in e for e in errors)
+    assert sealed.exists() and not (run_dir / "precommit.json").exists()
+
+
+def test_unseal_refuses_while_one_roster_role_is_missing(run_dir, tmp_path):
+    sealed = _open_council(run_dir, tmp_path)
+    (run_dir / "reports" / "executor.reply.json").unlink()
+    assert any("no reply yet from executor" in e for e in validate.unseal(sealed, run_dir))
+
+
+def test_unseal_with_a_missing_sealed_file_is_an_error_not_a_crash(run_dir, tmp_path):
+    _open_council(run_dir, tmp_path)
+    errors = validate.unseal(tmp_path / "gone" / "view.json", run_dir)
+    assert any("not found" in e for e in errors)
+
+
+def test_unseal_keeps_the_sealed_file_so_a_test_copy_cannot_destroy_it(run_dir, tmp_path):
+    sealed = _open_council(run_dir, tmp_path)
+    import shutil
+    copy_dir = tmp_path / "copy"
+    shutil.copytree(run_dir, copy_dir)
+    assert validate.unseal(sealed, copy_dir) == []
+    assert sealed.exists()
+    assert validate.unseal(sealed, run_dir) == []
+
+
+def test_missing_replies_are_reported_while_the_council_is_open(run_dir, tmp_path):
+    _open_council(run_dir, tmp_path)
+    (run_dir / "reports" / "executor.reply.json").unlink()
+    warnings = []
+    assert validate.validate_run(run_dir, warnings) == []
+    assert any("not replied yet: executor" in w for w in warnings)
+
+
+def test_missing_reply_after_the_council_closed_is_an_error(run_dir):
+    (run_dir / "reports" / "executor.reply.json").unlink()
+    assert any("no reply from executor" in e for e in validate.validate_run(run_dir))
+
+
+def _seal_setup(run_dir, tmp_path, view):
+    for reply in (run_dir / "reports").glob("*.reply.json"):
+        reply.unlink()
+    for name in ("result.json", "precommit.json", "precommit.sha256"):
+        (run_dir / name).unlink()
+    sealed = tmp_path / "view.json"
+    sealed.write_text(json.dumps(view), encoding="utf-8")
+    return sealed
+
+
+def test_seal_checks_the_view_before_hashing_it(run_dir, tmp_path):
+    bad = dict(sample_run.RESULT["precommit"], pick="Z")
+    sealed = _seal_setup(run_dir, tmp_path, bad)
+    assert any("precommit.pick" in e for e in validate.seal(sealed, run_dir))
+    assert not (run_dir / "precommit.sha256").exists()
+    sealed.write_text(json.dumps(sample_run.RESULT["precommit"]), encoding="utf-8")
+    assert validate.seal(sealed, run_dir) == []
+    assert (run_dir / "precommit.sha256").exists()
+
+
+def test_seal_refuses_once_a_reply_exists(run_dir, tmp_path):
+    sealed = _seal_setup(run_dir, tmp_path, sample_run.RESULT["precommit"])
+    (run_dir / "reports" / "contrarian.reply.json").write_text("{}", encoding="utf-8")
+    assert any("already exists" in e for e in validate.seal(sealed, run_dir))
+
+
+def test_seal_with_missing_files_is_an_error_not_a_crash(run_dir, tmp_path):
+    sealed = _seal_setup(run_dir, tmp_path, sample_run.RESULT["precommit"])
+    assert any("not found" in e for e in validate.seal(tmp_path / "nope.json", run_dir))
+    assert any("not found" in e for e in validate.seal(sealed, tmp_path / "no-run"))
+
+
+def test_roster_file_is_checked_before_the_council_runs(run_dir):
+    roster = json.loads((run_dir / "roster.json").read_text())
+    (run_dir / "roster.json").write_text(json.dumps([r for r in roster if r["role"] != "analyst"]))
+    assert any("must include the analyst" in e for e in validate.validate_run(run_dir))
+    (run_dir / "roster.json").write_text(json.dumps(roster + [{"role": "bogus", "model": "x", "why": "y"}]))
+    assert any("not in the library" in e for e in validate.validate_run(run_dir))
+
+
+def test_repo_source_accepts_dot_slash_and_rejects_bare_folder_names(tmp_path):
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "notes.md").write_text("x")
+    wd = tmp_path.resolve()
+    assert validate._repo_path_in(" ./docs/notes.md, line 3", wd)
+    assert validate._repo_path_in(" `docs/notes.md:14`", wd)
+    assert not validate._repo_path_in(" the docs say it is cheaper", wd)
+    assert not validate._repo_path_in(" see . for details", wd)

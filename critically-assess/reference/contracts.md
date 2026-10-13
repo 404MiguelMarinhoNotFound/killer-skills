@@ -30,7 +30,7 @@ Every file lives in the run directory `.critically-assess/runs/<YYYYMMDD-HHMMSS>
 
 ## precommit.json (step 4, sealed until step 7)
 
-Written first to `view.json` in a fresh `mktemp -d` folder outside the working directory, sealed with `validate.py --seal <file> <run_dir>` (which writes only its hash to `precommit.sha256`), and copied unchanged into the run folder with `validate.py --unseal <file> <run_dir>`, which refuses while any reply has an error. `validate.py` rejects a `precommit.json` that does not match the hash, a seal newer than any reply file, and a reply file newer than `precommit.json`, because that reply could have read the view.
+Written first to `view.json` in a fresh `mktemp -d` folder outside the working directory, sealed with `validate.py --seal <file> <run_dir>` (which checks the view's shape against the brief, refuses once any reply exists, and writes only its hash to `precommit.sha256`), and copied unchanged into the run folder with `validate.py --unseal <file> <run_dir>`, which refuses while any reply has an error or any roster role has neither replied nor been dropped, and leaves the sealed file where it is. `validate.py` rejects a `precommit.json` that does not match the hash, a seal newer than any reply file, and a reply file newer than `precommit.json`, because that reply could have read the view.
 
 ```json
 {"pick": "A", "position": "Your view before the council", "reasons": ["first", "second", "third"], "main_risk": "The biggest risk in your own view"}
@@ -44,11 +44,15 @@ Written first to `view.json` in a fresh `mktemp -d` folder outside the working d
 [{"role": "contrarian", "model": "opus", "why": "One line on why this role is on this council"}, {"role": "analyst", "model": "opus", "why": "Always included"}]
 ```
 
+`validate.py` checks it as soon as it exists: library role ids only, each listed once, the analyst included, and 3 to 5 council roles once dropped roles are left out.
+
 ## reports/<role>.reply.json (steps 6 and 7)
 
-Written by the subagent itself with the Write tool: exactly one JSON object, with no code fences or text around it. The supervisor never copies or edits it. The file name is the role id; `validate.py` sets the `role` field from it in the checked copy. Every council `evidence` item must start with `Brief:`, `Source:`, `Mechanism:` or `Knowledge:`, and a `Source:` item must name what the role opened: no `Source:` at all when `research` is `none`, a URL when `online`, an existing repository path when `repo`, and either when `both`; analyst ledger evidence with `Brief:`, `Mechanism:`, `Knowledge:` or `Supervisor:`. `scripts/validate.py` checks it and writes the checked copy to `reports/<role>.json`, which is what `result.json` takes the reports from. A council reply missing only `pick` or `point` can be completed with `reports/<role>.patch.json` holding just those fields; validation fills them in where the reply left them out and records them in `filled_by_supervisor`. Council roles follow `roles/_contract.md`, which includes `pick` (the option id the role favours) and `point` (its position in one line); the analyst follows its own contract in `roles/analyst.md`.
+Written by the subagent itself with the Write tool: exactly one JSON object, with no code fences or text around it. The supervisor never copies or edits it. The file name is the role id; `validate.py` sets the `role` field from it in the checked copy. Every council `evidence` item must start with `Brief:`, `Source:`, `Mechanism:` or `Knowledge:`, and a `Source:` item must name what the role opened: no `Source:` at all when `research` is `none`, a URL when `online`, an existing repository file (not a folder) when `repo`, and either when `both`; analyst ledger evidence with `Brief:`, `Mechanism:`, `Knowledge:` or `Supervisor:`. `scripts/validate.py` checks it and writes the checked copy to `reports/<role>.json`, which is what `result.json` takes the reports from. A council reply missing only `pick` or `point` can be completed with `reports/<role>.patch.json` holding just those fields; validation fills them in where the reply left them out and records them in `filled_by_supervisor`. Council roles follow `roles/_contract.md`, which includes `pick` (the option id the role favours) and `point` (its position in one line); the analyst follows its own contract in `roles/analyst.md`.
 
 ## result.json (step 8)
+
+Built by `scripts/assemble.py <run_dir> <synthesis.json>`: the synthesis file holds only the supervisor's judgement (every field below except `brief`, `precommit`, `roster`, `reports` and `analyst`; `scores` defaults to the analyst's grid), and the script copies the rest from the run folder unchanged.
 
 ```json
 {

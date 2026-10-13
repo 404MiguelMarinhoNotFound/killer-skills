@@ -33,7 +33,7 @@ def terminal_summary(result):
     lines = [f"## {result['title']}",
              f"Verdict: {names.get(verdict['decision'], verdict['decision'])} — {verdict['summary']}"]
     for cond in verdict.get("conditions") or []:
-        lines.append(f"  if: {cond}")
+        lines.append(f"  condition: {cond}")
     totals = scoring.weighted_totals(brief["criteria"], result["scores"])
     for option, total in sorted(totals.items(), key=lambda kv: -kv[1]):
         lines.append(f"  {names.get(option, option)}: {total:.2f} / 5")
@@ -102,4 +102,8 @@ if __name__ == "__main__":
     if len(args) != 1:
         print("usage: render.py <run_dir> [--no-open]")
         sys.exit(2)
-    main(args[0], open_report="--no-open" not in sys.argv[1:])
+    try:
+        main(args[0], open_report="--no-open" not in sys.argv[1:])
+    except BrokenPipeError:
+        # The reader closed the pipe early (e.g. `| head`); the report is already written.
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())

@@ -189,7 +189,8 @@ def validate_analyst_report(report, option_ids, criterion_ids):
         if not _is_text(item.get("evidence")):
             e.append(f"analyst: ledger item without evidence: {item.get('claim')}")
         elif not item["evidence"].strip().startswith(ANALYST_TAGS):
-            e.append(f"analyst: ledger evidence tag must be one of {', '.join(ANALYST_TAGS)}: {item.get('claim')}")
+            e.append(f"analyst: ledger evidence must start with one of {', '.join(ANALYST_TAGS)}, "
+                     f"but this one starts '{item['evidence'].strip()[:60]}'")
     for opt in option_ids:
         for kind in ("pro", "con"):
             n = sum(1 for i in ledger if i.get("option") == opt and i.get("kind") == kind)
@@ -451,9 +452,13 @@ def working_dir_of(run):
 
 
 def _repo_path_in(text, wd):
-    """True when some token in `text` names an existing file or folder inside the working directory."""
+    """True when some token in `text` names an existing file inside the working directory.
+
+    A folder does not count: a sentence like "the docs say..." must not pass because a docs/ folder exists.
+    """
     for token in text.split():
-        token = re.sub(r"(#L?\d+.*|:\d+(-\d+)?)$", "", token.strip("`'\"()[],;."))
+        token = token.lstrip("`'\"([").rstrip("`'\")[],;.:")
+        token = re.sub(r"(#L?\d+.*|:\d+(-\d+)?)$", "", token)
         if not token or URL.match(token):
             continue
         try:
@@ -461,7 +466,7 @@ def _repo_path_in(text, wd):
         except (OSError, ValueError):
             continue
         inside = wd in path.parents or path == wd
-        if inside and ".critically-assess" not in path.relative_to(wd).parts and path.exists():
+        if inside and ".critically-assess" not in path.relative_to(wd).parts and path.is_file():
             return True
     return False
 
@@ -503,31 +508,57 @@ def sha256_of(path):
 
 
 def seal(sealed_file, run_dir):
-    """Record the hash of the sealed view in the run folder before the council runs. The hash reveals nothing."""
-    (Path(run_dir) / "precommit.sha256").write_text(sha256_of(sealed_file) + "\n", encoding="utf-8")
+    """Record the hash of the sealed view in the run folder before the council runs. Returns errors.
+
+    The hash reveals nothing. The view is checked first, because once a reply exists a broken view
+    can no longer be fixed: editing it breaks the hash, and resealing after a reply is rejected.
+    """
+    run, sealed = Path(run_dir), Path(sealed_file)
+    if not run.is_dir():
+        return [f"run folder {run} not found"]
+    if any((run / "reports").glob("*.reply.json")):
+        return ["a council reply already exists: the view must be sealed before the council runs"]
+    pre, err = _read(sealed)
+    if err:
+        return [err]
+    brief, err = _read(run / "brief.json")
+    if err:
+        return [err + "; write the brief before sealing your view"]
+    if validate_brief(brief):
+        return ["brief.json has errors; run validate.py on the run folder and fix them before sealing"]
+    errors = validate_precommit(pre, brief["mode"], [o["id"] for o in brief["options"]])
+    if errors:
+        return errors
+    (run / "precommit.sha256").write_text(sha256_of(sealed) + "\n", encoding="utf-8")
+    return []
 
 
 def unseal(sealed_file, run_dir):
-    """Move the sealed view into the run folder, but only once every reply validates. Returns errors.
+    """Copy the sealed view into the run folder, but only once every roster role has a valid reply. Returns errors.
 
-    The view is copied rather than moved, so precommit.json's timestamp records when the council closed:
-    any reply written after it could have read the view, and validation rejects it.
+    The sealed file is left where it is, so a failed or mistaken unseal never destroys the only copy.
+    precommit.json's timestamp records when the council closed: any reply written after it could
+    have read the view, and validation rejects it.
     """
     run, sealed = Path(run_dir), Path(sealed_file)
     if (run / "precommit.json").exists():
         return ["precommit.json already exists: the view is already unsealed"]
-    errors = validate_run(run)
-    if errors:
-        return errors + ["the view stays sealed until every reply validates: fix or relaunch first"]
+    if not sealed.is_file():
+        return [f"sealed view {sealed} not found; unseal with the exact path you sealed, "
+                "and never write a new view: its hash would not match"]
     seal_file = run / "precommit.sha256"
+    if not seal_file.is_file():
+        return [f"{seal_file} not found: this run folder was never sealed"]
+    errors = validate_run(run)
+    missing = missing_replies(run)
+    if missing:
+        errors.append(f"no reply yet from {', '.join(missing)}: every roster role must reply, be relaunched "
+                      "or be dropped into reports/dropped/ before the council closes")
+    if errors:
+        return errors + ["the view stays sealed until every roster role has a valid reply: fix or relaunch first"]
     if sha256_of(sealed) != seal_file.read_text(encoding="utf-8").strip():
         return [f"{sealed} differs from the view sealed before the council ran"]
     (run / "precommit.json").write_bytes(sealed.read_bytes())
-    sealed.unlink()
-    try:
-        sealed.parent.rmdir()  # the mktemp folder, if nothing else is in it
-    except OSError:
-        pass
     return validate_run(run)
 
 
@@ -552,6 +583,48 @@ def check_precommit(run, mode, option_ids):
     return errors
 
 
+ROLES_DIR = Path(__file__).resolve().parent.parent / "roles"
+
+
+def _dropped(run):
+    return {p.name.removesuffix(".reply.json") for p in (run / "reports" / "dropped").glob("*.reply.json")}
+
+
+def validate_roster_file(run):
+    """roster.json, once written, must name library roles: the analyst plus 3-5 council roles still on the council."""
+    if not (run / "roster.json").exists():
+        return []
+    roster, err = _read(run / "roster.json")
+    if err:
+        return [err]
+    if not _dicts(roster) or not roster:
+        return ["roster.json must be a list of {role, model, why} objects"]
+    roles = [r.get("role") for r in roster]
+    e = []
+    if len(set(map(str, roles))) != len(roles):
+        e.append("roster.json lists a role more than once")
+    if ROLES_DIR.is_dir():
+        library = {p.stem for p in ROLES_DIR.glob("*.md") if not p.stem.startswith("_")}
+        unknown = [str(r) for r in roles if r not in library]
+        if unknown:
+            e.append(f"roster.json names roles that are not in the library: {unknown}")
+    if "analyst" not in roles:
+        e.append("roster.json must include the analyst")
+    council = [r for r in roles if r != "analyst" and r not in _dropped(run)]
+    if not 3 <= len(council) <= 5:
+        e.append(f"roster.json needs 3-5 council roles still on the council, got {len(council)}")
+    return e
+
+
+def missing_replies(run):
+    """Roster roles that have neither a reply file nor been dropped."""
+    roster, err = _read(run / "roster.json")
+    if err or not _dicts(roster):
+        return []
+    have = {p.name.removesuffix(".reply.json") for p in (run / "reports").glob("*.reply.json")}
+    return [str(r.get("role")) for r in roster if r.get("role") not in have | _dropped(run)]
+
+
 def check_roster(run, result, checked):
     """result.roster must be the roster fixed before launch, minus roles dropped with their files kept."""
     planned, err = _read(run / "roster.json")
@@ -559,7 +632,7 @@ def check_roster(run, result, checked):
         return [err]
     if not _dicts(planned):
         return ["roster.json must be a list of {role, model, why} objects"]
-    dropped = {p.name.removesuffix(".reply.json") for p in (run / "reports" / "dropped").glob("*.reply.json")}
+    dropped = _dropped(run)
     expected = sorted(str(r.get("role")) for r in planned if r.get("role") not in dropped)
     got = sorted(str(r.get("role")) for r in result.get("roster") or [] if isinstance(r, dict))
     e = []
@@ -632,6 +705,13 @@ def validate_run(run_dir, warnings=None):
                 errors += _safe(check_sources, path.stem, report, research, wd)
                 warnings += _pick_warnings(report, names)
     errors += _safe(check_precommit, "precommit", run, brief.get("mode"), option_ids)
+    errors += _safe(validate_roster_file, "roster", run)
+    missing = missing_replies(run)
+    if missing and (run / "precommit.json").exists():
+        errors.append(f"no reply from {', '.join(missing)}, but the council is closed; "
+                      "drop the role into reports/dropped/ and note it in unknowns")
+    elif missing and (run / "precommit.sha256").exists() and any(reports.glob("*.reply.json")):
+        warnings.append(f"{len(missing)} roster role(s) have not replied yet: {', '.join(missing)}")
     if (run / "result.json").exists():
         result, err = _read(run / "result.json")
         if err:
@@ -656,16 +736,20 @@ def validate_run(run_dir, warnings=None):
 if __name__ == "__main__":
     args = sys.argv[1:]
     if len(args) == 3 and args[0] == "--seal":
-        seal(args[1], args[2])
-        print(f"Sealed: {Path(args[2]) / 'precommit.sha256'}")
-        sys.exit(0)
+        problems = seal(args[1], args[2])
+        for p in problems:
+            print(f"ERROR: {p}")
+        print(f"Sealed: {Path(args[2]) / 'precommit.sha256'}" if not problems else f"{len(problems)} error(s)")
+        sys.exit(1 if problems else 0)
     if len(args) == 3 and args[0] == "--unseal":
         problems = unseal(args[1], args[2])
         for p in problems:
             print(f"ERROR: {p}")
         print(f"Unsealed: {Path(args[2]) / 'precommit.json'}" if not problems else f"{len(problems)} error(s)")
         sys.exit(1 if problems else 0)
-    if len(args) != 1:
+    if len(args) != 1 or not Path(args[0]).is_dir():
+        if len(args) == 1:
+            print(f"ERROR: run folder {args[0]} not found")
         print("usage: validate.py <run_dir>\n       validate.py --seal <sealed_view.json> <run_dir>\n"
               "       validate.py --unseal <sealed_view.json> <run_dir>")
         sys.exit(2)
