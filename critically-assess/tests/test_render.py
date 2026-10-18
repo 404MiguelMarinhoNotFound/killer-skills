@@ -1,3 +1,4 @@
+import copy
 import json
 
 import render
@@ -113,3 +114,15 @@ def test_cli_without_a_run_dir_prints_usage():
     out = subprocess.run([sys.executable, str(render.TEMPLATE.parent.parent / "scripts" / "render.py")],
                          capture_output=True, text=True)
     assert out.returncode == 2 and "usage" in out.stdout
+
+
+def test_a_unanimous_council_shows_a_reservation_not_a_dissent():
+    # Every sample member picked Postgres, so calling the executor's caveat a "dissent" would mislead the reader.
+    out = render.terminal_summary(sample_run.RESULT)
+    assert "Strongest reservation (executor; every member agreed)" in out
+    assert "Strongest dissent" not in out
+    split = copy.deepcopy(sample_run.RESULT)
+    split["reports"][2]["pick"] = "B"
+    assert "Strongest dissent (executor)" in render.terminal_summary(split)
+    template = render.TEMPLATE.read_text(encoding="utf-8")
+    assert "Strongest reservation" in template and "Strongest disagreement" in template

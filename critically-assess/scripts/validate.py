@@ -300,6 +300,9 @@ def validate_result(result):
     if not analyst_errors:
         by_supervisor = any(r.get("role") == "analyst" and r.get("model") == "supervisor" for r in roster)
         e += _check_analyst_authorship(result["analyst"], by_supervisor)
+        unknowns = result["unknowns"] if isinstance(result["unknowns"], list) else []
+        if by_supervisor and not any("analyst" in u.lower() for u in unknowns if isinstance(u, str)):
+            e.append("result: unknowns must say the analyst's scores were written by the supervisor")
     if isinstance(result["dissent"], dict) and _is_text(result["dissent"].get("role")) \
             and result["dissent"]["role"] not in known_roles:
         e.append(f"result: dissent.role must be a role in the roster, got {result['dissent']['role']}")
@@ -341,18 +344,32 @@ def result_warnings(result):
     names = {o["id"]: o["name"] for o in brief["options"]}
     decided = _decided_option(brief["mode"], result["verdict"].get("decision"))
     summary = str(result["verdict"].get("summary", ""))
-    if decided in names and names[decided].lower() not in summary.lower():
-        w.append(f"result: the verdict backs {names[decided]}, but verdict.summary does not name it")
+    # A single-mode no-go is about the idea, so the summary names the idea, not "Status quo".
+    named = "A" if brief["mode"] == "single" and decided == "B" else decided
+    if named in names and names[named].lower() not in summary.lower():
+        what = "it" if named == decided else names[named]
+        w.append(f"result: the verdict backs {names[decided]}, but verdict.summary does not name {what}")
     dissent_role = result["dissent"].get("role")
-    for r in result["reports"]:
-        if r.get("role") == dissent_role and decided and r.get("pick") == decided:
-            w.append(f"result: the dissent comes from {dissent_role}, who picked the option you recommend "
-                     f"({names.get(decided)}); the dissent should be the strongest view you did not adopt")
+    picks = [r.get("pick") for r in result["reports"]]
+    if decided and picks and all(p == decided for p in picks):
+        w.append(f"result: every council member picked {names.get(decided)}, so nobody dissented; dissent.position "
+                 "must say that no member disagreed with the choice and give the strongest reservation instead, "
+                 "and the report labels it a reservation")
+    else:
+        for r in result["reports"]:
+            if r.get("role") == dissent_role and decided and r.get("pick") == decided:
+                w.append(f"result: the dissent comes from {dissent_role}, who picked the option you recommend "
+                         f"({names.get(decided)}); the dissent should be the strongest view you did not adopt")
     if dissent_role == "analyst":
         w.append("result: the dissent names the analyst, who recommends nothing; pick a council member's view")
     if decided:
         from scoring import weighted_totals, winners  # local import keeps validate.py usable on its own
         top = winners(weighted_totals(brief["criteria"], result["scores"]))
+        analyst_top = winners(weighted_totals(brief["criteria"], result["analyst"]["scores"]))
+        if top != analyst_top:
+            w.append(f"result: your score changes move the top option from "
+                     f"{' and '.join(names.get(x, x) for x in analyst_top)} to {' and '.join(names.get(x, x) for x in top)}; "
+                     "the summary must say why the analyst's scores were overruled")
         if decided not in top:
             w.append(f"result: the verdict backs {names.get(decided)}, but the weighted scores rank "
                      f"{' and '.join(names.get(x, x) for x in top)} first; make sure the summary says why")
@@ -508,7 +525,7 @@ def sha256_of(path):
 
 
 def seal(sealed_file, run_dir):
-    """Record the hash of the sealed view in the run folder before the council runs. Returns errors.
+    """Record the hashes of the sealed view and of the brief in the run folder before the council runs. Returns errors.
 
     The hash reveals nothing. The view is checked first, because once a reply exists a broken view
     can no longer be fixed: editing it breaks the hash, and resealing after a reply is rejected.
@@ -530,6 +547,8 @@ def seal(sealed_file, run_dir):
     if errors:
         return errors
     (run / "precommit.sha256").write_text(sha256_of(sealed) + "\n", encoding="utf-8")
+    # The brief is sealed too: re-weighting the criteria after the analyst scored them would pick the winner.
+    (run / "brief.sha256").write_text(sha256_of(run / "brief.json") + "\n", encoding="utf-8")
     return []
 
 
@@ -560,6 +579,19 @@ def unseal(sealed_file, run_dir):
         return [f"{sealed} differs from the view sealed before the council ran"]
     (run / "precommit.json").write_bytes(sealed.read_bytes())
     return validate_run(run)
+
+
+def check_brief_seal(run):
+    """brief.json must be the brief the council answered, byte for byte, once the view is sealed."""
+    if not (run / "precommit.sha256").exists():
+        return []
+    seal_file = run / "brief.sha256"
+    if not seal_file.exists():
+        return ["brief.sha256 not found: seal again with validate.py --seal, which records the brief as well as the view"]
+    if (run / "brief.json").exists() and sha256_of(run / "brief.json") != seal_file.read_text(encoding="utf-8").strip():
+        return ["brief.json differs from the brief sealed before the council ran; the council answered the sealed "
+                "brief, so its question, options and criteria weights cannot change afterwards"]
+    return []
 
 
 def check_precommit(run, mode, option_ids):
@@ -613,6 +645,34 @@ def validate_roster_file(run):
     council = [r for r in roles if r != "analyst" and r not in _dropped(run)]
     if not 3 <= len(council) <= 5:
         e.append(f"roster.json needs 3-5 council roles still on the council, got {len(council)}")
+    replied = sorted(_replied(run) | _dropped(run))
+    for role in replied:
+        if role not in roles:
+            e.append(f"{role}.reply.json comes from a role that is not in roster.json; a role leaves the council only "
+                     "by being dropped into reports/dropped/, and a replacement is added to roster.json")
+    return e
+
+
+def _replied(run):
+    return {p.name.removesuffix(".reply.json") for p in (run / "reports").glob("*.reply.json")}
+
+
+def check_dropped(run, option_ids, research, wd):
+    """A role is dropped only after failing twice, so a reply that would pass validation cannot sit in reports/dropped/."""
+    e = []
+    for path in sorted((run / "reports" / "dropped").glob("*.reply.json")):
+        role = path.name.removesuffix(".reply.json")
+        if role == "analyst":
+            e.append("analyst cannot be dropped: relaunch it, or write its report yourself as SKILL.md describes")
+            continue
+        try:
+            data = read_reply(path)
+        except (OSError, ValueError):
+            continue
+        data["role"] = role
+        if not _safe(validate_role_report, role, data, option_ids) and not _safe(check_sources, role, data, research, wd):
+            e.append(f"{role}: dropped, but its reply in reports/dropped/ is valid; a role is dropped only after its "
+                     "reply fails validation twice, so move it back to reports/ and weigh it")
     return e
 
 
@@ -621,7 +681,7 @@ def missing_replies(run):
     roster, err = _read(run / "roster.json")
     if err or not _dicts(roster):
         return []
-    have = {p.name.removesuffix(".reply.json") for p in (run / "reports").glob("*.reply.json")}
+    have = _replied(run)
     return [str(r.get("role")) for r in roster if r.get("role") not in have | _dropped(run)]
 
 
@@ -642,7 +702,23 @@ def check_roster(run, result, checked):
     missing = [r for r in expected if r not in checked]
     if missing:
         e.append(f"result: no checked report for {missing}")
+    listed = result.get("unknowns") if isinstance(result.get("unknowns"), list) else []
+    unknowns = " ".join(u for u in listed if isinstance(u, str)).lower()
+    for role in sorted(dropped):
+        if not any(name in unknowns for name in _role_names(role)):
+            e.append(f"result: unknowns must say that {role} gave no usable report, because it was dropped")
     return e
+
+
+def _role_names(role):
+    """Ways a reader-facing sentence may name a role: its id, the id with spaces, or its display name."""
+    names = {role.lower(), role.lower().replace("-", " ")}
+    path = ROLES_DIR / f"{role}.md"
+    if path.is_file():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("name:"):
+                names.add(line.partition(":")[2].strip().lower().removeprefix("the ").strip())
+    return names
 
 
 def validate_run(run_dir, warnings=None):
@@ -705,6 +781,8 @@ def validate_run(run_dir, warnings=None):
                 errors += _safe(check_sources, path.stem, report, research, wd)
                 warnings += _pick_warnings(report, names)
     errors += _safe(check_precommit, "precommit", run, brief.get("mode"), option_ids)
+    errors += _safe(check_brief_seal, "brief", run)
+    errors += _safe(check_dropped, "dropped", run, option_ids, research, wd)
     errors += _safe(validate_roster_file, "roster", run)
     missing = missing_replies(run)
     if missing and (run / "precommit.json").exists():

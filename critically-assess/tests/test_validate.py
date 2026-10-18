@@ -9,6 +9,11 @@ import validate
 OPTS = ["A", "B"]
 
 
+def reseal_brief(run_dir):
+    """Tests that build a variant brief record it as the sealed one, as --seal would have."""
+    (run_dir / "brief.sha256").write_text(validate.sha256_of(run_dir / "brief.json") + "\n", encoding="utf-8")
+
+
 def reopen_council(run_dir):
     """Step back to before the synthesis and the unsealing, when replies may still be written."""
     for name in ("result.json", "precommit.json"):
@@ -407,6 +412,9 @@ def test_a_role_leaves_the_council_only_by_being_dropped(run_dir):
     dropped = run_dir / "reports" / "dropped"
     dropped.mkdir()
     (dropped / "outsider.reply.json").write_text("Sorry", encoding="utf-8")
+    result = json.loads((run_dir / "result.json").read_text())
+    result["unknowns"].append("The Outsider gave no usable report.")
+    (run_dir / "result.json").write_text(json.dumps(result), encoding="utf-8")
     assert validate.validate_run(run_dir) == []
 
 
@@ -415,6 +423,7 @@ def test_a_role_leaves_the_council_only_by_being_dropped(run_dir):
 def _with_evidence(run_dir, research, evidence, in_workdir=True):
     brief = dict(sample_run.BRIEF, research=research)
     (run_dir / "brief.json").write_text(json.dumps(brief), encoding="utf-8")
+    reseal_brief(run_dir)
     reopen_council(run_dir)  # replies are written before the council closes
     report = dict(sample_run.role_report("contrarian"), evidence=[evidence])
     (run_dir / "reports" / "contrarian.reply.json").write_text(json.dumps(report), encoding="utf-8")
@@ -455,9 +464,9 @@ def test_pick_that_the_point_does_not_name_is_warned(run_dir):
 
 
 def test_verdict_against_the_scores_and_agreeing_dissent_are_warned(run_dir):
-    warnings = []
-    assert validate.validate_run(run_dir, warnings) == []
-    assert any("who picked the option you recommend" in w for w in warnings)  # the sample dissent picked A
+    split = copy.deepcopy(sample_run.RESULT)
+    split["reports"][1]["pick"] = "B"  # a split council: the dissent should come from the member who picked B
+    assert any("who picked the option you recommend" in w for w in validate.result_warnings(split))
     def against(r):
         r["verdict"]["decision"] = "B"
         r["view_changed"] = True
@@ -613,3 +622,116 @@ def test_repo_source_accepts_dot_slash_and_rejects_bare_folder_names(tmp_path):
     assert validate._repo_path_in(" `docs/notes.md:14`", wd)
     assert not validate._repo_path_in(" the docs say it is cheaper", wd)
     assert not validate._repo_path_in(" see . for details", wd)
+
+
+# --- Gaming the run after the council has spoken (stress test 2026-10-18) ------------------------
+
+def test_brief_cannot_be_reweighted_after_sealing(run_dir):
+    # Re-weighting the criteria once the analyst's scores are in would let the supervisor pick the winner.
+    brief = json.loads((run_dir / "brief.json").read_text())
+    brief["criteria"][0]["weight"], brief["criteria"][1]["weight"] = 0.1, 0.9
+    (run_dir / "brief.json").write_text(json.dumps(brief), encoding="utf-8")
+    assert any("brief.json differs from the brief sealed" in e for e in validate.validate_run(run_dir))
+
+
+def test_seal_records_the_brief_too(run_dir, tmp_path):
+    sealed = _seal_setup(run_dir, tmp_path, sample_run.RESULT["precommit"])
+    (run_dir / "brief.sha256").unlink()
+    assert validate.seal(sealed, run_dir) == []
+    assert (run_dir / "brief.sha256").read_text().strip() == validate.sha256_of(run_dir / "brief.json")
+
+
+def test_a_run_without_a_sealed_brief_is_rejected(run_dir):
+    (run_dir / "brief.sha256").unlink()
+    assert any("brief.sha256 not found" in e for e in validate.validate_run(run_dir))
+
+
+def _drop(run_dir, role, reply):
+    dropped = run_dir / "reports" / "dropped"
+    dropped.mkdir(exist_ok=True)
+    (dropped / f"{role}.reply.json").write_text(reply, encoding="utf-8")
+
+
+def test_a_valid_reply_cannot_be_dropped_to_hide_it(run_dir):
+    roster = json.loads((run_dir / "roster.json").read_text())
+    roster.insert(0, {"role": "expansionist", "model": "sonnet", "why": "upside"})
+    (run_dir / "roster.json").write_text(json.dumps(roster), encoding="utf-8")
+    dissent = dict(sample_run.role_report("expansionist"), pick="B", point="DynamoDB wins")
+    _drop(run_dir, "expansionist", json.dumps(dissent))
+    errors = validate.validate_run(run_dir)
+    assert any("expansionist: dropped, but its reply in reports/dropped/ is valid" in e for e in errors)
+
+
+def test_the_analyst_cannot_be_dropped(run_dir):
+    _drop(run_dir, "analyst", "Sorry")
+    assert any("analyst cannot be dropped" in e for e in validate.validate_run(run_dir))
+
+
+def test_a_reply_from_a_role_outside_the_roster_is_an_error(run_dir):
+    # Deleting a role from roster.json after it replied would quietly take its reply out of the report.
+    (run_dir / "reports" / "expansionist.reply.json").write_text(
+        json.dumps(sample_run.role_report("expansionist")), encoding="utf-8")
+    import os
+    pre = run_dir / "precommit.json"
+    os.utime(run_dir / "reports" / "expansionist.reply.json", ns=(pre.stat().st_mtime_ns - 1, pre.stat().st_mtime_ns - 1))
+    assert any("expansionist.reply.json comes from a role that is not in roster.json" in e
+               for e in validate.validate_run(run_dir))
+
+
+def test_a_dropped_role_must_be_named_in_unknowns(run_dir):
+    roster = sample_run.RESULT["roster"] + [{"role": "outsider", "model": "sonnet", "why": "x"}]
+    (run_dir / "roster.json").write_text(json.dumps(roster), encoding="utf-8")
+    _drop(run_dir, "outsider", "Sorry")
+    result = json.loads((run_dir / "result.json").read_text())
+    result["unknowns"] = ["Peak traffic growth"]
+    (run_dir / "result.json").write_text(json.dumps(result), encoding="utf-8")
+    assert any("unknowns must say that outsider gave no usable report" in e for e in validate.validate_run(run_dir))
+    result["unknowns"].append("The Outsider gave no usable report.")
+    (run_dir / "result.json").write_text(json.dumps(result), encoding="utf-8")
+    assert validate.validate_run(run_dir) == []
+
+
+def test_a_supervisor_written_analyst_must_be_named_in_unknowns():
+    result = copy.deepcopy(sample_run.RESULT)
+    result["roster"][-1]["model"] = "supervisor"
+    for item in result["analyst"]["ledger"]:
+        item["evidence"] = "Supervisor: " + item["evidence"]
+    for s in result["analyst"]["scores"]:
+        s["rationale"] = "Supervisor: " + s["rationale"]
+    result["scores"] = result["analyst"]["scores"]
+    assert any("unknowns must say the analyst's scores were written by the supervisor" in e
+               for e in validate.validate_result(result))
+    result["unknowns"].append("The analyst's scores were written by the supervisor after the analyst failed twice.")
+    assert validate.validate_result(result) == []
+
+
+def test_score_changes_that_move_the_winner_are_warned():
+    result = copy.deepcopy(sample_run.RESULT)
+    result["scores"] = [dict(s, score=1 if s["option"] == "A" else 5, rationale="Supervisor: disagree")
+                        for s in result["analyst"]["scores"]]
+    result["verdict"] = {"decision": "B", "summary": "DynamoDB", "conditions": []}
+    result["view_changed"] = True
+    assert any("your score changes move the top option from Postgres to DynamoDB" in w
+               for w in validate.result_warnings(result))
+
+
+def test_a_unanimous_council_is_not_reported_as_dissent(run_dir):
+    # Every member picked Postgres, so there is no dissent: the report must not call a reservation a disagreement.
+    result = json.loads((run_dir / "result.json").read_text())
+    warnings = validate.result_warnings(result)
+    assert any("every council member picked Postgres" in w for w in warnings)
+    assert not any("should be the strongest view you did not adopt" in w for w in warnings)
+
+
+def test_single_mode_no_go_summary_names_the_idea_not_the_status_quo():
+    result = copy.deepcopy(sample_run.RESULT)
+    brief = result["brief"]
+    brief["mode"] = "single"
+    brief["options"] = [{"id": "A", "name": "Rust rewrite", "description": "x"},
+                        {"id": "B", "name": "Status quo", "description": "Keep doing what happens today"}]
+    result["precommit"]["pick"] = "no-go"
+    result["verdict"] = {"decision": "no-go", "summary": "Do not start the Rust rewrite.", "conditions": []}
+    warnings = validate.result_warnings(result)
+    assert not any("does not name" in w for w in warnings)
+    result["verdict"]["summary"] = "Do not do it."
+    assert any("does not name Rust rewrite" in w for w in validate.result_warnings(result))

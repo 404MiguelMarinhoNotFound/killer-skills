@@ -337,7 +337,12 @@
 
   /* What could make this wrong: dissent, blind spots, unknowns in one list. */
   const risks = [];
-  if (R.dissent && R.dissent.position) risks.push({ k: `Strongest disagreement, from the ${roleName(R.dissent.role)}`, v: R.dissent.position, more: R.dissent.why_rejected ? 'Why it was not followed: ' + R.dissent.why_rejected : null });
+  // When every member chose the recommended option there is no dissent, only the strongest reservation.
+  const unanimous = reports.length > 0 && recId && backers.length === reports.length;
+  if (R.dissent && R.dissent.position) risks.push({
+    k: unanimous ? `Strongest reservation, from the ${roleName(R.dissent.role)} (every member agreed with the choice)` : `Strongest disagreement, from the ${roleName(R.dissent.role)}`,
+    v: R.dissent.position,
+    more: R.dissent.why_rejected ? (unanimous ? 'How it is handled: ' : 'Why it was not followed: ') + R.dissent.why_rejected : null });
   list(R.blind_spots).forEach(b => risks.push({ k: 'Nobody on the council raised this', v: b }));
   list(R.unknowns).forEach(u => risks.push({ k: 'Still unknown', v: u }));
   if (risks.length) {

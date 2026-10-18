@@ -88,6 +88,8 @@ def write_run(path):
     path = Path(path)
     (path / "reports").mkdir(parents=True, exist_ok=True)
     (path / "brief.json").write_text(json.dumps(BRIEF), encoding="utf-8")
+    (path / "brief.sha256").write_text(hashlib.sha256(json.dumps(BRIEF).encode("utf-8")).hexdigest() + "\n",
+                                       encoding="utf-8")
     (path / "roster.json").write_text(json.dumps(RESULT["roster"]), encoding="utf-8")
     # The view is sealed before the council runs: its hash first, the view itself moved in afterwards.
     pre = json.dumps(RESULT["precommit"])

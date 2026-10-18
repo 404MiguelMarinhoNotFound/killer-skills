@@ -30,7 +30,7 @@ Every file lives in the run directory `.critically-assess/runs/<YYYYMMDD-HHMMSS>
 
 ## precommit.json (step 4, sealed until step 7)
 
-Written first to `view.json` in a fresh `mktemp -d` folder outside the working directory, sealed with `validate.py --seal <file> <run_dir>` (which checks the view's shape against the brief, refuses once any reply exists, and writes only its hash to `precommit.sha256`), and copied unchanged into the run folder with `validate.py --unseal <file> <run_dir>`, which refuses while any reply has an error or any roster role has neither replied nor been dropped, and leaves the sealed file where it is. `validate.py` rejects a `precommit.json` that does not match the hash, a seal newer than any reply file, and a reply file newer than `precommit.json`, because that reply could have read the view.
+Written first to `view.json` in a fresh `mktemp -d` folder outside the working directory, sealed with `validate.py --seal <file> <run_dir>` (which checks the view's shape against the brief, refuses once any reply exists, and writes only its hash to `precommit.sha256`, plus the brief's hash to `brief.sha256`; `validate.py` rejects a `brief.json` that no longer matches, so the question, options and criteria weights the council answered cannot change afterwards), and copied unchanged into the run folder with `validate.py --unseal <file> <run_dir>`, which refuses while any reply has an error or any roster role has neither replied nor been dropped, and leaves the sealed file where it is. `validate.py` rejects a `precommit.json` that does not match the hash, a seal newer than any reply file, and a reply file newer than `precommit.json`, because that reply could have read the view.
 
 ```json
 {"pick": "A", "position": "Your view before the council", "reasons": ["first", "second", "third"], "main_risk": "The biggest risk in your own view"}
@@ -44,7 +44,7 @@ Written first to `view.json` in a fresh `mktemp -d` folder outside the working d
 [{"role": "contrarian", "model": "opus", "why": "One line on why this role is on this council"}, {"role": "analyst", "model": "opus", "why": "Always included"}]
 ```
 
-`validate.py` checks it as soon as it exists: library role ids only, each listed once, the analyst included, and 3 to 5 council roles once dropped roles are left out.
+`validate.py` checks it as soon as it exists: library role ids only, each listed once, the analyst included, 3 to 5 council roles once dropped roles are left out, and no reply file from a role it does not list. A reply moved into `reports/dropped/` must fail validation, the analyst can never be dropped, and `result.json`'s `unknowns` must name every dropped role and, when the supervisor wrote the analyst's report, say so.
 
 ## reports/<role>.reply.json (steps 6 and 7)
 
@@ -78,7 +78,8 @@ Built by `scripts/assemble.py <run_dir> <synthesis.json>`: the synthesis file ho
 }
 ```
 
-- `verdict.decision`: in single mode `go`, `no-go` or `conditional-go` (the last one requires `conditions`); in multi mode an option id or `hybrid`.
+- `verdict.decision`: in single mode `go`, `no-go` or `conditional-go` (the last one requires `conditions`; a `no-go` may list the conditions under which the idea would be right); in multi mode an option id or `hybrid`.
+- `dissent`: when every council member picked the recommended option, `dissent.position` says nobody disagreed and gives the strongest reservation; the report then labels it a reservation.
 - `ledger`: merge the analyst's ledger with the council's pros and cons. Collapse duplicates into one item and list every role that raised it in `raised_by`. Drop anything without evidence. Give every item a `point`: the claim in one short line, which the report lists under that option's name, so the point may leave the name out. The full `claim` opens beneath it.
 - `scores`: start from the analyst's. If you change one, prefix its rationale with `Supervisor:` and say why.
 - Every sentence the reader sees follows "Write for the reader" in SKILL.md step 8. That is judged in the coherence pass, not by a script; `validate.py` checks structure only.

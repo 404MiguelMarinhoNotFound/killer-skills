@@ -42,7 +42,13 @@ def terminal_summary(result):
         lines.append("Sensitivity: winner changes if these weights move ±0.1: " + ", ".join(flips))
     else:
         lines.append("Sensitivity: stable under ±0.1 weight shifts")
-    lines.append(f"Strongest dissent ({result['dissent']['role']}): {result['dissent']['position']}")
+    decided = validate._decided_option(brief["mode"], verdict["decision"])
+    picks = [r.get("pick") for r in result["reports"]]
+    if decided and picks and all(p == decided for p in picks):
+        # Nobody disagreed, so the strongest caveat is a reservation, not a dissent.
+        lines.append(f"Strongest reservation ({result['dissent']['role']}; every member agreed): {result['dissent']['position']}")
+    else:
+        lines.append(f"Strongest dissent ({result['dissent']['role']}): {result['dissent']['position']}")
     lines.append(f"First step: {result['first_step']}")
     lines.append(f"Confidence: {result['confidence']}")
     return "\n".join(lines)
