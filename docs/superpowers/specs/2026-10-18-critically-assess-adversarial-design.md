@@ -1,4 +1,4 @@
-# decision-hearing: design spec
+# critically-assess-adversarial: design spec
 
 Date: 2026-10-18
 Status: draft for review
@@ -30,7 +30,7 @@ The value of a council lies in catching the cases where a first answer is wrong.
 ## 3. Scope
 
 **In scope**
-- A new skill folder, `decision-hearing/`, created by copying `critically-assess/` and then changing the copy.
+- A new skill folder, `critically-assess-adversarial/`, created by copying `critically-assess/` and then changing the copy.
 - A new workflow, new roles, a new contract, script changes, report changes and tests.
 - An evaluation harness and case set that measure catching, caving and the crux.
 
@@ -41,10 +41,10 @@ The value of a council lies in catching the cases where a first answer is wrong.
 
 ## 4. Name and layout
 
-The skill is named **decision-hearing**, and the frontmatter `name` matches the folder. The name describes what it does: a decision gets a hearing, with a case, a challenge, a defence and a judgement. Its description says it challenges a first answer, so it does not compete with critically-assess for "pros and cons" requests. Trigger overlap between the two skills is checked in the evaluation (section 11).
+The skill is named **critically-assess-adversarial**, and the frontmatter `name` matches the folder. The name marks it as the adversarial variant of critically-assess: a first answer gets a hearing, with a case, a challenge, a defence and a judgement. Because the two names are so close, the description must say plainly when to use this one (to challenge a first answer on a high-stakes decision) rather than critically-assess (a balanced pros-and-cons assessment). Otherwise the two skills will compete for the same requests. Trigger overlap between the two skills is checked in the evaluation (section 11).
 
 ```
-decision-hearing/
+critically-assess-adversarial/
   SKILL.md
   reference/contracts.md
   roles/            _attack_contract.md, thesis.md, reframer.md, rival.md,
@@ -241,7 +241,7 @@ Each run uses 1 thesis + 5 attackers + 1 rebuttal = 7 agents in 3 waves, plus th
 
 ## 10. Evaluation
 
-The evaluation lives in `decision-hearing/eval/` and runs as described in the brainstorm's section 3.
+The evaluation lives in `critically-assess-adversarial/eval/` and runs as described in the brainstorm's section 3.
 
 **Cases.** There are 12 cases, each with an answer key:
 - **8 traps**, two of each type:
@@ -266,7 +266,7 @@ Each key gives the correct verdict and the crux: the planted deciding fact or mi
 **Conditions.** Each case runs 2 times under each condition:
 1. **plain:** one agent answers.
 2. **self-critique:** one agent answers, critiques its own answer, then revises.
-3. **hearing:** decision-hearing.
+3. **hearing:** critically-assess-adversarial (the skill under test).
 
 **Metrics.**
 - **Catch rate:** on traps, the share of final verdicts that match the key.
