@@ -300,9 +300,9 @@ If the hearing does not beat self-critique, the extra agents are not earning the
 - A trigger-overlap check: a small fixture of prompts, with an agent asked which of the two descriptions applies. This runs as a documented eval step, not in pytest.
 - `critically-assess/tests` must still pass unchanged after the copy, as proof that the original was not touched.
 
-## 12. Open questions for review
+## 12. Resolved questions
 
-1. **Rebuttal mechanics.** Continuing the thesis agent with SendMessage keeps its reasoning but depends on the tool. A fresh agent is more reproducible. The spec prefers SendMessage, with a fresh agent as the fallback. Is that right?
-2. **The reframer's missing option.** In a parallel wave the rival cannot argue for a missing option that the reframer has only just proposed. The spec lets the reframer argue for it itself. Alternatively, a strong missing option could trigger a second rival wave, at extra cost.
-3. **Model diversity.** Should the rival and premortem run on a different model from the thesis author, to reduce convergence? The spec leaves this as a tunable per-role `model` setting that defaults to the library value.
-4. **Case authorship.** Should the user write the 12 evaluation cases and keys, or should a separate agent draft them for the user to approve?
+1. **Rebuttal mechanics.** The supervisor continues the thesis agent through SendMessage, so the author keeps its own reasoning. If SendMessage is unavailable or the agent cannot be resumed, a fresh agent gets the thesis and all attacks instead. The roster records which path was used (`"rebuttal_mode": "continued" | "fresh"`).
+2. **The reframer's missing option.** There is no second wave. The reframer argues for its own missing option in `role_fields.missing_option.case`, and the judge may class that objection `new_decisive`. A second rival wave is deferred until the evaluation shows frame traps being missed.
+3. **Model diversity.** The role library defaults put the thesis author and the analyst on `opus`, and the rival and premortem on `sonnet`, so the strongest attacks come from a different model than the thesis. The reframer and outside-view use `opus`. Each default can be overridden per run, as in critically-assess.
+4. **Case authorship.** A separate agent, which never acts as supervisor in the evaluation, drafts the 12 cases and their keys. The user reviews and approves each key before the cases are qualified. Keys stay in `eval/key/`.
